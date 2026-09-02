@@ -21,19 +21,17 @@
   @media (max-width:640px){
     .nav-hint{display:none} /* на мобильном полоса теперь не про "пролистать слайды", подсказка не нужна */
 
-    /* контейнер таймлайна на мобильном сильно ужат — фото/текст читаются нормально,
-       полоса внизу компактная (реально управляет высотой timenav_height_min, задан в JS) */
-    .tl-menubar{display:none !important}
+    .tl-menubar{display:none !important} /* кнопки zoom/стрелки — не нужны на мобильном */
 
-    /* карточка-превью с названием события — прячем, оставляем только риску-метку */
-    .tl-timemarker-content-container{display:none !important}
-
-    /* шкала десятилетий — прячем совсем, год пишем прямо на метке события через .ms-yr (см. JS) */
+    /* шкала десятилетий — прячем совсем, год теперь показывает сам флажок-метка (см. ниже) */
     .tl-timeaxis{display:none !important}
 
-    .ms-yr{
-      position:absolute; top:100%; left:50%; transform:translateX(-50%);
-      margin-top:4px; font-size:10.5px; color:var(--muted); white-space:nowrap;
+    /* флажок-метка события — как в оригинале, только текст внутри теперь год (не название),
+       поэтому можно сильно ужать под уже заданную высоту полосы, не трогая timenav_height_min */
+    .tl-timemarker-content{padding:3px 7px !important}
+    .tl-timemarker-text{padding:0 !important}
+    .tl-timemarker-text .tl-headline{
+      font-size:11px !important; line-height:1.2 !important; margin:0 !important; white-space:nowrap !important;
     }
   }
 </style>
@@ -98,18 +96,15 @@ async function loadTimeline(){
     document.getElementById("navHint").classList.add("hide");
   });
 
-  // на мобильном ось скрыта — подписываем год прямо на каждой метке-риске события
+  // на мобильном ось скрыта — во флажке-метке события показываем год вместо названия
+  // (сам флажок остаётся как в оригинале, меняется только текст внутри)
   if(isMobile){
     setTimeout(() => {
-      const ticks = document.querySelectorAll(".tl-timemarker-line-left");
-      ticks.forEach((tick, i) => {
-        const ev = list[i] || list[list.length - 1];
+      const flags = document.querySelectorAll(".tl-timemarker-text");
+      flags.forEach((flag, i) => {
+        const ev = list[i];
         if(!ev) return;
-        tick.style.position = "relative";
-        const yr = document.createElement("span");
-        yr.className = "ms-yr";
-        yr.textContent = ev.event_year;
-        tick.appendChild(yr);
+        flag.textContent = String(ev.event_year);
       });
     }, 300);
   }
