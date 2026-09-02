@@ -1,0 +1,114 @@
+:root{
+  --paper:#fafaf8; --ink:#22252a; --muted:#878d96; --line:#e4e2dc;
+  --accent:#8a6a3a; /* тёплая бронза — вместо синего, спокойнее и благороднее */
+  --warn:#a4641f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro Text","Segoe UI",sans-serif;background:#fff;color:var(--ink)}
+
+/* ---------- шапка сайта (одна на все страницы, вставляется из app.js) ---------- */
+.site-nav{
+  min-height:44px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  padding:8px 20px; position:relative; z-index:20; background:#fff; border-bottom:1px solid var(--line);
+  row-gap:8px;
+}
+.site-nav .links{display:flex; gap:32px; align-items:center}
+.site-nav .links a{
+  color:#999; text-decoration:none; font-size:12px; letter-spacing:.04em;
+  text-transform:uppercase; padding:4px 0; border-bottom:1px solid transparent; white-space:nowrap;
+}
+.site-nav .links a.active{color:var(--ink); border-bottom-color:var(--ink)}
+.site-nav .links a:hover{color:var(--ink)}
+
+.nav-right{position:absolute; right:20px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:14px}
+.nav-divider{width:1px; height:14px; background:var(--line)}
+
+/* "+ Добавить материал" — нейтральная благородная таблетка (не кричащий акцент) */
+.add-wrap{position:relative}
+.add-wrap .add-link{
+  background:none; border:1px solid var(--ink); color:var(--ink); cursor:pointer;
+  font-size:12px; letter-spacing:.02em; padding:5px 13px; border-radius:14px; font-family:inherit;
+  transition:background .15s, color .15s;
+}
+.add-wrap .add-link:hover, .add-wrap .add-link.open{background:var(--ink); color:#fff}
+
+.auth-link{
+  background:none; border:none; color:#999; cursor:pointer;
+  font-size:12px; letter-spacing:.04em; text-transform:uppercase;
+  padding:4px 0; font-family:inherit;
+}
+.auth-link:hover{color:var(--ink)}
+
+.who-wrap{position:relative; display:none}
+.who-chip{
+  display:flex; align-items:center; gap:7px; background:var(--paper); border:1px solid var(--line);
+  border-radius:20px; padding:4px 12px 4px 5px; cursor:pointer; font-family:inherit;
+  font-size:12.5px; color:var(--ink); text-transform:none; letter-spacing:normal;
+}
+.who-chip:hover{border-color:var(--ink)}
+.who-chip .avatar{
+  width:20px; height:20px; border-radius:50%; background:var(--ink); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; flex:none;
+}
+.profile-card{padding:10px 11px 9px}
+.profile-card .pn{font-weight:600; font-size:13.5px; margin-bottom:5px}
+.profile-card .pr{font-size:12px; color:var(--muted); line-height:1.5}
+
+@media (max-width:640px){
+  .site-nav{padding:10px 14px; justify-content:center}
+  .site-nav .links{order:1; width:100%; justify-content:center; gap:20px}
+  .nav-right{position:static; transform:none; order:2; width:100%; justify-content:center; margin-top:2px}
+}
+
+/* ---------- выпадающее меню (добавить материал / профиль) ---------- */
+.dropdown{
+  display:none; position:absolute; top:calc(100% + 10px); right:0;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+  box-shadow:0 10px 30px rgba(0,0,0,.08); width:270px; padding:6px; z-index:50;
+}
+.dropdown.open{display:block}
+.dropdown .opt{
+  display:block; width:100%; text-align:left; background:none; border:none;
+  border-radius:7px; padding:9px 10px; cursor:pointer; font:inherit; text-decoration:none; color:inherit;
+}
+.dropdown .opt:hover{background:#f7f6f3}
+.dropdown .opt .t{font-weight:600; font-size:12.5px; color:var(--ink)}
+.dropdown .opt .d{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.35}
+.dropdown .opt + .opt, .dropdown .profile-card + .opt{border-top:1px solid #f0efec}
+
+/* ---------- модалки ---------- */
+.overlay{position:fixed; inset:0; background:rgba(20,20,24,.45); z-index:60; display:none; align-items:center; justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px 24px; width:340px; max-width:90vw; position:relative}
+.modal h2{font-family:Georgia,serif; font-weight:400; font-size:17px; margin:0 0 14px}
+.modal label{display:block; font-size:12px; color:var(--muted); margin:12px 0 5px}
+.modal input, .modal select, .modal textarea{
+  width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
+  padding:9px 10px; border-radius:8px; font:inherit; font-size:13px;
+}
+.modal textarea{resize:vertical; min-height:60px}
+.modal .row-actions{display:flex; justify-content:flex-end; margin-top:18px}
+.modal .hint{font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.4}
+.modal .err{color:#b0413e; font-size:12px; margin-top:8px; display:none}
+.modal button.primary{
+  background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:20px;
+  font-size:12.5px; cursor:pointer; font-family:inherit;
+}
+.modal .close{position:absolute; top:12px; right:14px; border:none; background:none; color:var(--muted); font-size:18px; cursor:pointer}
+
+/* ---------- страницы-заглушки (швейцарская сетка: левый край, крупный отступ) ---------- */
+.stub{
+  min-height:calc(100dvh - 44px);
+  display:flex; flex-direction:column; justify-content:center;
+  padding:8vh 24px 10vh 72px;
+}
+.stub .k{font-size:11px; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; margin-bottom:18px}
+.stub h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:46px; line-height:1.05; margin:0 0 22px}
+.stub p{color:var(--muted); font-size:15px; line-height:1.7; max-width:480px; margin:0 0 14px}
+.stub .mail{font-size:14px; color:var(--ink)}
+.stub .mail a{color:var(--ink); border-bottom:1px solid var(--line); text-decoration:none}
+.stub .mail a:hover{border-bottom-color:var(--ink)}
+@media (max-width:640px){
+  .stub{padding:8vh 22px 10vh 24px}
+  .stub h1{font-size:34px}
+}
