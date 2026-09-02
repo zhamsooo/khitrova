@@ -24,17 +24,52 @@
   }
   .site-nav .links a.active{color:var(--ink); border-bottom-color:var(--ink)}
   .site-nav .links a:hover{color:var(--ink)}
-  .nav-right{position:absolute; right:20px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:16px}
-  .nav-right .who{font-size:12px; color:var(--muted)}
+
+  .nav-right{position:absolute; right:20px; top:50%; transform:translateY(-50%); display:flex; align-items:center; gap:14px}
+  .nav-divider{width:1px; height:14px; background:var(--line)}
+
+  /* "+ Добавить материал" — акцентная кнопка-таблетка, единственное цветное действие в шапке */
   .add-wrap{position:relative}
-  .add-wrap .add-link, .auth-link{
+  .add-wrap .add-link{
+    background:none; border:1px solid var(--accent); color:var(--accent); cursor:pointer;
+    font-size:12px; letter-spacing:.02em; padding:5px 13px; border-radius:14px; font-family:inherit;
+    transition:background .15s, color .15s;
+  }
+  .add-wrap .add-link:hover, .add-wrap .add-link.open{background:var(--accent); color:#fff}
+
+  /* "Войти" — тихая ссылка, как пункты меню */
+  .auth-link{
     background:none; border:none; color:#999; cursor:pointer;
     font-size:12px; letter-spacing:.04em; text-transform:uppercase;
     padding:4px 0; font-family:inherit;
   }
-  .add-wrap .add-link:hover, .add-wrap .add-link.open, .auth-link:hover{color:var(--ink)}
+  .auth-link:hover{color:var(--ink)}
+
+  /* Имя после входа — таблетка с обычным регистром, отдельно от капса меню */
+  .who-wrap{position:relative; display:none}
+  .who-chip{
+    display:flex; align-items:center; gap:7px; background:var(--paper); border:1px solid var(--line);
+    border-radius:20px; padding:4px 12px 4px 5px; cursor:pointer; font-family:inherit;
+    font-size:12.5px; color:var(--ink); text-transform:none; letter-spacing:normal;
+  }
+  .who-chip:hover{border-color:var(--accent)}
+  .who-chip .avatar{
+    width:20px; height:20px; border-radius:50%; background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:600; flex:none;
+  }
+  .profile-card{padding:10px 11px 9px}
+  .profile-card .pn{font-weight:600; font-size:13.5px; margin-bottom:5px}
+  .profile-card .pr{font-size:12px; color:var(--muted); line-height:1.5}
 
   #timeline-embed{width:100%; height:calc(100vh - 44px)}
+
+  /* подсказка про стрелки навигации */
+  .nav-hint{
+    position:fixed; top:54px; left:50%; transform:translateX(-50%);
+    font-size:11.5px; color:var(--muted); background:#fff; padding:5px 13px; border:1px solid var(--line);
+    border-radius:20px; z-index:15; opacity:1; transition:opacity .8s ease; pointer-events:none;
+  }
+  .nav-hint.hide{opacity:0}
 
   .dropdown{
     display:none; position:absolute; top:calc(100% + 10px); right:0;
@@ -49,7 +84,7 @@
   .dropdown .opt:hover{background:#f7f6f3}
   .dropdown .opt .t{font-weight:600; font-size:12.5px; color:var(--ink)}
   .dropdown .opt .d{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.35}
-  .dropdown .opt + .opt{border-top:1px solid #f0efec}
+  .dropdown .opt + .opt, .dropdown .profile-card + .opt{border-top:1px solid #f0efec}
 
   /* модалки */
   .overlay{position:fixed; inset:0; background:rgba(20,20,24,.45); z-index:60; display:none; align-items:center; justify-content:center}
@@ -76,12 +111,11 @@
 
 <header class="site-nav">
   <nav class="links">
-    <a href="#" class="active">Линия жизни</a>
-    <a href="#" onclick="alert('Раздел «Наследие» — следующая волна'); return false;">Наследие</a>
-    <a href="#" onclick="alert('Раздел «Люди» — следующая волна'); return false;">Люди</a>
+    <a href="index.html" class="active">Линия жизни</a>
+    <a href="people.html">Люди</a>
+    <a href="nasledie.html">Наследие</a>
   </nav>
   <div class="nav-right">
-    <span class="who" id="whoami" style="display:none"></span>
     <div class="add-wrap">
       <button class="add-link" id="addBtn">+ Добавить материал</button>
       <div class="dropdown" id="addDropdown">
@@ -95,9 +129,22 @@
         </button>
       </div>
     </div>
+    <span class="nav-divider"></span>
     <button class="auth-link" id="btnAuth">Войти</button>
+    <div class="who-wrap" id="whoWrap">
+      <button class="who-chip" id="whoChip">
+        <span class="avatar" id="whoAvatar"></span>
+        <span id="whoName"></span>
+      </button>
+      <div class="dropdown" id="whoDropdown">
+        <div class="profile-card" id="profileCard"></div>
+        <button class="opt" id="btnLogout"><div class="t">Выйти</div></button>
+      </div>
+    </div>
   </div>
 </header>
+
+<div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
 
 <div id="timeline-embed"></div>
 
@@ -115,7 +162,7 @@
     </div>
     <div id="stepCode" style="display:none">
       <h2>Код из письма</h2>
-      <label>6 цифр</label>
+      <label>Код из письма</label>
       <input type="text" id="inCode" inputmode="numeric" maxlength="12" placeholder="12345678">
       <div class="err" id="errCode"></div>
       <div class="row-actions"><button class="primary" id="btnVerifyCode">Подтвердить</button></div>
@@ -184,13 +231,23 @@ document.getElementById("btnAuth").addEventListener("click", () => { resetAuthMo
 const addBtn = document.getElementById("addBtn");
 const dropdown = document.getElementById("addDropdown");
 addBtn.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("open"); addBtn.classList.toggle("open"); });
-document.addEventListener("click", () => { dropdown.classList.remove("open"); addBtn.classList.remove("open"); });
 document.getElementById("optOther").addEventListener("click", e => { e.stopPropagation(); alert("Фото / статьи / воспоминания — следующая волна сайта."); dropdown.classList.remove("open"); });
 document.getElementById("optEvent").addEventListener("click", e => {
   e.stopPropagation();
   dropdown.classList.remove("open");
   if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
   open_("addOverlay");
+});
+
+// меню с именем после входа
+const whoChip = document.getElementById("whoChip");
+const whoDropdown = document.getElementById("whoDropdown");
+whoChip.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
+document.getElementById("btnLogout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
+
+document.addEventListener("click", () => {
+  dropdown.classList.remove("open"); addBtn.classList.remove("open");
+  whoDropdown.classList.remove("open");
 });
 
 document.getElementById("inRelation").addEventListener("change", e => {
@@ -238,15 +295,19 @@ document.getElementById("btnSaveProfile").addEventListener("click", async () => 
   onLoggedIn(profile);
 });
 
-function onLoggedIn(profile){
-  document.getElementById("whoami").textContent = profile.full_name;
-  document.getElementById("whoami").style.display = "inline";
-  document.getElementById("btnAuth").textContent = "Выйти";
-}
+const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Другое" };
 
-document.getElementById("btnAuth").addEventListener("click", async function(){
-  if(currentUser){ await sb.auth.signOut(); currentUser = null; location.reload(); }
-});
+function onLoggedIn(profile){
+  document.getElementById("btnAuth").style.display = "none";
+  document.getElementById("whoWrap").style.display = "block";
+  document.getElementById("whoName").textContent = profile.full_name;
+  document.getElementById("whoAvatar").textContent = profile.full_name.trim().charAt(0).toUpperCase();
+
+  let rows = `<div class="pn">${profile.full_name}</div><div class="pr">${relLabel[profile.relation_type] || profile.relation_type}`;
+  if(profile.relation_type === "ученик" && profile.study_end) rows += ` · выпуск ${profile.study_end}`;
+  rows += `</div>`;
+  document.getElementById("profileCard").innerHTML = rows;
+}
 
 document.getElementById("btnSubmitEvent").addEventListener("click", async () => {
   const event_year = parseInt(document.getElementById("evYear").value, 10);
@@ -272,6 +333,9 @@ sb.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
+// подсказка про навигацию стрелками — гасим через 6 секунд
+setTimeout(() => document.getElementById("navHint").classList.add("hide"), 6000);
+
 // ---- таймлайн из Supabase, рендер через TimelineJS3 ----
 async function loadTimeline(){
   const { data: events, error } = await sb.from("events").select("*").order("event_year");
@@ -287,6 +351,7 @@ async function loadTimeline(){
 
   const timelineData = {
     title: {
+      media: { url: "photo/main.jpg", caption: "Татьяна Ивановна Хитрова", credit: "" },
       text: {
         headline: "Татьяна Ивановна Хитрова",
         text: "<p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова. Таймлайн пополняют ученики — ниже могут быть неподтверждённые записи.</p>"
