@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="style.css">
 <style>
   html,body{height:100%; overflow-x:hidden}
+
+  /* ---------- десктоп: обычный TimelineJS, дефолтные настройки ---------- */
   #timeline-embed{width:100%; height:calc(100dvh - 44px)}
   .nav-hint{
     position:fixed; right:20px; bottom:22%;
@@ -16,28 +18,37 @@
     border-radius:20px; z-index:15; opacity:1; transition:opacity .8s ease; pointer-events:none;
   }
   .nav-hint.hide{opacity:0}
-  /* штатная подсказка TimelineJS про свайп — путает (не переводится, стрелка не туда), прячем и оставляем свою */
-  .tl-message-full{display:none !important}
+  .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
 
-  /* на мобильном био+фото — обычный текст страницы, а не слайд виджета */
-  .mobile-intro{display:none}
-
+  /* ---------- мобильный: своя простая полоска вместо TimelineJS ---------- */
+  .mobile-strip, .mobile-intro{display:none}
   @media (max-width:640px){
-    .mobile-intro{display:block; padding:24px 22px 4px}
+    #timeline-embed, .nav-hint{display:none}
+
+    .mobile-strip{
+      display:block; overflow-x:auto; -webkit-overflow-scrolling:touch;
+      border-bottom:1px solid var(--line); padding:16px 6px 10px;
+    }
+    .ms-track{position:relative; display:inline-flex; align-items:flex-start; gap:40px; padding:0 16px; min-width:100%}
+    .ms-line{position:absolute; left:16px; right:16px; top:18px; height:1px; background:var(--line)}
+    .ms-point{position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; flex:none; width:10px}
+    .ms-point .dot{width:9px; height:9px; border-radius:50%; background:var(--ink); flex:none}
+    .ms-point.pending .dot{background:#fff; border:1.5px solid var(--muted); width:6px; height:6px}
+    .ms-point .yr{margin-top:7px; font-size:11px; color:var(--muted); white-space:nowrap}
+
+    .mobile-intro{display:block; padding:22px 22px 4px}
     .mobile-intro img{width:100%; border-radius:10px; display:block; margin-bottom:18px}
     .mobile-intro h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:28px; margin:0 0 10px; line-height:1.15}
     .mobile-intro .sub{color:var(--muted); font-size:14px; margin:0 0 10px}
     .mobile-intro .bio{color:var(--muted); font-size:14px; line-height:1.6; margin:0}
-
-    /* сам виджет TimelineJS на мобильном — только узкая полоска с годами внизу, без слайда.
-       у метки события два разных узла: .tl-timemarker-content-container — всплывающая карточка (прячем),
-       .tl-timemarker-line-left — тонкая риска на оси (оставляем, это и есть "точка" события) */
-    .tl-storyslider, .nav-hint, .tl-menubar, .tl-timemarker-content-container{display:none !important}
-    #timeline-embed{height:96px; border-top:1px solid var(--line)}
   }
 </style>
 </head>
 <body data-page="index">
+
+<div class="mobile-strip" id="mobileStrip">
+  <div class="ms-track" id="msTrack"><div class="ms-line"></div></div>
+</div>
 
 <div class="mobile-intro" id="mobileIntro">
   <img src="photo/main.jpg" alt="Татьяна Ивановна Хитрова">
@@ -46,10 +57,8 @@
   <p class="bio">Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>
 </div>
 
-<div class="tl-mini-wrap" id="tlMiniWrap">
-  <div id="timeline-embed"></div>
-  <div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
-</div>
+<div id="timeline-embed"></div>
+<div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
@@ -65,8 +74,22 @@ async function loadTimeline(){
   if(error){ console.error(error); return; }
 
   const list = events || [];
+  const isMobile = window.innerWidth <= 640;
 
-  // события — от пользователей, экранируем перед вставкой в HTML
+  if(isMobile){
+    // своя простая полоска: линия + точки, подписанные годом, без шкалы десятилетий
+    const track = document.getElementById("msTrack");
+    const points = list.length ? list : [{ event_year: 1940, title: "Пока пусто", status: "confirmed" }];
+    track.innerHTML = '<div class="ms-line"></div>' + points.map(e => `
+      <div class="ms-point${e.status === "confirmed" ? "" : " pending"}">
+        <span class="dot"></span>
+        <span class="yr">${e.event_year}</span>
+      </div>
+    `).join("");
+    return;
+  }
+
+  // десктоп — обычный TimelineJS, дефолтные настройки без мобильных костылей
   const tlEvents = list.map(e => ({
     start_date: { year: String(e.event_year) },
     text: {
@@ -89,19 +112,13 @@ async function loadTimeline(){
     }]
   };
 
-  const isMobile = window.innerWidth <= 640;
-
   document.getElementById("timeline-embed").innerHTML = "";
   window.timeline = new TL.Timeline("timeline-embed", timelineData, {
     language: "ru",
     start_at_end: false,
-    // на мобильном слайд с фото/текстом скрыт (см. .mobile-intro), полоса — компактная,
-    // но с запасом под риски-метки событий (timenav_height_min реально управляет итоговой высотой)
-    timenav_height_min: isMobile ? 90 : undefined,
-    timenav_height_percentage: isMobile ? undefined : 20
+    timenav_height_percentage: 20
   });
 
-  // подсказку прячем только когда человек реально перешёл со стартового слайда (актуально только на десктопе)
   let firstChange = true;
   window.timeline.on("change", function(){
     if(firstChange){ firstChange = false; return; }
