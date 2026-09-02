@@ -30,10 +30,10 @@
     .mobile-intro .bio{color:var(--muted); font-size:14px; line-height:1.6; margin:0}
 
     /* сам виджет TimelineJS на мобильном — только узкая полоска с годами внизу, без слайда.
-       высота полосы теперь задаётся официальными опциями (timenav_height/timenav_height_min) в JS,
-       а не CSS-переопределением зашитого минимума библиотеки */
-    .tl-storyslider, .nav-hint, .tl-menubar, .tl-timemarker{display:none !important}
-    #timeline-embed{height:66px; border-top:1px solid var(--line)}
+       у метки события два разных узла: .tl-timemarker-content-container — всплывающая карточка (прячем),
+       .tl-timemarker-line-left — тонкая риска на оси (оставляем, это и есть "точка" события) */
+    .tl-storyslider, .nav-hint, .tl-menubar, .tl-timemarker-content-container{display:none !important}
+    #timeline-embed{height:96px; border-top:1px solid var(--line)}
   }
 </style>
 </head>
@@ -95,10 +95,9 @@ async function loadTimeline(){
   window.timeline = new TL.Timeline("timeline-embed", timelineData, {
     language: "ru",
     start_at_end: false,
-    // на мобильном слайд с фото/текстом скрыт (см. .mobile-intro), полоса — фиксированные 60px,
-    // без этого библиотека сама зажимает минимум 150px даже при маленьком проценте
-    timenav_height: isMobile ? 60 : undefined,
-    timenav_height_min: isMobile ? 40 : undefined,
+    // на мобильном слайд с фото/текстом скрыт (см. .mobile-intro), полоса — компактная,
+    // но с запасом под риски-метки событий (timenav_height_min реально управляет итоговой высотой)
+    timenav_height_min: isMobile ? 90 : undefined,
     timenav_height_percentage: isMobile ? undefined : 20
   });
 
