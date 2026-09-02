@@ -154,18 +154,29 @@ async function loadTimeline(){
     }, 300);
   } else {
     // на десктопе — подгоняем левый край меню точно под левый край фото (не фиксированный отступ у TimelineJS).
-    // фото появляется в DOM не сразу после new TL.Timeline(), поэтому ждём и подключаем ResizeObserver,
-    // который перевызывает подгонку при любой перекладке (загрузка шрифта, ресайз и т.п.)
-    setTimeout(() => {
-      const photo = document.querySelector("#timeline-embed img");
-      if(photo){
-        if(window.__navAlignObserver) window.__navAlignObserver.disconnect();
-        window.__navAlignObserver = new ResizeObserver(alignNavToPhoto);
-        window.__navAlignObserver.observe(photo);
-        window.__navAlignObserver.observe(document.body);
-      }
+    // фото появляется в DOM не сразу (TimelineJS вставляет его асинхронно) — ждём через MutationObserver,
+    // а не гадаем с таймером, сколько именно миллисекунд надо; ResizeObserver дальше держит подгонку в синхроне
+    const setupAlign = (photo) => {
+      if(window.__navAlignObserver) window.__navAlignObserver.disconnect();
+      window.__navAlignObserver = new ResizeObserver(alignNavToPhoto);
+      window.__navAlignObserver.observe(photo);
+      window.__navAlignObserver.observe(document.body);
+      // сама картинка может быть в DOM, но ещё без размеров (не догрузилась) — пересчитываем
+      // ещё раз по её load, и отдельно когда догрузятся веб-шрифты (они тоже сдвигают текст рядом)
+      if(photo.complete) alignNavToPhoto(); else photo.addEventListener("load", alignNavToPhoto, { once: true });
+      if(document.fonts && document.fonts.ready) document.fonts.ready.then(alignNavToPhoto);
       alignNavToPhoto();
-    }, 200);
+    };
+    const existingPhoto = document.querySelector("#timeline-embed img");
+    if(existingPhoto){
+      setupAlign(existingPhoto);
+    } else {
+      const mo = new MutationObserver(() => {
+        const photo = document.querySelector("#timeline-embed img");
+        if(photo){ mo.disconnect(); setupAlign(photo); }
+      });
+      mo.observe(document.getElementById("timeline-embed"), { childList: true, subtree: true });
+    }
   }
 }
 
