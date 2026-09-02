@@ -8,7 +8,7 @@
 <script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
 <link rel="stylesheet" href="style.css">
 <style>
-  html,body{height:100%}
+  html,body{height:100%; overflow-x:hidden}
   #timeline-embed{width:100%; height:calc(100dvh - 44px)}
   .nav-hint{
     position:fixed; right:20px; bottom:22%;
@@ -18,29 +18,53 @@
   .nav-hint.hide{opacity:0}
   /* штатная подсказка TimelineJS про свайп — путает (не переводится, стрелка не туда), прячем и оставляем свою */
   .tl-message-full{display:none !important}
+
+  /* мобильный — TimelineJS остаётся горизонтальным, просто рисуем его в "десктопном" размере
+     и визуально уменьшаем через scale, обрезая лишнее обёрткой */
+  .tl-mini-wrap{position:relative}
   @media (max-width:640px){
-    .nav-hint{right:14px; bottom:22%; font-size:11px}
+    .tl-mini-wrap{
+      width:100%; height:230px; overflow:hidden; border-bottom:1px solid var(--line);
+    }
+    #timeline-embed{
+      width:900px; height:560px;
+      transform:scale(.4); transform-origin:top left;
+    }
+    .nav-hint{
+      position:absolute; right:8px; bottom:8px; left:auto; top:auto;
+      font-size:10px; padding:4px 9px;
+    }
   }
 </style>
 </head>
 <body data-page="index">
 
-<div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
-
-<div id="timeline-embed"></div>
+<div class="tl-mini-wrap" id="tlMiniWrap">
+  <div id="timeline-embed"></div>
+  <div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
 <script>
+function escapeHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
 async function loadTimeline(){
   const { data: events, error } = await sb.from("events").select("*").order("event_year");
   if(error){ console.error(error); return; }
 
-  const tlEvents = (events || []).map(e => ({
+  const list = events || [];
+
+  // события — от пользователей, экранируем перед вставкой в HTML
+  const tlEvents = list.map(e => ({
     start_date: { year: String(e.event_year) },
     text: {
-      headline: e.title + (e.status === "confirmed" ? "" : " · не подтверждено"),
-      text: "<p>" + (e.description || "") + "</p>"
+      headline: escapeHtml(e.title) + (e.status === "confirmed" ? "" : " · не подтверждено"),
+      text: "<p>" + escapeHtml(e.description) + "</p>"
     }
   }));
 
@@ -49,7 +73,7 @@ async function loadTimeline(){
       media: { url: "photo/main.jpg", caption: "Татьяна Ивановна Хитрова", credit: "" },
       text: {
         headline: "Татьяна Ивановна Хитрова",
-        text: "<p>Сайт памяти любимого учителя Татьяны Ивановны Хитровой.</p><p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова.</p>"
+        text: "<p>Сайт памяти любимого учителя</p><p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>"
       }
     },
     events: tlEvents.length ? tlEvents : [{

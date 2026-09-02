@@ -14,6 +14,7 @@ const HEADER_HTML = `
     <a href="people.html" data-page="people">Люди</a>
     <a href="nasledie.html" data-page="nasledie">Наследие</a>
   </nav>
+  <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
   <div class="nav-right">
     <div class="add-wrap">
       <button class="add-link" id="addBtn">+ Добавить материал</button>
@@ -162,9 +163,15 @@ function initHeader(){
   whoChip.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
   document.getElementById("btnLogout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
+  // бургер — на мобильном открывает панель с "добавить материал" / "войти"
+  const burgerBtn = document.getElementById("burgerBtn");
+  const navRight = document.querySelector(".nav-right");
+  burgerBtn.addEventListener("click", e => { e.stopPropagation(); navRight.classList.toggle("open"); });
+
   document.addEventListener("click", () => {
     dropdown.classList.remove("open"); addBtn.classList.remove("open");
     whoDropdown.classList.remove("open");
+    navRight.classList.remove("open");
   });
 
   document.getElementById("inRelation").addEventListener("change", e => {

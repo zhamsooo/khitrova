@@ -54,11 +54,29 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
 .profile-card .pn{font-weight:600; font-size:13.5px; margin-bottom:5px}
 .profile-card .pr{font-size:12px; color:var(--muted); line-height:1.5}
 
+/* бургер — только на мобильном, открывает добавление/вход панелью */
+.burger-btn{
+  display:none; background:none; border:1px solid var(--line); border-radius:8px;
+  width:34px; height:34px; align-items:center; justify-content:center; cursor:pointer;
+  font-size:15px; color:var(--ink); flex:none;
+}
+.burger-btn:hover{border-color:var(--ink)}
+
 @media (max-width:640px){
-  .site-nav{padding:10px 14px; justify-content:center}
-  .site-nav .links{gap:20px}
-  /* на телефоне шапка не резиновая — прячем добавление/вход, чтобы не перегружать */
-  .nav-right{display:none}
+  .site-nav{padding:10px 14px; justify-content:space-between}
+  .site-nav .links{gap:18px}
+  .burger-btn{display:flex}
+
+  .nav-right{
+    display:none; position:absolute; top:calc(100% + 8px); right:14px;
+    background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.08); z-index:25;
+    flex-direction:column; align-items:stretch; gap:10px; padding:14px; width:230px;
+    transform:none;
+  }
+  .nav-right.open{display:flex}
+  .nav-divider{display:none}
+  .add-wrap .add-link{width:100%}
 }
 
 /* ---------- выпадающее меню (добавить материал / профиль) ---------- */
