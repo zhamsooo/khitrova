@@ -148,6 +148,16 @@ function initHeader(){
   const activeLink = document.querySelector(`.site-nav a[data-page="${page}"]`);
   if(activeLink) activeLink.classList.add("active");
 
+  // подхватываем позицию меню, посчитанную на "Линии жизни" в прошлый раз — чтобы не прыгало между страницами
+  try {
+    const saved = localStorage.getItem("navMarginLeft");
+    const linksEl = document.querySelector(".site-nav .links");
+    if(saved !== null && linksEl){
+      linksEl.style.marginLeft = saved + "px";
+      document.body.classList.add("nav-ready");
+    }
+  } catch(e){}
+
   document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", e => close_(e.target.closest(".overlay").id)));
 
   document.getElementById("btnAuth").addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
