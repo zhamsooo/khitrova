@@ -152,8 +152,31 @@ async function loadTimeline(){
         tick.appendChild(yr);
       });
     }, 300);
+  } else {
+    // на десктопе — подгоняем левый край меню точно под левый край фото (не фиксированный отступ у TimelineJS).
+    // фото появляется в DOM не сразу после new TL.Timeline(), поэтому ждём и подключаем ResizeObserver,
+    // который перевызывает подгонку при любой перекладке (загрузка шрифта, ресайз и т.п.)
+    setTimeout(() => {
+      const photo = document.querySelector("#timeline-embed img");
+      if(photo){
+        if(window.__navAlignObserver) window.__navAlignObserver.disconnect();
+        window.__navAlignObserver = new ResizeObserver(alignNavToPhoto);
+        window.__navAlignObserver.observe(photo);
+        window.__navAlignObserver.observe(document.body);
+      }
+      alignNavToPhoto();
+    }, 200);
   }
 }
+
+function alignNavToPhoto(){
+  const photo = document.querySelector("#timeline-embed img");
+  const links = document.querySelector(".site-nav .links");
+  if(!photo || !links) return;
+  const left = photo.getBoundingClientRect().left;
+  links.style.marginLeft = Math.max(0, Math.round(left) - 20) + "px"; // -20 = свой паддинг .site-nav
+}
+window.addEventListener("resize", () => { if(window.innerWidth > 640) alignNavToPhoto(); });
 
 // ---- галочка подтверждения: подсказка + действие модератора ----
 const evTip = document.getElementById("evTip");

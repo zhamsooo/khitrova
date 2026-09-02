@@ -13,11 +13,12 @@ html,body{margin:0;padding:0;min-height:100%;font-family:var(--font-body);backgr
 
 /* ---------- шапка сайта (одна на все страницы, вставляется из app.js) ---------- */
 .site-nav{
-  min-height:44px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+  min-height:44px; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start;
   padding:8px 20px; position:relative; z-index:20; background:#fff; border-bottom:1px solid var(--line);
   row-gap:8px;
 }
-.site-nav .links{display:flex; gap:32px; align-items:center}
+/* по умолчанию — как отступ страниц-заглушек; на index.html JS подгоняет точно под левый край фото */
+.site-nav .links{display:flex; gap:32px; align-items:center; margin-left:52px}
 .site-nav .links a{
   color:#999; text-decoration:none; font-size:12px; letter-spacing:.04em;
   text-transform:uppercase; padding:4px 0; border-bottom:1px solid transparent; white-space:nowrap;
@@ -69,7 +70,7 @@ html,body{margin:0;padding:0;min-height:100%;font-family:var(--font-body);backgr
 
 @media (max-width:640px){
   .site-nav{padding:10px 14px; justify-content:space-between}
-  .site-nav .links{gap:18px}
+  .site-nav .links{gap:18px; margin-left:0}
   .burger-btn{display:flex}
 
   .nav-right{
