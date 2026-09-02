@@ -21,8 +21,13 @@
 
   .tl-mini-wrap{position:relative}
   @media (max-width:640px){
-    /* фото и текст — в полный размер, сужаем только полосу с годами внизу (задаётся в JS через timenav_height_percentage) */
+    /* фото и текст — в полный размер; от полосы с годами оставляем только тонкую ось —
+       без плавающей карточки-превью и без кнопок zoom/стрелок */
     .nav-hint{right:10px; bottom:10px; font-size:10px}
+    .tl-menubar, .tl-timemarker{display:none !important}
+    #timeline-embed{height:560px; overflow:hidden}
+    /* библиотека сама зашивает inline высоту ~230px даже при маленьком проценте — форсируем меньше */
+    .tl-timenav{height:60px !important}
   }
 </style>
 </head>
@@ -76,7 +81,8 @@ async function loadTimeline(){
     language: "ru",
     start_at_end: false,
     // на телефоне фото и текст должны остаться читаемого размера — сужаем только полосу с годами
-    timenav_height_percentage: window.innerWidth <= 640 ? 9 : 20
+    // (карточка-превью и кнопки zoom/стрелки на мобильном скрыты через CSS, поэтому места нужно меньше)
+    timenav_height_percentage: window.innerWidth <= 640 ? 10 : 20
   });
 
   // подсказку прячем только когда человек реально перешёл со стартового слайда
