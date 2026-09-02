@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Татьяна Ивановна Хитрова — сайт памяти</title>
+<style>
+  :root{
+    --bg:#14161c; --ink:#eae6db; --muted:#7d8290; --line:#2b2f3a;
+    --accent:#c9a15a; --pending:#5a7fae; --panel:#1d2029;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%; overflow:hidden}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:14px/1.5 -apple-system,"SF Pro Text","Segoe UI",sans-serif;
+  }
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:10;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:16px 22px; pointer-events:none;
+  }
+  header .t{font-family:Georgia,serif; font-size:19px; letter-spacing:.02em}
+  header .sub{color:var(--muted); font-size:12px; margin-top:2px}
+  header .controls{pointer-events:auto; display:flex; gap:8px; align-items:center}
+  button{
+    background:transparent; border:1px solid var(--line); color:var(--ink);
+    padding:7px 14px; border-radius:20px; font-size:12.5px; cursor:pointer;
+    transition:border-color .15s; font-family:inherit;
+  }
+  button:hover{border-color:var(--accent)}
+  button.primary{border-color:var(--accent); color:var(--accent)}
+  button.active{border-color:var(--pending); color:var(--pending)}
+  svg{width:100vw; height:100vh; display:block}
+  .axis text{fill:var(--muted); font-size:11px}
+  .axis path, .axis line{stroke:var(--line)}
+  .spine{stroke:var(--line); stroke-width:1.5}
+  .node-confirmed circle{fill:var(--bg); stroke:var(--accent); stroke-width:1.6}
+  .node-confirmed text{fill:var(--ink); font-size:12px}
+  .node-unconfirmed circle{fill:var(--bg); stroke:var(--pending); stroke-width:1.2; stroke-dasharray:2,2}
+  .node-unconfirmed text{fill:var(--muted); font-size:11px}
+  .node .year{fill:var(--muted); font-size:10px}
+  .tip{
+    position:fixed; pointer-events:none; background:var(--panel); border:1px solid var(--line);
+    padding:8px 11px; border-radius:8px; font-size:12px; max-width:240px; opacity:0; transition:opacity .12s;
+    z-index:20;
+  }
+  footer{
+    position:fixed; bottom:0; left:0; right:0; padding:10px 22px; color:var(--muted); font-size:11px;
+    display:flex; justify-content:space-between; pointer-events:none;
+  }
+
+  /* модальные окна */
+  .overlay{
+    position:fixed; inset:0; background:rgba(10,11,14,.72); z-index:30;
+    display:none; align-items:center; justify-content:center;
+  }
+  .overlay.open{display:flex}
+  .modal{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:22px 24px; width:340px; max-width:90vw;
+  }
+  .modal h2{font-family:Georgia,serif; font-weight:400; font-size:17px; margin-bottom:14px}
+  .modal label{display:block; font-size:12px; color:var(--muted); margin:12px 0 5px}
+  .modal input, .modal select, .modal textarea{
+    width:100%; background:var(--bg); border:1px solid var(--line); color:var(--ink);
+    padding:9px 10px; border-radius:8px; font:inherit; font-size:13px;
+  }
+  .modal textarea{resize:vertical; min-height:60px}
+  .modal .row-actions{display:flex; justify-content:space-between; align-items:center; margin-top:18px}
+  .modal .hint{font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.4}
+  .modal .err{color:#c96060; font-size:12px; margin-top:8px; display:none}
+  .modal .close{background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; position:absolute; top:14px; right:16px}
+  .modal{position:relative}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="t">Татьяна Ивановна Хитрова</div>
+    <div class="sub">линия жизни · пунктир — ждёт подтверждения · тяни / крути колесо</div>
+  </div>
+  <div class="controls">
+    <span id="whoami" style="display:none; color:var(--muted); font-size:12.5px; padding-right:4px"></span>
+    <button id="btnAdd" class="primary" style="display:none">+ Добавить событие</button>
+    <button id="btnAuth">Войти</button>
+  </div>
+</header>
+
+<svg></svg>
+<div class="tip"></div>
+
+<footer>
+  <span>таймлайн живёт в общей базе — добавленное видно после подтверждения модератором</span>
+  <span id="count"></span>
+</footer>
+
+<!-- Модалка входа: email -> код -> (для новых) профиль -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+
+    <div id="stepEmail">
+      <h2>Войти / зарегистрироваться</h2>
+      <label>Email</label>
+      <input type="email" id="inEmail" placeholder="you@example.com" autocomplete="email">
+      <div class="hint">На почту придёт код подтверждения. Если ты здесь впервые — дальше попросим представиться.</div>
+      <div class="err" id="errEmail"></div>
+      <div class="row-actions">
+        <span></span>
+        <button class="primary" id="btnSendCode">Получить код</button>
+      </div>
+    </div>
+
+    <div id="stepCode" style="display:none">
+      <h2>Код из письма</h2>
+      <label>6 цифр</label>
+      <input type="text" id="inCode" inputmode="numeric" maxlength="6" placeholder="000000">
+      <div class="err" id="errCode"></div>
+      <div class="row-actions">
+        <span></span>
+        <button class="primary" id="btnVerifyCode">Подтвердить</button>
+      </div>
+    </div>
+
+    <div id="stepProfile" style="display:none">
+      <h2>Представься</h2>
+      <label>Имя и фамилия</label>
+      <input type="text" id="inName" placeholder="Имя Фамилия">
+      <label>Кем приходишься Т.И.?</label>
+      <select id="inRelation">
+        <option value="ученик">Ученик(ца)</option>
+        <option value="коллега">Коллега</option>
+        <option value="другое">Другое</option>
+      </select>
+      <div id="gradYearWrap">
+        <label>Год выпуска</label>
+        <input type="number" id="inGradYear" placeholder="например, 1998" min="1955" max="2026">
+      </div>
+      <div class="err" id="errProfile"></div>
+      <div class="row-actions">
+        <span></span>
+        <button class="primary" id="btnSaveProfile">Готово</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка добавления события -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+    <h2>Добавить событие на таймлайн</h2>
+    <label>Год</label>
+    <input type="number" id="evYear" placeholder="например, 1962" min="1940" max="2026">
+    <label>Что произошло</label>
+    <input type="text" id="evTitle" placeholder="Короткое название события">
+    <label>Подробности (необязательно)</label>
+    <textarea id="evDesc" placeholder="Пара предложений — что было, откуда знаешь"></textarea>
+    <div class="err" id="errEvent"></div>
+    <div class="hint">Появится на таймлайне пунктиром сразу, а сплошной линией — после проверки модератором.</div>
+    <div class="row-actions">
+      <span></span>
+      <button class="primary" id="btnSubmitEvent">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+// ---- Supabase ----
+const SUPABASE_URL = "https://vvcxnqqyuvakrcmkmhjq.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SMTkWj9fHPpUG3e9arN3tg_knlaKKfp";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let pendingEmail = null;
+let pendingProfile = null; // {full_name, relation_type, study_end} собранные перед отправкой кода
+
+// ---- вспомогательные для модалок ----
+function open(id){ document.getElementById(id).classList.add("open"); }
+function close(id){ document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", e => {
+  close(e.target.closest(".overlay").id);
+}));
+
+function resetAuthModal(){
+  document.getElementById("stepEmail").style.display = "block";
+  document.getElementById("stepCode").style.display = "none";
+  document.getElementById("stepProfile").style.display = "none";
+  document.getElementById("errEmail").style.display = "none";
+  document.getElementById("errCode").style.display = "none";
+  document.getElementById("errProfile").style.display = "none";
+}
+
+document.getElementById("btnAuth").addEventListener("click", () => { resetAuthModal(); open("authOverlay"); });
+document.getElementById("btnAdd").addEventListener("click", () => open("addOverlay"));
+
+document.getElementById("inRelation").addEventListener("change", e => {
+  document.getElementById("gradYearWrap").style.display = e.target.value === "ученик" ? "block" : "none";
+});
+
+// ---- шаг 1: email -> запрашиваем профиль сразу, потом отправляем код ----
+document.getElementById("btnSendCode").addEventListener("click", async () => {
+  const email = document.getElementById("inEmail").value.trim();
+  const errEl = document.getElementById("errEmail");
+  if(!email || !email.includes("@")){
+    errEl.textContent = "Введи нормальный email"; errEl.style.display = "block"; return;
+  }
+  errEl.style.display = "none";
+  pendingEmail = email;
+  const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+  if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+  document.getElementById("stepEmail").style.display = "none";
+  document.getElementById("stepCode").style.display = "block";
+});
+
+// ---- шаг 2: код ----
+document.getElementById("btnVerifyCode").addEventListener("click", async () => {
+  const token = document.getElementById("inCode").value.trim();
+  const errEl = document.getElementById("errCode");
+  const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: "email" });
+  if(error){ errEl.textContent = "Неверный или устаревший код"; errEl.style.display = "block"; return; }
+  currentUser = data.user;
+
+  // есть ли уже профиль?
+  const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
+  if(profile){
+    close("authOverlay");
+    onLoggedIn(profile);
+  } else {
+    document.getElementById("stepCode").style.display = "none";
+    document.getElementById("stepProfile").style.display = "block";
+  }
+});
+
+// ---- шаг 3 (только для новых): сохранить профиль ----
+document.getElementById("btnSaveProfile").addEventListener("click", async () => {
+  const full_name = document.getElementById("inName").value.trim();
+  const relation_type = document.getElementById("inRelation").value;
+  const gradRaw = document.getElementById("inGradYear").value;
+  const study_end = relation_type === "ученик" && gradRaw ? parseInt(gradRaw, 10) : null;
+  const errEl = document.getElementById("errProfile");
+  if(!full_name){ errEl.textContent = "Укажи имя и фамилию"; errEl.style.display = "block"; return; }
+
+  const { data: profile, error } = await sb.from("profiles")
+    .insert({ id: currentUser.id, full_name, relation_type, study_end })
+    .select().single();
+  if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+  close("authOverlay");
+  onLoggedIn(profile);
+});
+
+function onLoggedIn(profile){
+  document.getElementById("whoami").textContent = profile.full_name;
+  document.getElementById("whoami").style.display = "inline";
+  document.getElementById("btnAuth").style.display = "none";
+  document.getElementById("btnAdd").style.display = "inline-block";
+}
+
+// ---- добавление события ----
+document.getElementById("btnSubmitEvent").addEventListener("click", async () => {
+  const event_year = parseInt(document.getElementById("evYear").value, 10);
+  const title = document.getElementById("evTitle").value.trim();
+  const description = document.getElementById("evDesc").value.trim();
+  const errEl = document.getElementById("errEvent");
+  if(!event_year || !title){
+    errEl.textContent = "Заполни год и название"; errEl.style.display = "block"; return;
+  }
+  errEl.style.display = "none";
+  const { error } = await sb.from("events").insert({
+    event_year, title, description, created_by: currentUser.id
+  });
+  if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+  close("addOverlay");
+  document.getElementById("evYear").value = "";
+  document.getElementById("evTitle").value = "";
+  document.getElementById("evDesc").value = "";
+  loadTimeline();
+});
+
+// ---- восстановление сессии при перезагрузке ----
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session && session.user){
+    currentUser = session.user;
+    const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
+    if(profile) onLoggedIn(profile);
+  }
+});
+
+// ---- таймлайн (D3 force-layout по годам) ----
+const svg = d3.select("svg");
+const g = svg.append("g");
+const tip = d3.select(".tip");
+let sim, xScale, spine, axis;
+
+function dims(){
+  return [
+    document.documentElement.clientWidth || window.innerWidth,
+    document.documentElement.clientHeight || window.innerHeight
+  ];
+}
+
+async function loadTimeline(){
+  const { data: events, error } = await sb.from("events").select("*").order("event_year");
+  if(error){ console.error(error); return; }
+
+  g.selectAll("*").remove();
+  let [W, H] = dims();
+  const minYear = events.length ? Math.min(1940, ...events.map(e => e.event_year)) : 1940;
+  const maxYear = events.length ? Math.max(2025, ...events.map(e => e.event_year)) : 2025;
+  xScale = d3.scaleLinear().domain([minYear, maxYear]).range([80, Math.max(W * 1.6, (maxYear - minYear) * 26)]);
+
+  spine = g.append("line").attr("class", "spine")
+    .attr("x1", xScale(minYear)).attr("x2", xScale(maxYear))
+    .attr("y1", H/2).attr("y2", H/2);
+
+  axis = g.append("g").attr("class", "axis").attr("transform", `translate(0,${H-40})`)
+    .call(d3.axisBottom(xScale).ticks(Math.min(20, maxYear-minYear)).tickFormat(d3.format("d")));
+
+  const nodes = events.map(e => ({ ...e, y: H/2 + (Math.random()-0.5)*10 }));
+
+  const nodeSel = g.append("g").selectAll("g")
+    .data(nodes).join("g")
+    .attr("class", d => "node " + (d.status === "confirmed" ? "node-confirmed" : "node-unconfirmed"))
+    .call(d3.drag()
+      .on("start", (e,d) => { if(!e.active) sim.alphaTarget(0.2).restart(); d.fy = d.y; })
+      .on("drag", (e,d) => { d.fy = e.y; })
+      .on("end", (e,d) => { if(!e.active) sim.alphaTarget(0); d.fy = null; }));
+
+  nodeSel.append("circle").attr("r", 7);
+  nodeSel.append("text").attr("y", -13).attr("text-anchor", "middle").text(d => d.title);
+  nodeSel.append("text").attr("class", "year").attr("y", 20).attr("text-anchor", "middle").text(d => d.event_year);
+
+  nodeSel.on("mouseenter", (e,d) => {
+      tip.style("opacity",1)
+        .html(`<b>${d.title}</b><br>${d.event_year} · ${d.status === "confirmed" ? "подтверждено" : "ждёт проверки"}${d.description ? "<br>" + d.description : ""}`)
+        .style("left", (e.clientX+14)+"px").style("top",(e.clientY-10)+"px");
+    })
+    .on("mousemove", e => tip.style("left",(e.clientX+14)+"px").style("top",(e.clientY-10)+"px"))
+    .on("mouseleave", () => tip.style("opacity",0));
+
+  sim = d3.forceSimulation(nodes)
+    .force("collide", d3.forceCollide(24))
+    .force("y", d3.forceY(() => H/2).strength(0.06))
+    .on("tick", () => {
+      nodes.forEach(d => { d.x = xScale(d.event_year); });
+      nodeSel.attr("transform", d => `translate(${d.x},${d.y})`);
+    });
+
+  const zoom = d3.zoom().scaleExtent([0.4, 3]).on("zoom", e => g.attr("transform", e.transform));
+  svg.call(zoom);
+
+  document.getElementById("count").textContent =
+    `${events.length} событий · ${events.filter(e=>e.status==='confirmed').length} подтверждено`;
+}
+
+window.addEventListener("resize", () => loadTimeline());
+loadTimeline();
+</script>
+</body>
+</html>
