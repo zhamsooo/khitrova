@@ -40,7 +40,7 @@
     margin-left:7px; cursor:pointer; vertical-align:middle; border:1.5px solid var(--muted); color:var(--muted);
     font-size:11px; line-height:1; background:#fff;
   }
-  .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(61,122,82,.08)}
+  .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(51,84,122,.08)}
 
   .ev-tip{
     display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:10px;
@@ -83,6 +83,7 @@ function formatDate(iso){
   return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
 }
 function badgeHtml(e){
+  if(e.verification_hidden) return ""; // для очевидных фактов (дата рождения и т.п.) — галочку можно скрыть вручную в базе
   const confirmed = e.status === "confirmed";
   return `<span class="ev-badge${confirmed ? " confirmed" : ""}"` +
     ` data-id="${escapeAttr(e.id)}" data-status="${escapeAttr(e.status)}"` +
@@ -102,7 +103,7 @@ async function loadTimeline(){
     start_date: { year: String(e.event_year) },
     text: {
       headline: escapeHtml(e.title) + (e.status === "confirmed" ? "" : " · не подтверждено"),
-      text: "<p>" + escapeHtml(e.description) + "</p>" + badgeHtml(e)
+      text: "<p>" + escapeHtml(e.description) + badgeHtml(e) + "</p>"
     }
   }));
 
@@ -192,13 +193,27 @@ function showBadgeTip(badge){
   evTip.classList.add("open");
 }
 
+let tipHideTimer = null;
+function cancelHideTip(){ clearTimeout(tipHideTimer); }
+function scheduleHideTip(){
+  clearTimeout(tipHideTimer);
+  tipHideTimer = setTimeout(() => evTip.classList.remove("open"), 180);
+}
+
 document.getElementById("timeline-embed").addEventListener("mouseover", e => {
   const badge = e.target.closest(".ev-badge");
-  if(badge) showBadgeTip(badge);
+  if(badge){ cancelHideTip(); showBadgeTip(badge); }
 });
+document.getElementById("timeline-embed").addEventListener("mouseout", e => {
+  const badge = e.target.closest(".ev-badge");
+  if(badge) scheduleHideTip();
+});
+evTip.addEventListener("mouseover", cancelHideTip);
+evTip.addEventListener("mouseout", scheduleHideTip);
+
 document.getElementById("timeline-embed").addEventListener("click", e => {
   const badge = e.target.closest(".ev-badge");
-  if(badge){ e.stopPropagation(); showBadgeTip(badge); }
+  if(badge){ e.stopPropagation(); cancelHideTip(); showBadgeTip(badge); }
 });
 document.addEventListener("click", e => {
   if(!e.target.closest(".ev-tip") && !e.target.closest(".ev-badge")) evTip.classList.remove("open");
