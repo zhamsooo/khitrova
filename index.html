@@ -17,13 +17,14 @@
     border-radius:20px; z-index:15; opacity:1; transition:opacity .8s ease; pointer-events:none;
   }
   .nav-hint.hide{opacity:0}
-  .nav-hint .hi{
-    display:inline-block; width:6px; height:6px; border-radius:50%; background:#000; flex:none;
-    animation:navHintBounce 1s ease-in-out infinite;
+  .nav-hint .arrows{
+    font-weight:700; font-size:13px; color:var(--ink); padding-bottom:2px;
+    border-bottom:2px solid var(--ink);
+    animation:navHintUnderline 2.6s ease-in-out infinite;
   }
-  @keyframes navHintBounce{
-    0%, 100% { transform:translateY(0); }
-    50% { transform:translateY(-7px); }
+  @keyframes navHintUnderline{
+    0%, 100% { opacity:.35; }
+    50% { opacity:1; }
   }
   .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
   .tl-timeaxis-minor{display:none !important} /* лишняя мелкая шкала (1931, 1933…) поверх основной — не нужна */
@@ -74,7 +75,7 @@
 <body data-page="index">
 
 <div id="timeline-embed"></div>
-<div class="nav-hint" id="navHint"><span class="hi"></span> Стрелки ← → на клавиатуре или клик по краям экрана</div>
+<div class="nav-hint" id="navHint">Используйте <span class="arrows">← →</span> на клавиатуре</div>
 
 <div class="ev-tip" id="evTip">
   <div id="evTipBody"></div>
