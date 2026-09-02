@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Модерация — сайт памяти Т.И. Хитровой</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .mod-wrap{max-width:640px; margin:0 auto; padding:40px 24px 60px}
+  .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:24px; margin:0 0 6px}
+  .mod-wrap .sub{color:var(--muted); font-size:13.5px; margin-bottom:28px}
+
+  .mod-state{padding:60px 24px; text-align:center; color:var(--muted); font-size:14px}
+
+  .mod-card{border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; background:#fff}
+  .mod-card .yr{font-family:var(--font-head); font-weight:700; font-size:15px; color:var(--accent)}
+  .mod-card .ti{font-weight:600; font-size:15px; margin:4px 0 6px}
+  .mod-card .de{font-size:13.5px; color:var(--ink); line-height:1.5; margin-bottom:8px}
+  .mod-card .meta{font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.6}
+  .mod-card .meta a{color:var(--accent)}
+  .mod-card textarea{
+    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
+    padding:8px 10px; border-radius:8px; font:inherit; font-size:13px; min-height:50px; resize:vertical; margin-bottom:10px;
+  }
+  .mod-card .row{display:flex; gap:10px}
+  .mod-card button{
+    flex:1; border:none; border-radius:8px; padding:9px 0; font-size:13px; cursor:pointer;
+    font-family:var(--font-head); font-weight:700;
+  }
+  .mod-card .btn-confirm{background:var(--confirmed); color:#fff}
+  .mod-card .btn-reject{background:#fff; border:1px solid #b0413e; color:#b0413e}
+  .mod-card .err{color:#b0413e; font-size:12px; margin-top:6px; display:none}
+</style>
+</head>
+<body data-page="moderation">
+
+<div class="mod-wrap">
+  <h1>Модерация</h1>
+  <div class="sub">События, предложенные на таймлайн, — подтвердите или отклоните.</div>
+  <div id="modContent"><div class="mod-state">Проверяем доступ…</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<script>
+function escapeHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+function formatDate(iso){
+  if(!iso) return "";
+  return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
+}
+
+async function initModeration(){
+  const content = document.getElementById("modContent");
+
+  if(!currentUser){
+    content.innerHTML = `<div class="mod-state">Эта страница только для модераторов. <a href="#" onclick="document.getElementById('btnAuth').click(); return false;" style="color:var(--accent)">Войдите</a>, чтобы проверить доступ.</div>`;
+    return;
+  }
+  if(!myProfile || !myProfile.is_moderator){
+    content.innerHTML = `<div class="mod-state">Эта страница только для модераторов.</div>`;
+    return;
+  }
+
+  const { data, error } = await sb.from("events").select("*").eq("status", "unconfirmed").order("created_at");
+  if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+
+  if(!data || !data.length){
+    content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
+    return;
+  }
+
+  content.innerHTML = data.map(e => `
+    <div class="mod-card" data-id="${e.id}">
+      <div class="yr">${e.event_year}</div>
+      <div class="ti">${escapeHtml(e.title)}</div>
+      ${e.description ? `<div class="de">${escapeHtml(e.description)}</div>` : ""}
+      <div class="meta">
+        Добавил(а): <b>${escapeHtml(e.created_by_name || "неизвестно")}</b> · ${formatDate(e.created_at)}
+        ${e.source ? `<br>Источник: ${/^https?:\/\//.test(e.source) ? `<a href="${escapeHtml(e.source)}" target="_blank" rel="noopener">${escapeHtml(e.source)}</a>` : escapeHtml(e.source)}` : ""}
+      </div>
+      <textarea placeholder="Заметка (необязательно) — увидит автор, особенно полезно при отклонении"></textarea>
+      <div class="row">
+        <button class="btn-confirm">Подтвердить</button>
+        <button class="btn-reject">Отклонить</button>
+      </div>
+      <div class="err"></div>
+    </div>
+  `).join("");
+
+  content.querySelectorAll(".mod-card").forEach(card => {
+    const id = card.dataset.id;
+    const note = card.querySelector("textarea");
+    const errEl = card.querySelector(".err");
+
+    async function moderate(status){
+      const { error } = await sb.from("events").update({
+        status,
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: note.value.trim() || null
+      }).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+      card.remove();
+      if(!document.querySelectorAll(".mod-card").length){
+        content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
+      }
+    }
+
+    card.querySelector(".btn-confirm").addEventListener("click", () => moderate("confirmed"));
+    card.querySelector(".btn-reject").addEventListener("click", () => moderate("rejected"));
+  });
+}
+
+// профиль подгружается асинхронно — ждём настоящего сигнала готовности от app.js, не таймера
+window.addEventListener("authReady", initModeration, { once: true });
+</script>
+</body>
+</html>

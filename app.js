@@ -38,6 +38,7 @@ const HEADER_HTML = `
       </button>
       <div class="dropdown" id="whoDropdown">
         <div class="profile-card" id="profileCard"></div>
+        <a class="opt" id="modLink" href="moderation.html" style="display:none"><div class="t">Модерация</div></a>
         <button class="opt" id="btnLogout"><div class="t">Выйти</div></button>
       </div>
     </div>
@@ -138,6 +139,8 @@ function onLoggedIn(profile){
   if(profile.relation_type === "ученик" && profile.study_end) rows += ` · выпуск ${profile.study_end}`;
   rows += `</div>`;
   document.getElementById("profileCard").innerHTML = rows;
+
+  if(profile.is_moderator) document.getElementById("modLink").style.display = "block";
 }
 
 function initHeader(){
@@ -296,6 +299,8 @@ function initHeader(){
       const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
       if(profile) onLoggedIn(profile);
     }
+    // сигнал для других страниц (например moderation.html) — авторизация проверена, можно смотреть currentUser/myProfile
+    window.dispatchEvent(new Event("authReady"));
   });
 }
 

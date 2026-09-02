@@ -54,6 +54,7 @@
     font-size:11px; line-height:1; background:#fff;
   }
   .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(51,84,122,.08)}
+  .ev-badge.rejected{border-color:#b0413e; color:#b0413e; background:rgba(176,65,62,.08)}
 
   .ev-tip{
     display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:10px;
@@ -97,12 +98,12 @@ function formatDate(iso){
 }
 function badgeHtml(e){
   if(e.verification_hidden) return ""; // для очевидных фактов (дата рождения и т.п.) — галочку можно скрыть вручную в базе
-  const confirmed = e.status === "confirmed";
-  return `<span class="ev-badge${confirmed ? " confirmed" : ""}"` +
+  return `<span class="ev-badge ${escapeAttr(e.status)}"` +
     ` data-id="${escapeAttr(e.id)}" data-status="${escapeAttr(e.status)}"` +
     ` data-created-name="${escapeAttr(e.created_by_name || "")}" data-created-at="${escapeAttr(formatDate(e.created_at))}"` +
-    ` data-confirmed-name="${escapeAttr(e.confirmed_by_name || "")}" data-confirmed-at="${escapeAttr(formatDate(e.confirmed_at))}"` +
-    ` data-source="${escapeAttr(e.source || "")}">✓</span>`;
+    ` data-moderated-name="${escapeAttr(e.moderated_by_name || "")}" data-moderated-at="${escapeAttr(formatDate(e.moderated_at))}"` +
+    ` data-note="${escapeAttr(e.moderator_note || "")}"` +
+    ` data-source="${escapeAttr(e.source || "")}">${e.status === "rejected" ? "✕" : "✓"}</span>`;
 }
 
 async function loadTimeline(){
@@ -214,15 +215,21 @@ function showBadgeTip(badge){
   const status = badge.dataset.status;
   const createdName = badge.dataset.createdName;
   const createdAt = badge.dataset.createdAt;
-  const confirmedName = badge.dataset.confirmedName;
-  const confirmedAt = badge.dataset.confirmedAt;
+  const modName = badge.dataset.moderatedName;
+  const modAt = badge.dataset.moderatedAt;
+  const note = badge.dataset.note;
   const source = badge.dataset.source;
 
   let html = `<div class="et-row">${createdName ? `Добавил(а): <b>${createdName}</b>` : "Добавлено модератором"}${createdAt ? " · " + createdAt : ""}</div>`;
   if(status === "confirmed"){
-    html += `<div class="et-row">Подтвердил(а): <b>${confirmedName || "модератор"}</b>${confirmedAt ? " · " + confirmedAt : ""}</div>`;
+    html += `<div class="et-row">Подтвердил(а): <b>${modName || "модератор"}</b>${modAt ? " · " + modAt : ""}</div>`;
+  } else if(status === "rejected"){
+    html += `<div class="et-row" style="color:#b0413e">Отклонено${modName ? " — " + modName : ""}${modAt ? " · " + modAt : ""}</div>`;
   } else {
     html += `<div class="et-row" style="color:var(--muted)">Ждёт подтверждения</div>`;
+  }
+  if(note){
+    html += `<div class="et-row">Заметка модератора: ${escapeHtml(note)}</div>`;
   }
   if(source){
     const isUrl = /^https?:\/\//.test(source);
@@ -275,9 +282,9 @@ document.getElementById("etConfirmBtn").addEventListener("click", async () => {
   const id = document.getElementById("etConfirmBtn").dataset.id;
   const { error } = await sb.from("events").update({
     status: "confirmed",
-    confirmed_by: currentUser.id,
-    confirmed_by_name: myProfile.full_name,
-    confirmed_at: new Date().toISOString()
+    moderated_by: currentUser.id,
+    moderated_by_name: myProfile.full_name,
+    moderated_at: new Date().toISOString()
   }).eq("id", id);
   if(error){ alert("Не получилось подтвердить: " + error.message); return; }
   evTip.classList.remove("open");
