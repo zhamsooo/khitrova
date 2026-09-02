@@ -25,9 +25,9 @@
        без плавающей карточки-превью и без кнопок zoom/стрелок */
     .nav-hint{right:10px; bottom:10px; font-size:10px}
     .tl-menubar, .tl-timemarker{display:none !important}
-    #timeline-embed{height:560px; overflow:hidden}
-    /* библиотека сама зашивает inline высоту ~230px даже при маленьком проценте — форсируем меньше */
-    .tl-timenav{height:60px !important}
+    #timeline-embed{height:480px; overflow:hidden}
+    /* библиотека зашивает inline-высоту полосы ~230px и её внутреннему слайдеру — режем оба, с overflow:hidden */
+    .tl-timenav, .tl-timenav-slider{height:64px !important; overflow:hidden !important}
   }
 </style>
 </head>
