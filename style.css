@@ -56,8 +56,9 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
 
 @media (max-width:640px){
   .site-nav{padding:10px 14px; justify-content:center}
-  .site-nav .links{order:1; width:100%; justify-content:center; gap:20px}
-  .nav-right{position:static; transform:none; order:2; width:100%; justify-content:center; margin-top:2px}
+  .site-nav .links{gap:20px}
+  /* на телефоне шапка не резиновая — прячем добавление/вход, чтобы не перегружать */
+  .nav-right{display:none}
 }
 
 /* ---------- выпадающее меню (добавить материал / профиль) ---------- */
@@ -87,7 +88,14 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
   padding:9px 10px; border-radius:8px; font:inherit; font-size:13px;
 }
 .modal textarea{resize:vertical; min-height:60px}
-.modal .row-actions{display:flex; justify-content:flex-end; margin-top:18px}
+.modal .row-actions{display:flex; justify-content:flex-end; align-items:center; margin-top:18px}
+.modal .row-actions.split{justify-content:space-between}
+.modal .linkgroup{display:flex; gap:14px}
+.modal button.linklike{
+  background:none; border:none; color:var(--muted); font-size:11.5px; cursor:pointer;
+  font-family:inherit; padding:0; text-decoration:underline;
+}
+.modal button.linklike:hover{color:var(--ink)}
 .modal .hint{font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.4}
 .modal .err{color:#b0413e; font-size:12px; margin-top:8px; display:none}
 .modal button.primary{

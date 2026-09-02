@@ -52,22 +52,29 @@ const MODALS_HTML = `
       <h2>Войти / зарегистрироваться</h2>
       <label>Email</label>
       <input type="email" id="inEmail" placeholder="you@example.com" autocomplete="email">
-      <div class="hint">На почту придёт код подтверждения. Если ты здесь впервые — дальше попросим представиться.</div>
+      <div class="hint">На почту придёт код из 8 цифр. Если вы здесь впервые — дальше попросим представиться.</div>
       <div class="err" id="errEmail"></div>
       <div class="row-actions"><button class="primary" id="btnSendCode">Получить код</button></div>
     </div>
     <div id="stepCode" style="display:none">
       <h2>Код из письма</h2>
-      <label>Код из письма</label>
-      <input type="text" id="inCode" inputmode="numeric" maxlength="12" placeholder="12345678">
+      <div class="hint" id="codeSentTo"></div>
+      <label>Код (8 цифр)</label>
+      <input type="text" id="inCode" inputmode="numeric" maxlength="8" placeholder="12345678">
       <div class="err" id="errCode"></div>
-      <div class="row-actions"><button class="primary" id="btnVerifyCode">Подтвердить</button></div>
+      <div class="row-actions split">
+        <span class="linkgroup">
+          <button type="button" class="linklike" id="btnChangeEmail">Другой email</button>
+          <button type="button" class="linklike" id="btnResendCode">Отправить снова</button>
+        </span>
+        <button class="primary" id="btnVerifyCode">Подтвердить</button>
+      </div>
     </div>
     <div id="stepProfile" style="display:none">
-      <h2>Представься</h2>
+      <h2>Представьтесь</h2>
       <label>Имя и фамилия</label>
       <input type="text" id="inName" placeholder="Имя Фамилия">
-      <label>Кем приходишься Т.И.?</label>
+      <label>Кем вы приходитесь Т.И.?</label>
       <select id="inRelation">
         <option value="ученик">Ученик(ца)</option>
         <option value="коллега">Коллега</option>
@@ -92,7 +99,7 @@ const MODALS_HTML = `
     <label>Что произошло</label>
     <input type="text" id="evTitle" placeholder="Короткое название события">
     <label>Подробности (необязательно)</label>
-    <textarea id="evDesc" placeholder="Пара предложений — что было, откуда знаешь"></textarea>
+    <textarea id="evDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
     <div class="err" id="errEvent"></div>
     <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
     <div class="row-actions"><button class="primary" id="btnSubmitEvent">Отправить</button></div>
@@ -164,18 +171,50 @@ function initHeader(){
     document.getElementById("gradYearWrap").style.display = e.target.value === "ученик" ? "block" : "none";
   });
 
+  // только цифры в поле кода
+  document.getElementById("inCode").addEventListener("input", e => {
+    e.target.value = e.target.value.replace(/\D/g, "");
+  });
+
   let pendingEmail = null;
+
+  async function sendCode(){
+    const errEl = document.getElementById("errEmail");
+    errEl.style.display = "none";
+    const { error } = await sb.auth.signInWithOtp({ email: pendingEmail, options: { shouldCreateUser: true } });
+    if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return false; }
+    return true;
+  }
 
   document.getElementById("btnSendCode").addEventListener("click", async () => {
     const email = document.getElementById("inEmail").value.trim();
     const errEl = document.getElementById("errEmail");
-    if(!email || !email.includes("@")){ errEl.textContent = "Введи нормальный email"; errEl.style.display = "block"; return; }
-    errEl.style.display = "none";
+    if(!email || !email.includes("@")){ errEl.textContent = "Введите email"; errEl.style.display = "block"; return; }
     pendingEmail = email;
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-    if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+    const ok = await sendCode();
+    if(!ok) return;
+    document.getElementById("codeSentTo").innerHTML = `Код отправлен на <b>${pendingEmail}</b>`;
     document.getElementById("stepEmail").style.display = "none";
     document.getElementById("stepCode").style.display = "block";
+  });
+
+  document.getElementById("btnChangeEmail").addEventListener("click", () => {
+    document.getElementById("errCode").style.display = "none";
+    document.getElementById("stepCode").style.display = "none";
+    document.getElementById("stepEmail").style.display = "block";
+  });
+
+  document.getElementById("btnResendCode").addEventListener("click", async () => {
+    const errEl = document.getElementById("errCode");
+    const ok = await sendCode();
+    if(!ok){
+      const emailErr = document.getElementById("errEmail");
+      errEl.textContent = emailErr.textContent;
+      errEl.style.display = "block";
+      return;
+    }
+    errEl.style.display = "none";
+    document.getElementById("codeSentTo").innerHTML = `Код отправлен повторно на <b>${pendingEmail}</b>`;
   });
 
   document.getElementById("btnVerifyCode").addEventListener("click", async () => {
@@ -198,7 +237,7 @@ function initHeader(){
     const gradRaw = document.getElementById("inGradYear").value;
     const study_end = relation_type === "ученик" && gradRaw ? parseInt(gradRaw, 10) : null;
     const errEl = document.getElementById("errProfile");
-    if(!full_name){ errEl.textContent = "Укажи имя и фамилию"; errEl.style.display = "block"; return; }
+    if(!full_name){ errEl.textContent = "Укажите имя и фамилию"; errEl.style.display = "block"; return; }
     const { data: profile, error } = await sb.from("profiles").insert({ id: currentUser.id, full_name, relation_type, study_end }).select().single();
     if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
     close_("authOverlay");
@@ -210,7 +249,7 @@ function initHeader(){
     const title = document.getElementById("evTitle").value.trim();
     const description = document.getElementById("evDesc").value.trim();
     const errEl = document.getElementById("errEvent");
-    if(!event_year || !title){ errEl.textContent = "Заполни год и название"; errEl.style.display = "block"; return; }
+    if(!event_year || !title){ errEl.textContent = "Заполните год и название"; errEl.style.display = "block"; return; }
     errEl.style.display = "none";
     const { error } = await sb.from("events").insert({ event_year, title, description, created_by: currentUser.id });
     if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
