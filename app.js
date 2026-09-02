@@ -148,13 +148,18 @@ function initHeader(){
   const activeLink = document.querySelector(`.site-nav a[data-page="${page}"]`);
   if(activeLink) activeLink.classList.add("active");
 
-  // подхватываем позицию меню, посчитанную на "Линии жизни" в прошлый раз — чтобы не прыгало между страницами
+  // подхватываем позицию меню, посчитанную на "Линии жизни" в прошлый раз — чтобы не прыгало между страницами.
+  // тот же отступ применяем к блоку страниц-заглушек (Люди/Наследие), чтобы всё стояло в одну сетку
   try {
     const saved = localStorage.getItem("navMarginLeft");
     const linksEl = document.querySelector(".site-nav .links");
     if(saved !== null && linksEl){
       linksEl.style.marginLeft = saved + "px";
       document.body.classList.add("nav-ready");
+      if(window.innerWidth > 640){
+        const stubEl = document.querySelector(".stub");
+        if(stubEl) stubEl.style.paddingLeft = (20 + parseInt(saved, 10)) + "px"; // 20 = свой паддинг .site-nav
+      }
     }
   } catch(e){}
 
