@@ -18,10 +18,13 @@
     box-shadow:0 8px 22px rgba(0,0,0,.22);
   }
   .nav-hint.hide{opacity:0}
-  .nav-hint .hi{display:inline-block; font-size:16px; animation:navHintNudge 1.3s ease-in-out infinite}
-  @keyframes navHintNudge{
-    0%, 100% { transform:translateX(0); }
-    50% { transform:translateX(6px); }
+  .nav-hint .hi{
+    display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--accent); flex:none;
+    animation:navHintBounce 1s ease-in-out infinite;
+  }
+  @keyframes navHintBounce{
+    0%, 100% { transform:translateY(0); }
+    50% { transform:translateY(-7px); }
   }
   .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
   .tl-timeaxis-minor{display:none !important} /* лишняя мелкая шкала (1931, 1933…) поверх основной — не нужна */
@@ -72,7 +75,7 @@
 <body data-page="index">
 
 <div id="timeline-embed"></div>
-<div class="nav-hint" id="navHint"><span class="hi">👉</span> Нажимайте по краям экрана, чтобы смотреть дальше</div>
+<div class="nav-hint" id="navHint"><span class="hi"></span> Стрелки ← → на клавиатуре или клик по краям экрана</div>
 
 <div class="ev-tip" id="evTip">
   <div id="evTipBody"></div>
