@@ -13,8 +13,8 @@ html,body{margin:0;padding:0;min-height:100%;font-family:var(--font-body);backgr
 
 /* ---------- шапка сайта (одна на все страницы, вставляется из app.js) ---------- */
 .site-nav{
-  min-height:44px; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start;
-  padding:8px 20px; position:relative; z-index:20; background:#fff; border-bottom:1px solid var(--line);
+  min-height:52px; display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-start;
+  padding:13px 20px; position:relative; z-index:20; background:#fff; border-bottom:1px solid var(--line);
   row-gap:8px;
 }
 /* по умолчанию — как отступ страниц-заглушек; на index.html JS подгоняет точно под левый край фото */
@@ -130,7 +130,7 @@ html,body{margin:0;padding:0;min-height:100%;font-family:var(--font-body);backgr
 
 /* ---------- страницы-заглушки (швейцарская сетка: левый край, крупный отступ) ---------- */
 .stub{
-  min-height:calc(100dvh - 44px);
+  min-height:calc(100dvh - 52px);
   display:flex; flex-direction:column; justify-content:center;
   padding:8vh 24px 10vh 72px;
 }
