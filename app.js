@@ -101,6 +101,8 @@ const MODALS_HTML = `
     <input type="text" id="evTitle" placeholder="Короткое название события">
     <label>Подробности (необязательно)</label>
     <textarea id="evDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+    <label>Источник / ссылка (необязательно)</label>
+    <input type="text" id="evSource" placeholder="Фото афиши, ссылка на статью и т.п.">
     <div class="err" id="errEvent"></div>
     <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
     <div class="row-actions"><button class="primary" id="btnSubmitEvent">Отправить</button></div>
@@ -109,6 +111,7 @@ const MODALS_HTML = `
 `;
 
 let currentUser = null;
+let myProfile = null;
 
 function open_(id){ document.getElementById(id).classList.add("open"); }
 function close_(id){ document.getElementById(id).classList.remove("open"); }
@@ -125,6 +128,7 @@ function resetAuthModal(){
 const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Другое" };
 
 function onLoggedIn(profile){
+  myProfile = profile;
   document.getElementById("btnAuth").style.display = "none";
   document.getElementById("whoWrap").style.display = "block";
   document.getElementById("whoName").textContent = profile.full_name;
@@ -255,15 +259,19 @@ function initHeader(){
     const event_year = parseInt(document.getElementById("evYear").value, 10);
     const title = document.getElementById("evTitle").value.trim();
     const description = document.getElementById("evDesc").value.trim();
+    const source = document.getElementById("evSource").value.trim();
     const errEl = document.getElementById("errEvent");
     if(!event_year || !title){ errEl.textContent = "Заполните год и название"; errEl.style.display = "block"; return; }
     errEl.style.display = "none";
-    const { error } = await sb.from("events").insert({ event_year, title, description, created_by: currentUser.id });
+    const { error } = await sb.from("events").insert({
+      event_year, title, description, source: source || null, created_by: currentUser.id, created_by_name: myProfile.full_name
+    });
     if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
     close_("addOverlay");
     document.getElementById("evYear").value = "";
     document.getElementById("evTitle").value = "";
     document.getElementById("evDesc").value = "";
+    document.getElementById("evSource").value = "";
     if(typeof window.onEventAdded === "function") window.onEventAdded();
   });
 

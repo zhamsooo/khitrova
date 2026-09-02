@@ -17,6 +17,7 @@
   }
   .nav-hint.hide{opacity:0}
   .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
+  .tl-timeaxis-minor{display:none !important} /* лишняя мелкая шкала (1931, 1933…) поверх основной — не нужна */
 
   @media (max-width:640px){
     .nav-hint{display:none} /* на мобильном полоса теперь не про "пролистать слайды", подсказка не нужна */
@@ -32,12 +33,39 @@
       margin-top:4px; font-size:11px; color:var(--muted); white-space:nowrap; /* nowrap = не обрезается по ширине */
     }
   }
+
+  /* ---------- галочка подтверждения на событии + всплывающая карточка ---------- */
+  .ev-badge{
+    display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%;
+    margin-left:7px; cursor:pointer; vertical-align:middle; border:1.5px solid var(--muted); color:var(--muted);
+    font-size:11px; line-height:1; background:#fff;
+  }
+  .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(61,122,82,.08)}
+
+  .ev-tip{
+    display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 30px rgba(0,0,0,.14); padding:13px 14px; width:230px; font-size:12.5px; color:var(--ink); line-height:1.4;
+  }
+  .ev-tip.open{display:block}
+  .ev-tip .et-row{margin-bottom:6px}
+  .ev-tip .et-row:last-child{margin-bottom:0}
+  .ev-tip b{font-weight:700}
+  .ev-tip a{color:var(--accent)}
+  .et-confirm{
+    margin-top:10px; width:100%; background:var(--confirmed); color:#fff; border:none; border-radius:8px;
+    padding:7px 0; font-size:12.5px; cursor:pointer; font-family:var(--font-head); font-weight:700;
+  }
 </style>
 </head>
 <body data-page="index">
 
 <div id="timeline-embed"></div>
 <div class="nav-hint" id="navHint">← → пролистать, или клик по краям экрана</div>
+
+<div class="ev-tip" id="evTip">
+  <div id="evTipBody"></div>
+  <button class="et-confirm" id="etConfirmBtn" style="display:none">Подтвердить</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
@@ -46,6 +74,21 @@ function escapeHtml(s){
   const d = document.createElement("div");
   d.textContent = s || "";
   return d.innerHTML;
+}
+function escapeAttr(s){
+  return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+function formatDate(iso){
+  if(!iso) return "";
+  return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
+}
+function badgeHtml(e){
+  const confirmed = e.status === "confirmed";
+  return `<span class="ev-badge${confirmed ? " confirmed" : ""}"` +
+    ` data-id="${escapeAttr(e.id)}" data-status="${escapeAttr(e.status)}"` +
+    ` data-created-name="${escapeAttr(e.created_by_name || "")}" data-created-at="${escapeAttr(formatDate(e.created_at))}"` +
+    ` data-confirmed-name="${escapeAttr(e.confirmed_by_name || "")}" data-confirmed-at="${escapeAttr(formatDate(e.confirmed_at))}"` +
+    ` data-source="${escapeAttr(e.source || "")}">✓</span>`;
 }
 
 async function loadTimeline(){
@@ -59,7 +102,7 @@ async function loadTimeline(){
     start_date: { year: String(e.event_year) },
     text: {
       headline: escapeHtml(e.title) + (e.status === "confirmed" ? "" : " · не подтверждено"),
-      text: "<p>" + escapeHtml(e.description) + "</p>"
+      text: "<p>" + escapeHtml(e.description) + "</p>" + badgeHtml(e)
     }
   }));
 
@@ -68,7 +111,7 @@ async function loadTimeline(){
       media: { url: "photo/main.jpg", caption: "Татьяна Ивановна Хитрова", credit: "" },
       text: {
         headline: "Татьяна Ивановна Хитрова",
-        text: "<p>Сайт памяти любимого учителя</p><p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>"
+        text: "<p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>"
       }
     },
     events: tlEvents.length ? tlEvents : [{
@@ -110,6 +153,69 @@ async function loadTimeline(){
     }, 300);
   }
 }
+
+// ---- галочка подтверждения: подсказка + действие модератора ----
+const evTip = document.getElementById("evTip");
+
+function showBadgeTip(badge){
+  const status = badge.dataset.status;
+  const createdName = badge.dataset.createdName;
+  const createdAt = badge.dataset.createdAt;
+  const confirmedName = badge.dataset.confirmedName;
+  const confirmedAt = badge.dataset.confirmedAt;
+  const source = badge.dataset.source;
+
+  let html = `<div class="et-row">${createdName ? `Добавил(а): <b>${createdName}</b>` : "Добавлено модератором"}${createdAt ? " · " + createdAt : ""}</div>`;
+  if(status === "confirmed"){
+    html += `<div class="et-row">Подтвердил(а): <b>${confirmedName || "модератор"}</b>${confirmedAt ? " · " + confirmedAt : ""}</div>`;
+  } else {
+    html += `<div class="et-row" style="color:var(--muted)">Ждёт подтверждения</div>`;
+  }
+  if(source){
+    const isUrl = /^https?:\/\//.test(source);
+    html += `<div class="et-row">Источник: ${isUrl ? `<a href="${source}" target="_blank" rel="noopener">ссылка</a>` : source}</div>`;
+  }
+  document.getElementById("evTipBody").innerHTML = html;
+
+  const btn = document.getElementById("etConfirmBtn");
+  if(typeof myProfile !== "undefined" && myProfile && myProfile.is_moderator && status !== "confirmed"){
+    btn.style.display = "block";
+    btn.dataset.id = badge.dataset.id;
+  } else {
+    btn.style.display = "none";
+  }
+
+  const r = badge.getBoundingClientRect();
+  const left = Math.min(Math.max(8, r.left), window.innerWidth - 246);
+  evTip.style.left = left + "px";
+  evTip.style.top = (r.bottom + 8) + "px";
+  evTip.classList.add("open");
+}
+
+document.getElementById("timeline-embed").addEventListener("mouseover", e => {
+  const badge = e.target.closest(".ev-badge");
+  if(badge) showBadgeTip(badge);
+});
+document.getElementById("timeline-embed").addEventListener("click", e => {
+  const badge = e.target.closest(".ev-badge");
+  if(badge){ e.stopPropagation(); showBadgeTip(badge); }
+});
+document.addEventListener("click", e => {
+  if(!e.target.closest(".ev-tip") && !e.target.closest(".ev-badge")) evTip.classList.remove("open");
+});
+
+document.getElementById("etConfirmBtn").addEventListener("click", async () => {
+  const id = document.getElementById("etConfirmBtn").dataset.id;
+  const { error } = await sb.from("events").update({
+    status: "confirmed",
+    confirmed_by: currentUser.id,
+    confirmed_by_name: myProfile.full_name,
+    confirmed_at: new Date().toISOString()
+  }).eq("id", id);
+  if(error){ alert("Не получилось подтвердить: " + error.message); return; }
+  evTip.classList.remove("open");
+  loadTimeline();
+});
 
 window.onEventAdded = loadTimeline;
 loadTimeline();

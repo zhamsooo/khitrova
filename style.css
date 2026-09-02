@@ -1,10 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=PT+Serif:ital,wght@0,400;0,700;1,400&family=PT+Sans+Narrow:wght@400;700&display=swap');
+
 :root{
   --paper:#fafaf8; --ink:#22252a; --muted:#878d96; --line:#e4e2dc;
   --accent:#8a6a3a; /* тёплая бронза — вместо синего, спокойнее и благороднее */
-  --warn:#a4641f;
+  --warn:#a4641f; --confirmed:#3d7a52;
+  /* те же два шрифта, что использует сам виджет TimelineJS на "Линии жизни" — единый стиль сайта */
+  --font-body:"PT Serif", Georgia, "Times New Roman", serif;
+  --font-head:"PT Sans Narrow", -apple-system, "Segoe UI", sans-serif;
 }
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro Text","Segoe UI",sans-serif;background:#fff;color:var(--ink)}
+html,body{margin:0;padding:0;min-height:100%;font-family:var(--font-body);background:#fff;color:var(--ink)}
 
 /* ---------- шапка сайта (одна на все страницы, вставляется из app.js) ---------- */
 .site-nav{
@@ -14,7 +19,7 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
 }
 .site-nav .links{display:flex; gap:32px; align-items:center}
 .site-nav .links a{
-  color:#999; text-decoration:none; font-size:12px; letter-spacing:.04em;
+  color:#999; text-decoration:none; font-size:13px; font-family:var(--font-head); font-weight:700; letter-spacing:.04em;
   text-transform:uppercase; padding:4px 0; border-bottom:1px solid transparent; white-space:nowrap;
 }
 .site-nav .links a.active{color:var(--ink); border-bottom-color:var(--ink)}
@@ -27,15 +32,15 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
 .add-wrap{position:relative}
 .add-wrap .add-link{
   background:none; border:1px solid var(--ink); color:var(--ink); cursor:pointer;
-  font-size:12px; letter-spacing:.02em; padding:5px 13px; border-radius:14px; font-family:inherit;
+  font-size:13px; font-family:var(--font-head); font-weight:700; letter-spacing:.02em; padding:5px 13px; border-radius:14px;
   transition:background .15s, color .15s;
 }
 .add-wrap .add-link:hover, .add-wrap .add-link.open{background:var(--ink); color:#fff}
 
 .auth-link{
   background:none; border:none; color:#999; cursor:pointer;
-  font-size:12px; letter-spacing:.04em; text-transform:uppercase;
-  padding:4px 0; font-family:inherit;
+  font-size:13px; font-family:var(--font-head); font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  padding:4px 0;
 }
 .auth-link:hover{color:var(--ink)}
 
@@ -99,7 +104,7 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
 .overlay{position:fixed; inset:0; background:rgba(20,20,24,.45); z-index:60; display:none; align-items:center; justify-content:center}
 .overlay.open{display:flex}
 .modal{background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px 24px; width:340px; max-width:90vw; position:relative}
-.modal h2{font-family:Georgia,serif; font-weight:400; font-size:17px; margin:0 0 14px}
+.modal h2{font-family:var(--font-head); font-weight:700; font-size:19px; margin:0 0 14px}
 .modal label{display:block; font-size:12px; color:var(--muted); margin:12px 0 5px}
 .modal input, .modal select, .modal textarea{
   width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
@@ -128,8 +133,8 @@ html,body{margin:0;padding:0;min-height:100%;font-family:-apple-system,"SF Pro T
   display:flex; flex-direction:column; justify-content:center;
   padding:8vh 24px 10vh 72px;
 }
-.stub .k{font-size:11px; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; margin-bottom:18px}
-.stub h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:46px; line-height:1.05; margin:0 0 22px}
+.stub .k{font-size:12px; font-family:var(--font-head); font-weight:700; color:var(--accent); letter-spacing:.1em; text-transform:uppercase; margin-bottom:18px}
+.stub h1{font-family:var(--font-head); font-weight:700; font-size:50px; line-height:1.05; margin:0 0 22px}
 .stub p{color:var(--muted); font-size:15px; line-height:1.7; max-width:480px; margin:0 0 14px}
 .stub .mail{font-size:14px; color:var(--ink)}
 .stub .mail a{color:var(--ink); border-bottom:1px solid var(--line); text-decoration:none}
