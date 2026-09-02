@@ -19,19 +19,32 @@
   /* штатная подсказка TimelineJS про свайп — путает (не переводится, стрелка не туда), прячем и оставляем свою */
   .tl-message-full{display:none !important}
 
-  .tl-mini-wrap{position:relative}
+  /* на мобильном био+фото — обычный текст страницы, а не слайд виджета */
+  .mobile-intro{display:none}
+
   @media (max-width:640px){
-    /* фото и текст — в полный размер; от полосы с годами оставляем только тонкую ось —
-       без плавающей карточки-превью и без кнопок zoom/стрелок */
-    .nav-hint{right:10px; bottom:10px; font-size:10px}
-    .tl-menubar, .tl-timemarker{display:none !important}
-    #timeline-embed{height:480px; overflow:hidden}
-    /* библиотека зашивает inline-высоту полосы ~230px и её внутреннему слайдеру — режем оба, с overflow:hidden */
-    .tl-timenav, .tl-timenav-slider{height:64px !important; overflow:hidden !important}
+    .mobile-intro{display:block; padding:24px 22px 4px}
+    .mobile-intro img{width:100%; border-radius:10px; display:block; margin-bottom:18px}
+    .mobile-intro h1{font-family:Georgia,"Times New Roman",serif; font-weight:400; font-size:28px; margin:0 0 10px; line-height:1.15}
+    .mobile-intro .sub{color:var(--muted); font-size:14px; margin:0 0 10px}
+    .mobile-intro .bio{color:var(--muted); font-size:14px; line-height:1.6; margin:0}
+
+    /* сам виджет TimelineJS на мобильном — только узкая полоска с годами внизу, без слайда.
+       высота полосы теперь задаётся официальными опциями (timenav_height/timenav_height_min) в JS,
+       а не CSS-переопределением зашитого минимума библиотеки */
+    .tl-storyslider, .nav-hint, .tl-menubar, .tl-timemarker{display:none !important}
+    #timeline-embed{height:66px; border-top:1px solid var(--line)}
   }
 </style>
 </head>
 <body data-page="index">
+
+<div class="mobile-intro" id="mobileIntro">
+  <img src="photo/main.jpg" alt="Татьяна Ивановна Хитрова">
+  <h1>Татьяна Ивановна Хитрова</h1>
+  <p class="sub">Сайт памяти любимого учителя</p>
+  <p class="bio">Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>
+</div>
 
 <div class="tl-mini-wrap" id="tlMiniWrap">
   <div id="timeline-embed"></div>
@@ -76,16 +89,20 @@ async function loadTimeline(){
     }]
   };
 
+  const isMobile = window.innerWidth <= 640;
+
   document.getElementById("timeline-embed").innerHTML = "";
   window.timeline = new TL.Timeline("timeline-embed", timelineData, {
     language: "ru",
     start_at_end: false,
-    // на телефоне фото и текст должны остаться читаемого размера — сужаем только полосу с годами
-    // (карточка-превью и кнопки zoom/стрелки на мобильном скрыты через CSS, поэтому места нужно меньше)
-    timenav_height_percentage: window.innerWidth <= 640 ? 10 : 20
+    // на мобильном слайд с фото/текстом скрыт (см. .mobile-intro), полоса — фиксированные 60px,
+    // без этого библиотека сама зажимает минимум 150px даже при маленьком проценте
+    timenav_height: isMobile ? 60 : undefined,
+    timenav_height_min: isMobile ? 40 : undefined,
+    timenav_height_percentage: isMobile ? undefined : 20
   });
 
-  // подсказку прячем только когда человек реально перешёл со стартового слайда
+  // подсказку прячем только когда человек реально перешёл со стартового слайда (актуально только на десктопе)
   let firstChange = true;
   window.timeline.on("change", function(){
     if(firstChange){ firstChange = false; return; }
