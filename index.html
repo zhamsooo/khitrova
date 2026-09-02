@@ -19,21 +19,10 @@
   /* штатная подсказка TimelineJS про свайп — путает (не переводится, стрелка не туда), прячем и оставляем свою */
   .tl-message-full{display:none !important}
 
-  /* мобильный — TimelineJS остаётся горизонтальным, просто рисуем его в "десктопном" размере
-     и визуально уменьшаем через scale, обрезая лишнее обёрткой */
   .tl-mini-wrap{position:relative}
   @media (max-width:640px){
-    .tl-mini-wrap{
-      width:100%; height:230px; overflow:hidden; border-bottom:1px solid var(--line);
-    }
-    #timeline-embed{
-      width:900px; height:560px;
-      transform:scale(.4); transform-origin:top left;
-    }
-    .nav-hint{
-      position:absolute; right:8px; bottom:8px; left:auto; top:auto;
-      font-size:10px; padding:4px 9px;
-    }
+    /* фото и текст — в полный размер, сужаем только полосу с годами внизу (задаётся в JS через timenav_height_percentage) */
+    .nav-hint{right:10px; bottom:10px; font-size:10px}
   }
 </style>
 </head>
@@ -86,7 +75,8 @@ async function loadTimeline(){
   window.timeline = new TL.Timeline("timeline-embed", timelineData, {
     language: "ru",
     start_at_end: false,
-    timenav_height_percentage: 20
+    // на телефоне фото и текст должны остаться читаемого размера — сужаем только полосу с годами
+    timenav_height_percentage: window.innerWidth <= 640 ? 9 : 20
   });
 
   // подсказку прячем только когда человек реально перешёл со стартового слайда
