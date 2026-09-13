@@ -6,25 +6,87 @@
 <title>Наследие — сайт памяти Т.И. Хитровой</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .nsl-wrap{max-width:720px; margin:0 auto; padding:8vh 24px 10vh}
+  .nsl-wrap{max-width:740px; margin:0 auto; padding:8vh 24px 10vh}
   .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:38px; margin:0 0 10px}
-  .nsl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 22px; max-width:520px}
+  .nsl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 22px; max-width:540px}
   .write-wrap{position:relative; display:inline-block; margin-bottom:8px}
 
-  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
-  .nsl-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:28px 0 12px}
+  .dropdown-write{width:320px !important}
+  .dd-group-title{
+    font-family:var(--font-head); font-weight:700; font-size:10.5px;
+    text-transform:uppercase; letter-spacing:.07em; color:var(--muted);
+    padding:8px 10px 4px;
+  }
+  .dd-divider{height:1px; background:var(--line); margin:6px 0}
 
-  .art-card{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px; background:#fff; cursor:pointer; font:inherit; color:inherit}
-  .art-card:hover{border-color:var(--ink)}
-  .art-card .badge{font-family:var(--font-head); font-weight:700; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:6px}
-  .art-card .badge.st-draft{color:var(--muted)}
-  .art-card .badge.st-unconfirmed{color:var(--warn)}
-  .art-card .badge.st-rejected{color:#b0413e}
-  .art-card .ti{font-family:var(--font-head); font-weight:700; font-size:17px; margin:0 0 6px}
+  .nsl-controls-bar{margin:22px 0 26px}
+  .nsl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
+  .nsl-chip{
+    background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+    font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
+    transition:all .15s;
+  }
+  .nsl-chip:hover{border-color:var(--ink); color:var(--ink)}
+  .nsl-chip.active{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
+  .nsl-empty-block{
+    padding:28px 20px; text-align:center; color:var(--muted); font-size:13.5px;
+    background:var(--paper); border:1px dashed var(--line); border-radius:10px; margin-bottom:14px;
+  }
+  .nsl-section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin:32px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .nsl-section-title{
+    font-family:var(--font-head); font-weight:700; font-size:13px;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin:0;
+  }
+  .nsl-section-sub{font-size:11.5px; color:var(--muted)}
+
+  .art-card{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px; background:#fff; cursor:pointer; font:inherit; color:inherit; transition:border-color .15s, box-shadow .15s}
+  .art-card:hover{border-color:var(--ink); box-shadow:0 3px 12px rgba(0,0,0,.03)}
+  .art-card .badge{
+    font-family:var(--font-head); font-weight:700; font-size:10px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--accent); display:inline-block; margin-bottom:6px;
+    padding:2px 7px; border-radius:6px; background:rgba(138,106,58,.08);
+  }
+  .art-card .badge.badge-ti{color:var(--confirmed); background:rgba(51,84,122,.08)}
+  .art-card .badge.st-draft{color:var(--muted); background:#eee}
+  .art-card .badge.st-unconfirmed{color:var(--warn); background:rgba(164,100,31,.08)}
+  .art-card .badge.st-rejected{color:#b0413e; background:rgba(176,65,62,.08)}
+  .art-card .ti{font-family:var(--font-head); font-weight:700; font-size:17px; margin:0 0 6px; line-height:1.25}
   .art-card .ex{font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:8px}
   .art-card .meta{font-size:11.5px; color:var(--muted)}
 
-  .nsl-editor{max-width:720px; margin:0 auto; padding:24px 24px 80px}
+  /* Панель метаданных статьи в редакторе */
+  .editor-meta-box{
+    background:var(--paper); border:1px solid var(--line); border-radius:10px;
+    padding:14px 16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;
+  }
+  .editor-meta-row{display:flex; flex-wrap:wrap; align-items:center; gap:14px}
+  .editor-meta-col{flex:1; min-width:180px}
+  .editor-meta-col label{
+    display:block; font-size:11px; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.05em; margin-bottom:4px; font-family:var(--font-head); font-weight:700;
+  }
+  .editor-meta-col input, .editor-meta-col select{
+    width:100%; background:#fff; border:1px solid var(--line); border-radius:8px;
+    padding:6px 10px; font:inherit; font-size:13px; outline:none;
+  }
+  .editor-meta-col input:focus, .editor-meta-col select:focus{border-color:var(--ink)}
+  .author-type-toggle{display:flex; gap:6px}
+  .author-type-btn{
+    flex:1; padding:6px 10px; font-size:12px; font-family:inherit; border-radius:7px;
+    border:1px solid var(--line); background:#fff; cursor:pointer; text-align:center;
+    transition:all .12s; color:var(--muted);
+  }
+  .author-type-btn:hover{color:var(--ink); border-color:var(--ink)}
+  .author-type-btn.active{
+    background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600;
+  }
+
+  .nsl-editor{max-width:740px; margin:0 auto; padding:24px 24px 80px}
   .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--line)}
   .btn-plain{background:none; border:none; color:var(--muted); font-size:13px; padding:0; cursor:pointer; font-family:inherit}
   .btn-plain:hover{color:var(--ink)}
@@ -35,8 +97,17 @@
   #editorjs{font-family:var(--font-body); font-size:16px; line-height:1.7}
 
   .nsl-read{max-width:640px; margin:0 auto; padding:8vh 24px 10vh}
-  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:34px; margin:14px 0 8px}
-  .nsl-read .meta{font-size:13px; color:var(--muted); margin-bottom:32px}
+  .read-badge-wrap{margin-top:16px; margin-bottom:10px}
+  .read-category-badge{
+    font-family:var(--font-head); font-weight:700; font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--accent); display:inline-block;
+    padding:3px 9px; border-radius:6px; background:rgba(138,106,58,.08);
+  }
+  .read-category-badge.badge-ti{color:var(--confirmed); background:rgba(51,84,122,.08)}
+  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:34px; margin:0 0 10px; line-height:1.2}
+  .read-byline{font-size:13.5px; color:var(--muted); margin-bottom:30px; line-height:1.55}
+  .read-byline b{color:var(--ink)}
+
   .read-body{font-family:var(--font-body); font-size:17px; line-height:1.75; color:var(--ink)}
   .read-body h2{font-family:var(--font-head); font-weight:700; font-size:23px; margin:32px 0 12px}
   .read-body h3{font-family:var(--font-head); font-weight:700; font-size:19px; margin:26px 0 10px}
@@ -56,6 +127,7 @@
     .nsl-head h1{font-size:30px}
     .art-title{font-size:24px}
     .nsl-read h1{font-size:26px}
+    .editor-meta-row{flex-direction:column; align-items:stretch}
   }
 </style>
 </head>
@@ -64,16 +136,45 @@
 <div class="nsl-wrap" id="nslWrap">
   <div class="nsl-head">
     <h1>Наследие</h1>
-    <p class="sub">Статьи и интервью Татьяны Ивановны, воспоминания её учеников и коллег — каждый может опубликовать свой текст.</p>
+    <p class="sub">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
     <div class="write-wrap">
       <button class="add-link" id="writeBtn">+ Написать</button>
-      <div class="dropdown" id="writeDropdown">
-        <button class="opt" data-type="воспоминание"><div class="t">Воспоминание</div><div class="d">Личная история о Татьяне Ивановне</div></button>
-        <button class="opt" data-type="статья"><div class="t">Статья</div><div class="d">Более развёрнутый текст, интервью, разбор</div></button>
-        <button class="opt" data-type="другое"><div class="t">Другой материал</div><div class="d">Всё, что не подходит под первые два</div></button>
+      <div class="dropdown dropdown-write" id="writeDropdown">
+        <div class="dd-group-title">От Татьяны Ивановны</div>
+        <button class="opt" data-author="ti" data-type="статья">
+          <div class="t">Статья или публикация Т.И.</div>
+          <div class="d">Текст, статья или заметка авторства Татьяны Ивановны</div>
+        </button>
+        <button class="opt" data-author="ti" data-type="интервью">
+          <div class="t">Интервью с Т.И.</div>
+          <div class="d">Беседа или интервью, данное Татьяной Ивановной</div>
+        </button>
+        <div class="dd-divider"></div>
+        <div class="dd-group-title">От учеников и коллег</div>
+        <button class="opt" data-author="community" data-type="воспоминание">
+          <div class="t">Воспоминание</div>
+          <div class="d">Личная история или память о Т.И. от первого лица</div>
+        </button>
+        <button class="opt" data-author="community" data-type="статья">
+          <div class="t">Статья или очерк о Т.И.</div>
+          <div class="d">Текст о педагогике или жизни Т.И. от автора</div>
+        </button>
+        <button class="opt" data-author="community" data-type="другое">
+          <div class="t">Другой материал</div>
+          <div class="d">Архивный документ, разбор, памятка</div>
+        </button>
       </div>
     </div>
   </div>
+
+  <div class="nsl-controls-bar">
+    <div class="nsl-controls">
+      <button class="nsl-chip active" data-tab="все">Все</button>
+      <button class="nsl-chip" data-tab="ti">От Татьяны Ивановны</button>
+      <button class="nsl-chip" data-tab="community">Воспоминания и статьи коллег</button>
+    </div>
+  </div>
+
   <div id="nslList"><div class="nsl-state">Загрузка…</div></div>
 </div>
 
@@ -83,15 +184,56 @@
     <span class="save-state" id="saveState"></span>
     <button class="btn-publish" id="btnPublish">Отправить на публикацию</button>
   </div>
+
+  <div class="editor-meta-box" id="editorMetaBox">
+    <div class="editor-meta-row">
+      <div class="editor-meta-col" style="flex:1.5">
+        <label>Раздел / Принадлежность</label>
+        <div class="author-type-toggle">
+          <button type="button" class="author-type-btn" id="btnTypeTi" data-cat="ti">От Татьяны Ивановны</button>
+          <button type="button" class="author-type-btn active" id="btnTypeComm" data-cat="community">От учеников и коллег</button>
+        </div>
+      </div>
+      <div class="editor-meta-col" style="flex:1">
+        <label>Тип материала</label>
+        <select id="editArtType">
+          <option value="статья">Статья</option>
+          <option value="интервью">Интервью</option>
+          <option value="публикация">Публикация</option>
+          <option value="воспоминание">Воспоминание</option>
+          <option value="другое">Другой материал</option>
+        </select>
+      </div>
+    </div>
+    <div class="editor-meta-row" id="tiMetaRow" style="display:none">
+      <div class="editor-meta-col" style="flex:2">
+        <label>Первоисточник / издание</label>
+        <input type="text" id="editArtSource" placeholder="напр. Журнал «Советская музыка», 1984">
+      </div>
+      <div class="editor-meta-col" style="flex:1">
+        <label>Год оригинала</label>
+        <input type="number" id="editArtYear" placeholder="напр. 1984" min="1940" max="2026">
+      </div>
+    </div>
+    <div class="editor-meta-row" id="commMetaRow">
+      <div class="editor-meta-col">
+        <label>Автор материала</label>
+        <input type="text" id="editArtAuthor" placeholder="Имя и фамилия автора">
+      </div>
+    </div>
+  </div>
+
   <input type="text" id="artTitle" class="art-title" placeholder="Заголовок">
   <div id="editorjs"></div>
 </div>
 
 <div class="nsl-read" id="nslRead" style="display:none">
-  <button class="btn-plain" id="btnBackToList2">← К списку</button>
-  <div class="nsl-section-title" id="readType"></div>
+  <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
+  <div class="read-badge-wrap">
+    <span class="read-category-badge" id="readCategoryBadge"></span>
+  </div>
   <h1 id="readTitle"></h1>
-  <div class="meta" id="readMeta"></div>
+  <div class="read-byline" id="readByline"></div>
   <div class="read-body" id="readBody"></div>
 </div>
 
@@ -105,14 +247,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@2.10.3"></script>
 <script src="app.js"></script>
 <script>
-const TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "другое":"Материал" };
-const STATUS_LABEL = { draft:"Черновик", unconfirmed:"На проверке", rejected:"Отклонено" };
+const TYPE_LABEL = {
+  "воспоминание": "Воспоминание",
+  "статья": "Статья",
+  "интервью": "Интервью",
+  "публикация": "Публикация",
+  "другое": "Материал"
+};
+const STATUS_LABEL = { draft: "Черновик", unconfirmed: "На проверке", rejected: "Отклонено" };
 
 let editor = null;
 let currentArticleId = null;
+let currentAuthorType = "community";
 let dirty = false;
 let saveTimer = null;
 let periodicTimer = null;
+let allArticles = [];
+let activeTab = "все";
 
 const elWrap = document.getElementById("nslWrap");
 const elList = document.getElementById("nslList");
@@ -122,43 +273,135 @@ const titleInput = document.getElementById("artTitle");
 const saveStateEl = document.getElementById("saveState");
 const btnPublish = document.getElementById("btnPublish");
 
+// Поля метаданных в редакторе
+const btnTypeTi = document.getElementById("btnTypeTi");
+const btnTypeComm = document.getElementById("btnTypeComm");
+const editArtType = document.getElementById("editArtType");
+const editArtSource = document.getElementById("editArtSource");
+const editArtYear = document.getElementById("editArtYear");
+const editArtAuthor = document.getElementById("editArtAuthor");
+const tiMetaRow = document.getElementById("tiMetaRow");
+const commMetaRow = document.getElementById("commMetaRow");
+
 function showView(name){
   elWrap.style.display = name === "list" ? "block" : "none";
   elEditor.style.display = name === "editor" ? "block" : "none";
   elRead.style.display = name === "read" ? "block" : "none";
 }
 
+function getArticleCategory(a){
+  if(a.author_type === "ti" || a.author_type === "community") return a.author_type;
+  if(a.content && a.content.meta && a.content.meta.author_type) return a.content.meta.author_type;
+  if(a.type === "интервью" || a.type === "публикация") return "ti";
+  if(a.type === "воспоминание") return "community";
+  return "community";
+}
+
+function getArticleBadge(a){
+  const cat = getArticleCategory(a);
+  const t = a.type || "статья";
+  if(cat === "ti"){
+    if(t === "интервью") return "Интервью с Т.И.";
+    if(t === "статья") return "Статья Т.И.";
+    if(t === "публикация") return "Публикация Т.И.";
+    return "Труд Т.И.";
+  }
+  if(t === "воспоминание") return "Воспоминание";
+  if(t === "статья") return "Статья о Т.И.";
+  return "Материал";
+}
+
 function cardHtml(a){
   const excerpt = excerptFromContent(a.content);
   const isMine = a.status !== "confirmed";
-  const badge = isMine ? `${TYPE_LABEL[a.type] || ""} · ${STATUS_LABEL[a.status] || a.status}` : (TYPE_LABEL[a.type] || "");
-  const badgeClass = isMine ? `st-${a.status}` : "";
+  const cat = getArticleCategory(a);
+  const badgeText = getArticleBadge(a);
+  const fullBadge = isMine ? `${badgeText} · ${STATUS_LABEL[a.status] || a.status}` : badgeText;
+  const badgeClass = isMine ? `st-${a.status}` : (cat === "ti" ? "badge-ti" : "");
+
+  let metaParts = [];
+  if(cat === "ti"){
+    if(a.source) metaParts.push(escapeHtml(a.source));
+    if(a.original_year) metaParts.push(`${a.original_year} г.`);
+    if(a.created_by_name) metaParts.push(`добавил(а) ${escapeHtml(a.created_by_name)}`);
+  } else {
+    const author = a.author_name || a.created_by_name || "Автор неизвестен";
+    metaParts.push(escapeHtml(author));
+    metaParts.push(formatDate(a.created_at));
+  }
+
   return `
     <button class="art-card" data-id="${a.id}" data-status="${a.status}">
-      <span class="badge ${badgeClass}">${escapeHtml(badge)}</span>
+      <span class="badge ${badgeClass}">${escapeHtml(fullBadge)}</span>
       <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
       ${excerpt ? `<div class="ex">${escapeHtml(excerpt)}</div>` : ""}
-      <div class="meta">${escapeHtml(a.created_by_name || "")} · ${formatDate(a.created_at)}</div>
+      <div class="meta">${metaParts.join(" · ")}</div>
     </button>
   `;
 }
 
-async function loadList(){
-  elList.innerHTML = `<div class="nsl-state">Загрузка…</div>`;
-  let q = sb.from("articles").select("*").order("created_at", { ascending:false });
-  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
-  const { data, error } = await q;
-  if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
-
-  const mine = currentUser ? data.filter(a => a.created_by === currentUser.id && a.status !== "confirmed") : [];
-  const published = data.filter(a => a.status === "confirmed");
+function renderList(){
+  const mine = currentUser ? allArticles.filter(a => a.created_by === currentUser.id && a.status !== "confirmed") : [];
+  const confirmed = allArticles.filter(a => a.status === "confirmed");
 
   let html = "";
   if(mine.length){
-    html += `<div class="nsl-section-title">Моё</div>${mine.map(cardHtml).join("")}`;
+    html += `
+      <div class="nsl-section-head">
+        <h2 class="nsl-section-title">Моё</h2>
+        <span class="nsl-section-sub">Черновики и отправленные на проверку (${mine.length})</span>
+      </div>
+      ${mine.map(cardHtml).join("")}
+    `;
   }
-  html += `<div class="nsl-section-title">Опубликовано</div>`;
-  html += published.length ? published.map(cardHtml).join("") : `<div class="nsl-state">Пока ничего не опубликовано — станьте первым.</div>`;
+
+  const tiArticles = confirmed.filter(a => getArticleCategory(a) === "ti");
+  const communityArticles = confirmed.filter(a => getArticleCategory(a) !== "ti");
+
+  if(activeTab === "все"){
+    // 1. Блок трудов и статей Т.И.
+    html += `
+      <div class="nsl-section-head">
+        <h2 class="nsl-section-title">От Татьяны Ивановны</h2>
+        <span class="nsl-section-sub">Статьи, публикации, интервью Т.И. (${tiArticles.length})</span>
+      </div>
+    `;
+    html += tiArticles.length
+      ? tiArticles.map(cardHtml).join("")
+      : `<div class="nsl-empty-block">Пока нет опубликованных статей или интервью Татьяны Ивановны. Вы можете добавить первую запись через кнопку «+ Написать».</div>`;
+
+    // 2. Блок воспоминаний и материалов от остальных
+    html += `
+      <div class="nsl-section-head" style="margin-top:40px">
+        <h2 class="nsl-section-title">Воспоминания и статьи коллег</h2>
+        <span class="nsl-section-sub">Память об учителе от учеников и коллег (${communityArticles.length})</span>
+      </div>
+    `;
+    html += communityArticles.length
+      ? communityArticles.map(cardHtml).join("")
+      : `<div class="nsl-empty-block">Пока нет опубликованных воспоминаний. Станьте первым, кто поделится историей.</div>`;
+  } else if(activeTab === "ti"){
+    html += `
+      <div class="nsl-section-head">
+        <h2 class="nsl-section-title">От Татьяны Ивановны</h2>
+        <span class="nsl-section-sub">Труды, статьи, публикации и интервью Т.И. (${tiArticles.length})</span>
+      </div>
+    `;
+    html += tiArticles.length
+      ? tiArticles.map(cardHtml).join("")
+      : `<div class="nsl-state">В этом разделе пока нет материалов.</div>`;
+  } else if(activeTab === "community"){
+    html += `
+      <div class="nsl-section-head">
+        <h2 class="nsl-section-title">Воспоминания и статьи коллег</h2>
+        <span class="nsl-section-sub">Воспоминания, очерки и исследования от учеников и коллег (${communityArticles.length})</span>
+      </div>
+    `;
+    html += communityArticles.length
+      ? communityArticles.map(cardHtml).join("")
+      : `<div class="nsl-state">В этом разделе пока нет материалов.</div>`;
+  }
+
   elList.innerHTML = html;
 
   elList.querySelectorAll(".art-card").forEach(card => {
@@ -168,6 +411,27 @@ async function loadList(){
     });
   });
 }
+
+async function loadList(){
+  elList.innerHTML = `<div class="nsl-state">Загрузка…</div>`;
+  let q = sb.from("articles").select("*").order("created_at", { ascending:false });
+  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
+  const { data, error } = await q;
+  if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+
+  allArticles = data || [];
+  renderList();
+}
+
+// Табы фильтрации
+document.querySelectorAll(".nsl-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".nsl-chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    activeTab = chip.dataset.tab;
+    renderList();
+  });
+});
 
 const EDITOR_TOOLS = {
   header: { class: Header, inlineToolbar: true, config: { levels: [2,3,4], defaultLevel: 2 } },
@@ -202,7 +466,17 @@ function scheduleLocalSave(){
     if(!editor) return;
     try{
       const data = await editor.save();
-      localStorage.setItem("nsl_draft_" + currentArticleId, JSON.stringify({ title: titleInput.value, content: data, ts: Date.now() }));
+      const meta = {
+        title: titleInput.value,
+        content: data,
+        author_type: currentAuthorType,
+        type: editArtType.value,
+        source: editArtSource.value,
+        original_year: editArtYear.value,
+        author_name: editArtAuthor.value,
+        ts: Date.now()
+      };
+      localStorage.setItem("nsl_draft_" + currentArticleId, JSON.stringify(meta));
     }catch(e){}
   }, 1500);
 }
@@ -212,8 +486,31 @@ async function saveToServer(){
   let data;
   try{ data = await editor.save(); } catch(e){ return; }
   const title = titleInput.value.trim();
+  const source = editArtSource.value.trim() || null;
+  const original_year = editArtYear.value ? parseInt(editArtYear.value, 10) : null;
+  const author_name = editArtAuthor.value.trim() || (currentAuthorType === "ti" ? "Татьяна Ивановна Хитрова" : (myProfile && myProfile.full_name));
+
+  // Сохраняем метаданные и в content.meta для обратной совместимости, и в отдельные столбцы
+  data.meta = {
+    author_type: currentAuthorType,
+    type: editArtType.value,
+    source,
+    original_year,
+    author_name
+  };
+
   saveStateEl.textContent = "Сохранение…";
-  const { error } = await sb.from("articles").update({ title, content: data, updated_at: new Date().toISOString() }).eq("id", currentArticleId);
+  const { error } = await sb.from("articles").update({
+    title,
+    content: data,
+    author_type: currentAuthorType,
+    type: editArtType.value,
+    source,
+    original_year,
+    author_name,
+    updated_at: new Date().toISOString()
+  }).eq("id", currentArticleId);
+
   if(error){ saveStateEl.textContent = "Ошибка автосохранения: " + error.message; return; }
   dirty = false;
   saveStateEl.textContent = "Сохранено " + new Date().toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
@@ -228,6 +525,48 @@ async function leaveEditor(){
   currentArticleId = null;
 }
 
+function setEditorAuthorType(cat){
+  currentAuthorType = cat;
+  btnTypeTi.classList.toggle("active", cat === "ti");
+  btnTypeComm.classList.toggle("active", cat !== "ti");
+  tiMetaRow.style.display = cat === "ti" ? "flex" : "none";
+  commMetaRow.style.display = cat !== "ti" ? "flex" : "none";
+
+  // Подстраиваем список типов под выбранную категорию
+  const currentVal = editArtType.value;
+  if(cat === "ti"){
+    editArtType.innerHTML = `
+      <option value="статья">Статья / публикация</option>
+      <option value="интервью">Интервью с Т.И.</option>
+      <option value="публикация">Публикация / доклад</option>
+      <option value="другое">Другой материал Т.И.</option>
+    `;
+    if(["статья", "интервью", "публикация", "другое"].includes(currentVal)){
+      editArtType.value = currentVal;
+    } else {
+      editArtType.value = "статья";
+    }
+  } else {
+    editArtType.innerHTML = `
+      <option value="воспоминание">Воспоминание</option>
+      <option value="статья">Статья о Т.И.</option>
+      <option value="другое">Другой материал</option>
+    `;
+    if(["воспоминание", "статья", "другое"].includes(currentVal)){
+      editArtType.value = currentVal;
+    } else {
+      editArtType.value = "воспоминание";
+    }
+  }
+}
+
+btnTypeTi.addEventListener("click", () => { setEditorAuthorType("ti"); scheduleLocalSave(); });
+btnTypeComm.addEventListener("click", () => { setEditorAuthorType("community"); scheduleLocalSave(); });
+editArtType.addEventListener("change", scheduleLocalSave);
+editArtSource.addEventListener("input", scheduleLocalSave);
+editArtYear.addEventListener("input", scheduleLocalSave);
+editArtAuthor.addEventListener("input", scheduleLocalSave);
+
 async function openEditor(id){
   const { data: art, error } = await sb.from("articles").select("*").eq("id", id).maybeSingle();
   if(error || !art || art.created_by !== currentUser.id){ location.hash = "#list"; return; }
@@ -236,6 +575,15 @@ async function openEditor(id){
   dirty = false;
   saveStateEl.textContent = "";
   titleInput.value = art.title || "";
+
+  const initialCat = getArticleCategory(art);
+  setEditorAuthorType(initialCat);
+
+  if(art.type) editArtType.value = art.type;
+  editArtSource.value = art.source || (art.content && art.content.meta && art.content.meta.source) || "";
+  editArtYear.value = art.original_year || (art.content && art.content.meta && art.content.meta.original_year) || "";
+  editArtAuthor.value = art.author_name || (art.content && art.content.meta && art.content.meta.author_name) || (initialCat === "ti" ? "Татьяна Ивановна Хитрова" : (myProfile && myProfile.full_name) || "");
+
   let initialData = (art.content && art.content.blocks) ? art.content : { blocks: [] };
 
   try{
@@ -246,6 +594,11 @@ async function openEditor(id){
         if(confirm("Найден несохранённый черновик — возможно, после разрыва связи. Восстановить его вместо сохранённой версии?")){
           initialData = local.content;
           if(local.title) titleInput.value = local.title;
+          if(local.author_type) setEditorAuthorType(local.author_type);
+          if(local.type) editArtType.value = local.type;
+          if(local.source) editArtSource.value = local.source;
+          if(local.original_year) editArtYear.value = local.original_year;
+          if(local.author_name) editArtAuthor.value = local.author_name;
         } else {
           localStorage.removeItem("nsl_draft_" + id);
         }
@@ -283,9 +636,30 @@ async function openEditor(id){
 async function openRead(id){
   const { data: art, error } = await sb.from("articles").select("*").eq("id", id).maybeSingle();
   if(error || !art || (art.status !== "confirmed" && (!currentUser || art.created_by !== currentUser.id))){ location.hash = "#list"; return; }
-  document.getElementById("readType").textContent = TYPE_LABEL[art.type] || "";
+
+  const cat = getArticleCategory(art);
+  const badgeText = getArticleBadge(art);
+  const badgeEl = document.getElementById("readCategoryBadge");
+  badgeEl.textContent = (cat === "ti" ? "Труды Татьяны Ивановны · " : "Воспоминания и материалы · ") + badgeText;
+  badgeEl.className = "read-category-badge " + (cat === "ti" ? "badge-ti" : "");
+
   document.getElementById("readTitle").textContent = art.title || "Без названия";
-  document.getElementById("readMeta").textContent = `${art.created_by_name || ""} · ${formatDate(art.created_at)}`;
+
+  let byline = "";
+  if(cat === "ti"){
+    byline = `Автор: <b>Татьяна Ивановна Хитрова</b>`;
+    const src = art.source || (art.content && art.content.meta && art.content.meta.source);
+    const yr = art.original_year || (art.content && art.content.meta && art.content.meta.original_year);
+    if(src) byline += ` · Первоисточник: ${escapeHtml(src)}`;
+    if(yr) byline += ` (${yr} г.)`;
+    if(art.created_by_name) byline += ` · Опубликовал(а): ${escapeHtml(art.created_by_name)}`;
+  } else {
+    const author = art.author_name || (art.content && art.content.meta && art.content.meta.author_name) || art.created_by_name || "неизвестно";
+    byline = `Автор: <b>${escapeHtml(author)}</b> · ${formatDate(art.created_at)}`;
+    const src = art.source || (art.content && art.content.meta && art.content.meta.source);
+    if(src) byline += ` · Источник: ${escapeHtml(src)}`;
+  }
+  document.getElementById("readByline").innerHTML = byline;
   document.getElementById("readBody").innerHTML = renderArticleContent(art.content);
   showView("read");
 }
@@ -319,11 +693,22 @@ document.querySelectorAll("#writeDropdown .opt").forEach(opt => {
     e.stopPropagation();
     document.getElementById("writeDropdown").classList.remove("open");
     if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
-    const type = opt.dataset.type;
+
+    const author_type = opt.dataset.author || "community";
+    const type = opt.dataset.type || "воспоминание";
+    const author_name = author_type === "ti" ? "Татьяна Ивановна Хитрова" : myProfile.full_name;
+
     const { data, error } = await sb.from("articles").insert({
-      type, title: "", content: {}, status: "draft",
-      created_by: currentUser.id, created_by_name: myProfile.full_name
+      author_type,
+      type,
+      author_name,
+      title: "",
+      content: { blocks: [], meta: { author_type, type, author_name } },
+      status: "draft",
+      created_by: currentUser.id,
+      created_by_name: myProfile.full_name
     }).select().single();
+
     if(error){ alert(error.message); return; }
     location.hash = `#edit/${data.id}`;
   });

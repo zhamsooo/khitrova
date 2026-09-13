@@ -130,7 +130,7 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="app.js"></script>
 <script>
-const ART_TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "другое":"Материал" };
+const ART_TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "интервью":"Интервью", "публикация":"Публикация", "другое":"Материал" };
 
 function formatSourceLink(s){
   if(!s) return "";
@@ -577,17 +577,34 @@ async function loadArticles(){
     return;
   }
 
-  content.innerHTML = data.map(a => `
+  content.innerHTML = data.map(a => {
+    const cat = a.author_type || (a.content && a.content.meta && a.content.meta.author_type === "ti" ? "ti" : "community");
+    const metaAuthor = a.author_name || (a.content && a.content.meta && a.content.meta.author_name) || (cat === "ti" ? "Т. И. Хитрова" : (a.created_by_name || ""));
+    const metaSource = a.source || (a.content && a.content.meta && a.content.meta.source) || "";
+    const metaYear = a.original_year || (a.content && a.content.meta && a.content.meta.original_year) || "";
+
+    const catBadge = cat === "ti"
+      ? '<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:#e8f0fe; color:#1a73e8; border:1px solid #c8dafc;">✦ От Т.И.</span>'
+      : '<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:11px; font-weight:600; background:#f5efe6; color:#7d5228; border:1px solid #dec8b0;">От учеников и коллег</span>';
+
+    return `
     <div class="mod-card" data-id="${a.id}">
       <div class="card-view">
-        <div class="yr">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}</div>
+        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+          ${catBadge}
+          <div class="yr" style="margin:0">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}${metaYear ? ` (${escapeHtml(metaYear)})` : ''}</div>
+        </div>
         <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
         <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
         <div class="art-preview" style="display:none"></div>
         <div>
           <a href="nasledie.html#edit/${a.id}" target="_blank" class="art-editor-link">Открыть в полном редакторе Наследия ↗</a>
         </div>
-        <div class="meta">Автор: <b>${escapeHtml(a.created_by_name || "неизвестно")}</b> · ${formatDate(a.created_at)}</div>
+        <div class="meta" style="margin-top:8px">
+          Автор материала: <b>${escapeHtml(metaAuthor || "не указан")}</b>
+          ${metaSource ? ` · Источник: <i>${formatSourceLink(metaSource)}</i>` : ''}
+          <br><span style="color:var(--muted); font-size:11px">Загрузил: ${escapeHtml(a.created_by_name || "неизвестно")} · ${formatDate(a.created_at)}</span>
+        </div>
         <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
         <div class="row">
           <button type="button" class="btn-confirm">Подтвердить</button>
@@ -598,16 +615,39 @@ async function loadArticles(){
 
       <div class="card-edit" style="display:none">
         <div class="edit-field">
+          <label>Раздел / авторство</label>
+          <select class="in-art-author-type">
+            <option value="ti" ${cat === "ti" ? "selected" : ""}>От Татьяны Ивановны (её статья, публикация, интервью)</option>
+            <option value="community" ${cat === "community" ? "selected" : ""}>От учеников и коллег (воспоминания, статьи о Т.И.)</option>
+          </select>
+        </div>
+        <div class="edit-field">
           <label>Тип материала</label>
           <select class="in-art-type">
             <option value="воспоминание" ${a.type === "воспоминание" ? "selected" : ""}>Воспоминание</option>
             <option value="статья" ${a.type === "статья" ? "selected" : ""}>Статья</option>
+            <option value="интервью" ${a.type === "интервью" ? "selected" : ""}>Интервью</option>
+            <option value="публикация" ${a.type === "публикация" ? "selected" : ""}>Публикация / заметка</option>
             <option value="другое" ${a.type === "другое" ? "selected" : ""}>Другой материал</option>
           </select>
         </div>
         <div class="edit-field">
-          <label>Заголовок статьи</label>
+          <label>Заголовок материала</label>
           <input type="text" class="in-art-title" value="${escapeHtml(a.title || "")}">
+        </div>
+        <div class="edit-field">
+          <label>Имя автора текста</label>
+          <input type="text" class="in-art-author-name" value="${escapeHtml(metaAuthor || "")}" placeholder="Например: Т. И. Хитрова или имя автора">
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+          <div class="edit-field">
+            <label>Первоисточник / издание</label>
+            <input type="text" class="in-art-source" value="${escapeHtml(metaSource || "")}" placeholder="Газета, сборник, ссылка">
+          </div>
+          <div class="edit-field">
+            <label>Год оригинала</label>
+            <input type="number" class="in-art-year" value="${escapeHtml(metaYear || "")}" placeholder="1984">
+          </div>
         </div>
         <div style="margin:8px 0 12px; font-size:12px; color:var(--muted)">
           Для изменения текста статьи откройте её в <a href="nasledie.html#edit/${a.id}" target="_blank" style="color:var(--accent)">полном редакторе ↗</a>
@@ -620,7 +660,8 @@ async function loadArticles(){
       </div>
       <div class="err"></div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   content.querySelectorAll(".mod-card").forEach(card => {
     const id = card.dataset.id;
@@ -651,11 +692,21 @@ async function loadArticles(){
 
     async function save(status, keepCard){
       errEl.style.display = "none";
+      const author_type = card.querySelector(".in-art-author-type").value;
       const type = card.querySelector(".in-art-type").value;
       const title = card.querySelector(".in-art-title").value.trim();
+      const author_name = card.querySelector(".in-art-author-name").value.trim() || null;
+      const source = card.querySelector(".in-art-source").value.trim() || null;
+      const rawYear = card.querySelector(".in-art-year").value.trim();
+      const original_year = rawYear ? parseInt(rawYear, 10) || null : null;
 
       const updateData = {
-        type, title,
+        author_type,
+        type,
+        title,
+        author_name,
+        source,
+        original_year,
         status,
         moderated_by: currentUser.id,
         moderated_by_name: myProfile.full_name,
@@ -667,7 +718,10 @@ async function loadArticles(){
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
 
       if(keepCard){
-        card.querySelector(".yr").textContent = ART_TYPE_LABEL[type] || type;
+        // Обновляем локальный объект статьи
+        Object.assign(article, updateData);
+        const yrLabel = (ART_TYPE_LABEL[type] || type) + (original_year ? ` (${original_year})` : "");
+        card.querySelector(".yr").textContent = yrLabel;
         card.querySelector(".ti").textContent = title || "Без названия";
         editEl.style.display = "none";
         viewEl.style.display = "block";
