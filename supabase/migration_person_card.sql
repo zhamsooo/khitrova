@@ -14,6 +14,10 @@ alter table public.people add column if not exists studied_conservatory boolean 
 alter table public.people add column if not exists conservatory_start int;
 alter table public.people add column if not exists conservatory_end int;
 
+alter table public.people add column if not exists studied_assistantship boolean not null default false;
+alter table public.people add column if not exists assistantship_start int;
+alter table public.people add column if not exists assistantship_end int;
+
 -- Аудит изменений
 alter table public.people add column if not exists updated_by uuid references auth.users(id);
 alter table public.people add column if not exists updated_by_name text;

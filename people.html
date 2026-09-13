@@ -90,10 +90,7 @@ function decadeLabel(year){
 function personMeta(p){
   const parts = [];
   if(p.created_by_name) parts.push(`Добавил(а): ${escapeHtml(p.created_by_name)}`);
-  if(p.source){
-    const isUrl = /^https?:\/\//.test(p.source);
-    parts.push(`Источник: ${isUrl ? `<a href="${p.source}" target="_blank" rel="noopener">ссылка</a>` : escapeHtml(p.source)}`);
-  }
+  if(p.source) parts.push(`Источник: ${escapeHtml(p.source)}`);
   return parts.join(" · ");
 }
 
@@ -105,14 +102,11 @@ function personCard(p){
     ? window.personRelationLabel(p)
     : (REL_LABEL_P[p.relation_type] || p.relation_type);
 
-  let eduTag = "";
-  if(p.studied_choir_school && p.studied_conservatory){
-    eduTag = " · Хор. уч. + СПбГК";
-  } else if(p.studied_choir_school){
-    eduTag = " · Хор. уч.";
-  } else if(p.studied_conservatory){
-    eduTag = " · СПбГК";
-  }
+  const eduParts = [];
+  if(p.studied_choir_school) eduParts.push("Хор. уч.");
+  if(p.studied_conservatory) eduParts.push("СПбГК");
+  if(p.studied_assistantship) eduParts.push("Ассист.");
+  const eduTag = eduParts.length ? " · " + eduParts.join(" + ") : "";
 
   const yearsLine = p.relation_type === "ученик" && (p.study_start || p.study_end)
     ? ` (${p.study_start ? p.study_start + "–" : ""}${p.study_end || "?"})`

@@ -151,6 +151,12 @@ const MODALS_HTML = `
         <div id="pConservatoryBox" style="display:none; margin:4px 0 8px 24px">
           <input type="number" id="pConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
         </div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
+          <input type="checkbox" id="pAssistantship" style="width:auto; margin:0"> Ассистентура-стажировка в СПбГК
+        </label>
+        <div id="pAssistantBox" style="display:none; margin:4px 0 8px 24px">
+          <input type="number" id="pAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+        </div>
       </div>
       <label>Или другие годы учёбы (необязательно)</label>
       <div style="display:flex; gap:8px">
@@ -301,6 +307,11 @@ function initHeader(){
   if(pConservatory && pConservatoryBox){
     pConservatory.addEventListener("change", () => pConservatoryBox.style.display = pConservatory.checked ? "block" : "none");
   }
+  const pAssistantship = document.getElementById("pAssistantship");
+  const pAssistantBox = document.getElementById("pAssistantBox");
+  if(pAssistantship && pAssistantBox){
+    pAssistantship.addEventListener("change", () => pAssistantBox.style.display = pAssistantship.checked ? "block" : "none");
+  }
 
   const whoChip = document.getElementById("whoChip");
   const whoDropdown = document.getElementById("whoDropdown");
@@ -426,11 +437,13 @@ function initHeader(){
     const choir_school_end = (studied_choir_school && document.getElementById("pChoirEnd").value) ? parseInt(document.getElementById("pChoirEnd").value, 10) : null;
     const studied_conservatory = pConservatory ? pConservatory.checked : false;
     const conservatory_end = (studied_conservatory && document.getElementById("pConservatoryEnd").value) ? parseInt(document.getElementById("pConservatoryEnd").value, 10) : null;
+    const studied_assistantship = pAssistantship ? pAssistantship.checked : false;
+    const assistantship_end = (studied_assistantship && document.getElementById("pAssistantEnd").value) ? parseInt(document.getElementById("pAssistantEnd").value, 10) : null;
 
     let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
     let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
     if(!study_end && relation_type === "ученик"){
-      study_end = Math.max(choir_school_end || 0, conservatory_end || 0) || null;
+      study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
     }
     const institution = document.getElementById("pInstitution").value.trim();
     const notes = document.getElementById("pNotes").value.trim();
@@ -442,6 +455,7 @@ function initHeader(){
       full_name, gender, relation_type,
       studied_choir_school, choir_school_end,
       studied_conservatory, conservatory_end,
+      studied_assistantship, assistantship_end,
       study_start, study_end,
       institution: institution || null, notes: notes || null, source: source || null,
       created_by: currentUser.id, created_by_name: myProfile.full_name
@@ -454,6 +468,8 @@ function initHeader(){
     document.getElementById("pChoirEnd").value = "";
     if(pConservatory){ pConservatory.checked = false; pConservatoryBox.style.display = "none"; }
     document.getElementById("pConservatoryEnd").value = "";
+    if(pAssistantship){ pAssistantship.checked = false; pAssistantBox.style.display = "none"; }
+    document.getElementById("pAssistantEnd").value = "";
     document.getElementById("pStudyStart").value = "";
     document.getElementById("pStudyEnd").value = "";
     document.getElementById("pInstitution").value = "";
