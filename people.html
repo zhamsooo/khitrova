@@ -25,13 +25,25 @@
   .ppl-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px}
   .ppl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
 
-  .ppl-card{border:1px solid var(--line); border-radius:10px; padding:14px 16px; background:#fff}
+  .ppl-card{
+    border:1px solid var(--line); border-radius:10px; padding:14px 16px; background:#fff;
+    text-decoration:none; color:inherit; display:flex; flex-direction:column;
+    transition:border-color .15s, box-shadow .15s, transform .1s;
+  }
+  .ppl-card:hover{border-color:var(--ink); box-shadow:0 4px 14px rgba(0,0,0,.04); transform:translateY(-1px)}
+  .ppl-card-top{display:flex; align-items:center; gap:12px; margin-bottom:8px}
+  .ppl-mini-avatar{width:38px; height:38px; border-radius:50%; object-fit:cover; background:var(--paper); border:1px solid var(--line); flex:none}
+  .ppl-mini-placeholder{
+    width:38px; height:38px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-head); font-weight:700; font-size:16px; color:var(--accent); flex:none;
+  }
   .ppl-card .badge{font-family:var(--font-head); font-weight:700; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:6px}
   .ppl-card .badge.st-rejected{color:#b0413e}
-  .ppl-card .name{font-family:var(--font-head); font-weight:700; font-size:16px; margin:0 0 3px}
-  .ppl-card .rel{font-size:12px; color:var(--accent); margin-bottom:6px}
-  .ppl-card .inst{font-size:13.5px; color:var(--ink); line-height:1.45; margin-bottom:4px}
-  .ppl-card .notes{font-size:12.5px; color:var(--muted); line-height:1.45; margin-bottom:8px}
+  .ppl-card .name{font-family:var(--font-head); font-weight:700; font-size:16px; margin:0 0 2px}
+  .ppl-card .rel{font-size:12px; color:var(--accent); margin-bottom:2px}
+  .ppl-card .inst{font-size:13px; color:var(--ink); line-height:1.4; margin-bottom:4px}
+  .ppl-card .notes{font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:8px}
   .ppl-card .meta{font-size:11px; color:var(--muted); border-top:1px solid #f0efec; padding-top:7px; margin-top:auto}
   .ppl-card .meta a{color:var(--muted)}
 
@@ -87,18 +99,43 @@ function personMeta(p){
 
 function personCard(p){
   const isMine = p.status !== "confirmed";
+  const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
+
+  const roleStr = typeof window.personRelationLabel === "function"
+    ? window.personRelationLabel(p)
+    : (REL_LABEL_P[p.relation_type] || p.relation_type);
+
+  let eduTag = "";
+  if(p.studied_choir_school && p.studied_conservatory){
+    eduTag = " · Хор. уч. + СПбГК";
+  } else if(p.studied_choir_school){
+    eduTag = " · Хор. уч.";
+  } else if(p.studied_conservatory){
+    eduTag = " · СПбГК";
+  }
+
   const yearsLine = p.relation_type === "ученик" && (p.study_start || p.study_end)
-    ? ` · ${p.study_start || "?"}–${p.study_end || "?"}`
+    ? ` (${p.study_start ? p.study_start + "–" : ""}${p.study_end || "?"})`
     : "";
+
+  const avatarEl = p.avatar_url
+    ? `<img src="${escapeHtml(p.avatar_url)}" alt="" class="ppl-mini-avatar">`
+    : `<div class="ppl-mini-placeholder">${initial}</div>`;
+
   return `
-    <div class="ppl-card">
+    <a href="person.html?id=${p.id}" class="ppl-card">
       ${isMine ? `<span class="badge st-${p.status}">${STATUS_LABEL_P[p.status] || p.status}</span>` : ""}
-      <div class="name">${escapeHtml(p.full_name)}</div>
-      <div class="rel">${REL_LABEL_P[p.relation_type] || p.relation_type}${yearsLine}</div>
+      <div class="ppl-card-top">
+        ${avatarEl}
+        <div style="min-width:0; flex:1">
+          <div class="name">${escapeHtml(p.full_name)}</div>
+          <div class="rel">${escapeHtml(roleStr)}${yearsLine}${eduTag}</div>
+        </div>
+      </div>
       ${p.institution ? `<div class="inst">${escapeHtml(p.institution)}</div>` : ""}
       ${p.notes ? `<div class="notes">${escapeHtml(p.notes)}</div>` : ""}
       <div class="meta">${personMeta(p)}</div>
-    </div>
+    </a>
   `;
 }
 

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Карточка человека — сайт памяти Т.И. Хитровой</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .person-wrap{max-width:720px; margin:0 auto; padding:6vh 24px 10vh}
+  .btn-back{
+    display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none;
+    font-size:13px; margin-bottom:28px; transition:color .15s; font-family:inherit;
+  }
+  .btn-back:hover{color:var(--ink)}
+
+  .person-card-view{
+    background:#fff; border:1px solid var(--line); border-radius:14px; padding:32px 34px;
+    box-shadow:0 4px 20px rgba(0,0,0,.03);
+  }
+
+  .person-head-row{
+    display:flex; align-items:flex-start; gap:24px; margin-bottom:28px; padding-bottom:24px;
+    border-bottom:1px solid var(--line);
+  }
+
+  .person-avatar-wrap{flex:none}
+  .person-avatar{
+    width:90px; height:90px; border-radius:50%; object-fit:cover; display:block;
+    background:var(--paper); border:1px solid var(--line);
+  }
+  .person-avatar-placeholder{
+    width:90px; height:90px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-head); font-weight:700; font-size:36px; color:var(--accent);
+  }
+
+  .person-title-area{flex:1; min-width:0}
+  .person-name{
+    font-family:var(--font-head); font-weight:700; font-size:32px; margin:0 0 6px;
+    line-height:1.15; color:var(--ink);
+  }
+  .person-role-line{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px}
+  .person-role{font-size:14px; color:var(--accent); font-weight:600}
+  .person-badge{
+    font-family:var(--font-head); font-weight:700; font-size:10.5px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--warn); padding:2px 8px; border-radius:10px;
+    background:rgba(164,100,31,.08);
+  }
+  .person-badge.st-rejected{color:#b0413e; background:rgba(176,65,62,.08)}
+
+  .person-actions{margin-top:14px}
+  .btn-edit-card{
+    background:none; border:1px solid var(--line); color:var(--ink); cursor:pointer;
+    font-size:12.5px; font-family:inherit; padding:6px 14px; border-radius:14px;
+    transition:border-color .15s, background .15s;
+  }
+  .btn-edit-card:hover{border-color:var(--ink); background:#fcfbfa}
+
+  .person-section{margin-bottom:22px}
+  .person-section:last-of-type{margin-bottom:0}
+  .person-section-label{
+    font-family:var(--font-head); font-weight:700; font-size:11.5px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:6px;
+  }
+  .person-section-content{font-size:15px; line-height:1.55; color:var(--ink)}
+  .person-section-content.notes-text{white-space:pre-wrap; color:#3a3e45}
+
+  .edu-item{display:flex; align-items:baseline; gap:8px; margin-bottom:5px}
+  .edu-dot{width:5px; height:5px; border-radius:50%; background:var(--accent); flex:none; transform:translateY(-3px)}
+
+  .person-meta{
+    margin-top:32px; padding-top:18px; border-top:1px solid #f0efec;
+    font-size:12px; color:var(--muted); line-height:1.6;
+  }
+  .person-meta a{color:var(--accent)}
+
+  .person-state{padding:60px 24px; text-align:center; color:var(--muted); font-size:15px}
+
+  /* Редактирование аватарки в модалке */
+  .avatar-edit-box{
+    display:flex; align-items:center; gap:16px; margin:8px 0 14px;
+    padding:12px 14px; background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  }
+  .avatar-preview-img{
+    width:64px; height:64px; border-radius:50%; object-fit:cover; display:block;
+    background:#fff; border:1px solid var(--line);
+  }
+  .avatar-preview-empty{
+    width:64px; height:64px; border-radius:50%; background:#fff; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-head); font-weight:700; font-size:24px; color:var(--muted);
+  }
+  .avatar-edit-actions{display:flex; flex-direction:column; gap:6px}
+  .btn-upload{
+    background:#fff; border:1px solid var(--line); padding:6px 12px; border-radius:12px;
+    font-size:12px; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .btn-upload:hover{border-color:var(--ink)}
+  .btn-remove-avatar{
+    background:none; border:none; color:#b0413e; font-size:11.5px; cursor:pointer;
+    padding:0; text-align:left; text-decoration:underline; font-family:inherit;
+  }
+
+  @media (max-width:640px){
+    .person-wrap{padding:4vh 16px 8vh}
+    .person-card-view{padding:22px 18px}
+    .person-head-row{flex-direction:column; align-items:center; text-align:center; gap:16px}
+    .person-role-line{justify-content:center}
+    .person-name{font-size:26px}
+    .person-actions{display:flex; justify-content:center}
+  }
+</style>
+</head>
+<body data-page="people">
+
+<div class="person-wrap">
+  <a href="people.html" class="btn-back">← Все люди</a>
+  <div id="personContent">
+    <div class="person-state">Загрузка информации…</div>
+  </div>
+</div>
+
+<!-- Модалка редактирования карточки человека -->
+<div class="overlay" id="editPersonOverlay">
+  <div class="modal" style="width:440px">
+    <button class="close" data-close>×</button>
+    <h2>Редактировать данные</h2>
+
+    <label>Фотография (аватарка)</label>
+    <div class="avatar-edit-box">
+      <div id="avatarPreviewHolder"></div>
+      <div class="avatar-edit-actions">
+        <input type="file" id="editAvatarInput" accept="image/*" style="display:none">
+        <button type="button" class="btn-upload" id="btnTriggerUpload">Загрузить фото</button>
+        <button type="button" class="btn-remove-avatar" id="btnRemoveAvatar" style="display:none">Удалить фото</button>
+      </div>
+    </div>
+
+    <label>Имя и фамилия</label>
+    <input type="text" id="editFullName">
+
+    <label>Пол</label>
+    <select id="editGender">
+      <option value="">Не указан</option>
+      <option value="m">Мужской (ученик)</option>
+      <option value="f">Женский (ученица)</option>
+    </select>
+
+    <label>Кем приходится Т.И.?</label>
+    <select id="editRelation">
+      <option value="ученик">Ученик / Ученица</option>
+      <option value="коллега">Коллега</option>
+      <option value="другое">Другое</option>
+    </select>
+
+    <div id="editStudyBlock">
+      <label>Где учился(лась) у Т.И.?</label>
+      <div style="margin-bottom:8px">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
+          <input type="checkbox" id="editChoirSchool" style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
+        </label>
+        <div id="editChoirBox" style="display:none; margin:4px 0 8px 24px">
+          <input type="number" id="editChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
+          <input type="checkbox" id="editConservatory" style="width:auto; margin:0"> СПбГК им. Н.А. Римского-Корсакова
+        </label>
+        <div id="editConservatoryBox" style="display:none; margin:4px 0 8px 24px">
+          <input type="number" id="editConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
+        </div>
+      </div>
+      <label>Или другие годы учёбы (необязательно)</label>
+      <div style="display:flex; gap:8px">
+        <input type="number" id="editStudyStart" placeholder="начало" min="1955" max="2026">
+        <input type="number" id="editStudyEnd" placeholder="окончание" min="1955" max="2026">
+      </div>
+    </div>
+
+    <label>Место работы / должность (необязательно)</label>
+    <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
+
+    <label>Заметки, достижения, биография (необязательно)</label>
+    <textarea id="editNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
+
+    <label>Источник / ссылка (необязательно)</label>
+    <input type="text" id="editSource" placeholder="Откуда эта информация">
+
+    <div class="err" id="errEditPerson"></div>
+    <div class="row-actions">
+      <button class="primary" id="btnSavePersonEdit">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="app.js"></script>
+<script>
+let currentPerson = null;
+let editingAvatarUrl = null;
+let pendingAvatarFile = null;
+
+const params = new URLSearchParams(location.search);
+const personId = params.get("id");
+
+function renderEducation(p){
+  const items = [];
+  if(p.studied_choir_school){
+    items.push(`Хоровое училище им. М.И. Глинки${p.choir_school_end ? ` · выпуск ${p.choir_school_end}` : ""}`);
+  }
+  if(p.studied_conservatory){
+    items.push(`СПбГК им. Н.А. Римского-Корсакова${p.conservatory_end ? ` · выпуск ${p.conservatory_end}` : ""}`);
+  }
+  if(!items.length && (p.study_start || p.study_end)){
+    items.push(`Годы учёбы: ${p.study_start || "…"}–${p.study_end || "…"}`);
+  }
+  if(!items.length) return "";
+  return `
+    <div class="person-section">
+      <div class="person-section-label">Обучение у Т.И. Хитровой</div>
+      <div class="person-section-content">
+        ${items.map(it => `<div class="edu-item"><span class="edu-dot"></span><span>${escapeHtml(it)}</span></div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function renderMeta(p){
+  const parts = [];
+  if(p.created_by_name) parts.push(`Добавил(а): <b>${escapeHtml(p.created_by_name)}</b>`);
+  if(p.created_at) parts.push(formatDate(p.created_at));
+  if(p.updated_by_name){
+    parts.push(`Последнее изменение: <b>${escapeHtml(p.updated_by_name)}</b> (${formatDate(p.updated_at)})`);
+  }
+  if(p.source){
+    const isUrl = /^https?:\/\//.test(p.source);
+    parts.push(`Источник: ${isUrl ? `<a href="${escapeHtml(p.source)}" target="_blank" rel="noopener">ссылка</a>` : escapeHtml(p.source)}`);
+  }
+  return parts.join(" · ");
+}
+
+function renderPerson(p){
+  document.title = `${p.full_name} — Татьяна Ивановна Хитрова`;
+  const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
+
+  const avatarHtml = p.avatar_url
+    ? `<img src="${escapeHtml(p.avatar_url)}" alt="${escapeHtml(p.full_name)}" class="person-avatar">`
+    : `<div class="person-avatar-placeholder">${initial}</div>`;
+
+  const roleText = typeof window.personRelationLabel === "function"
+    ? window.personRelationLabel(p)
+    : (p.relation_type || "Ученик(ца)");
+
+  const isUnconfirmed = p.status !== "confirmed";
+
+  const html = `
+    <div class="person-card-view">
+      <div class="person-head-row">
+        <div class="person-avatar-wrap">${avatarHtml}</div>
+        <div class="person-title-area">
+          <h1 class="person-name">${escapeHtml(p.full_name)}</h1>
+          <div class="person-role-line">
+            <span class="person-role">${escapeHtml(roleText)}</span>
+            ${isUnconfirmed ? `<span class="person-badge st-${p.status}">${p.status === "rejected" ? "Отклонено" : "На проверке"}</span>` : ""}
+          </div>
+          <div class="person-actions">
+            <button class="btn-edit-card" id="btnOpenEdit">✎ Редактировать карточку</button>
+          </div>
+        </div>
+      </div>
+
+      ${renderEducation(p)}
+
+      ${p.institution ? `
+        <div class="person-section">
+          <div class="person-section-label">Место работы / должность</div>
+          <div class="person-section-content">${escapeHtml(p.institution)}</div>
+        </div>
+      ` : ""}
+
+      ${p.notes ? `
+        <div class="person-section">
+          <div class="person-section-label">Заметки и биография</div>
+          <div class="person-section-content notes-text">${escapeHtml(p.notes)}</div>
+        </div>
+      ` : ""}
+
+      <div class="person-meta">${renderMeta(p)}</div>
+    </div>
+  `;
+
+  document.getElementById("personContent").innerHTML = html;
+
+  document.getElementById("btnOpenEdit").addEventListener("click", () => {
+    if(!currentUser){
+      resetAuthModal();
+      open_("authOverlay");
+      return;
+    }
+    openEditModal(p);
+  });
+}
+
+async function loadPerson(){
+  if(!personId){
+    location.href = "people.html";
+    return;
+  }
+  const { data, error } = await sb.from("people").select("*").eq("id", personId).maybeSingle();
+  if(error || !data){
+    document.getElementById("personContent").innerHTML = `
+      <div class="person-state">Человек не найден или был удалён. <br><br><a href="people.html" style="color:var(--accent)">← Вернуться к списку</a></div>
+    `;
+    return;
+  }
+  currentPerson = data;
+  renderPerson(data);
+}
+
+function updateAvatarPreview(url, name){
+  const holder = document.getElementById("avatarPreviewHolder");
+  const btnRemove = document.getElementById("btnRemoveAvatar");
+  const initial = (name || "?").trim().charAt(0).toUpperCase();
+
+  if(url){
+    holder.innerHTML = `<img src="${escapeHtml(url)}" class="avatar-preview-img" alt="">`;
+    btnRemove.style.display = "block";
+  } else {
+    holder.innerHTML = `<div class="avatar-preview-empty">${initial}</div>`;
+    btnRemove.style.display = "none";
+  }
+}
+
+function openEditModal(p){
+  editingAvatarUrl = p.avatar_url || null;
+  pendingAvatarFile = null;
+
+  document.getElementById("editFullName").value = p.full_name || "";
+  document.getElementById("editGender").value = p.gender || "";
+  document.getElementById("editRelation").value = p.relation_type || "ученик";
+
+  const isStudent = (p.relation_type || "ученик") === "ученик";
+  document.getElementById("editStudyBlock").style.display = isStudent ? "block" : "none";
+
+  const choirCheck = document.getElementById("editChoirSchool");
+  const choirBox = document.getElementById("editChoirBox");
+  choirCheck.checked = !!p.studied_choir_school;
+  choirBox.style.display = choirCheck.checked ? "block" : "none";
+  document.getElementById("editChoirEnd").value = p.choir_school_end || "";
+
+  const consCheck = document.getElementById("editConservatory");
+  const consBox = document.getElementById("editConservatoryBox");
+  consCheck.checked = !!p.studied_conservatory;
+  consBox.style.display = consCheck.checked ? "block" : "none";
+  document.getElementById("editConservatoryEnd").value = p.conservatory_end || "";
+
+  document.getElementById("editStudyStart").value = p.study_start || "";
+  document.getElementById("editStudyEnd").value = p.study_end || "";
+  document.getElementById("editInstitution").value = p.institution || "";
+  document.getElementById("editNotes").value = p.notes || "";
+  document.getElementById("editSource").value = p.source || "";
+  document.getElementById("errEditPerson").style.display = "none";
+
+  updateAvatarPreview(editingAvatarUrl, p.full_name);
+  open_("editPersonOverlay");
+}
+
+document.getElementById("editRelation").addEventListener("change", e => {
+  document.getElementById("editStudyBlock").style.display = e.target.value === "ученик" ? "block" : "none";
+});
+
+document.getElementById("editChoirSchool").addEventListener("change", e => {
+  document.getElementById("editChoirBox").style.display = e.target.checked ? "block" : "none";
+});
+
+document.getElementById("editConservatory").addEventListener("change", e => {
+  document.getElementById("editConservatoryBox").style.display = e.target.checked ? "block" : "none";
+});
+
+document.getElementById("btnTriggerUpload").addEventListener("click", () => {
+  document.getElementById("editAvatarInput").click();
+});
+
+document.getElementById("editAvatarInput").addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  pendingAvatarFile = file;
+  const localUrl = URL.createObjectURL(file);
+  updateAvatarPreview(localUrl, document.getElementById("editFullName").value);
+});
+
+document.getElementById("btnRemoveAvatar").addEventListener("click", () => {
+  pendingAvatarFile = null;
+  editingAvatarUrl = null;
+  document.getElementById("editAvatarInput").value = "";
+  updateAvatarPreview(null, document.getElementById("editFullName").value);
+});
+
+document.getElementById("btnSavePersonEdit").addEventListener("click", async () => {
+  const full_name = document.getElementById("editFullName").value.trim();
+  const gender = document.getElementById("editGender").value || null;
+  const relation_type = document.getElementById("editRelation").value;
+  const errEl = document.getElementById("errEditPerson");
+  const saveBtn = document.getElementById("btnSavePersonEdit");
+
+  if(!full_name){
+    errEl.textContent = "Укажите имя и фамилию";
+    errEl.style.display = "block";
+    return;
+  }
+  errEl.style.display = "none";
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Сохранение…";
+
+  try {
+    let finalAvatarUrl = editingAvatarUrl;
+    if(pendingAvatarFile){
+      const ext = (pendingAvatarFile.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+      const { error: upErr } = await sb.storage.from("person-avatars").upload(path, pendingAvatarFile);
+      if(upErr){
+        throw new Error("Не удалось загрузить фото: " + upErr.message);
+      }
+      const { data: pubData } = sb.storage.from("person-avatars").getPublicUrl(path);
+      finalAvatarUrl = pubData.publicUrl;
+    }
+
+    const studied_choir_school = document.getElementById("editChoirSchool").checked;
+    const choir_school_end = (studied_choir_school && document.getElementById("editChoirEnd").value)
+      ? parseInt(document.getElementById("editChoirEnd").value, 10) : null;
+
+    const studied_conservatory = document.getElementById("editConservatory").checked;
+    const conservatory_end = (studied_conservatory && document.getElementById("editConservatoryEnd").value)
+      ? parseInt(document.getElementById("editConservatoryEnd").value, 10) : null;
+
+    const studyStartRaw = document.getElementById("editStudyStart").value;
+    const studyEndRaw = document.getElementById("editStudyEnd").value;
+    let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
+    let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    if(!study_end && relation_type === "ученик"){
+      study_end = Math.max(choir_school_end || 0, conservatory_end || 0) || null;
+    }
+
+    const institution = document.getElementById("editInstitution").value.trim() || null;
+    const notes = document.getElementById("editNotes").value.trim() || null;
+    const source = document.getElementById("editSource").value.trim() || null;
+
+    const updatePayload = {
+      full_name,
+      gender,
+      relation_type,
+      studied_choir_school,
+      choir_school_end,
+      studied_conservatory,
+      conservatory_end,
+      study_start,
+      study_end,
+      institution,
+      notes,
+      source,
+      avatar_url: finalAvatarUrl,
+      updated_by: currentUser.id,
+      updated_by_name: myProfile ? myProfile.full_name : "Участник сайта",
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: updateErr } = await sb.from("people").update(updatePayload).eq("id", personId);
+    if(updateErr) throw updateErr;
+
+    close_("editPersonOverlay");
+    await loadPerson();
+  } catch(err){
+    errEl.textContent = err.message;
+    errEl.style.display = "block";
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Сохранить";
+  }
+});
+
+loadPerson();
+</script>
+</body>
+</html>

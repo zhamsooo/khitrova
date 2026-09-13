@@ -124,14 +124,35 @@ const MODALS_HTML = `
     <h2>Добавить человека</h2>
     <label>Имя и фамилия</label>
     <input type="text" id="pFullName" placeholder="Имя Фамилия">
+    <label>Пол</label>
+    <select id="pGender">
+      <option value="">Не указан</option>
+      <option value="m">Мужской (ученик)</option>
+      <option value="f">Женский (ученица)</option>
+    </select>
     <label>Кем приходится Т.И.?</label>
     <select id="pRelation">
-      <option value="ученик">Ученик(ца)</option>
+      <option value="ученик">Ученик / Ученица</option>
       <option value="коллега">Коллега</option>
       <option value="другое">Другое</option>
     </select>
     <div id="pStudyWrap">
-      <label>Годы учёбы (необязательно)</label>
+      <label>Где учился(лась) у Т.И.?</label>
+      <div style="margin-bottom:8px">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
+          <input type="checkbox" id="pChoirSchool" style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
+        </label>
+        <div id="pChoirBox" style="display:none; margin:4px 0 8px 24px">
+          <input type="number" id="pChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
+          <input type="checkbox" id="pConservatory" style="width:auto; margin:0"> СПбГК им. Н.А. Римского-Корсакова
+        </label>
+        <div id="pConservatoryBox" style="display:none; margin:4px 0 8px 24px">
+          <input type="number" id="pConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
+        </div>
+      </div>
+      <label>Или другие годы учёбы (необязательно)</label>
       <div style="display:flex; gap:8px">
         <input type="number" id="pStudyStart" placeholder="начало" min="1955" max="2026">
         <input type="number" id="pStudyEnd" placeholder="окончание" min="1955" max="2026">
@@ -164,6 +185,19 @@ function resetAuthModal(){
   document.getElementById("errCode").style.display = "none";
   document.getElementById("errProfile").style.display = "none";
 }
+
+function personRelationLabel(p){
+  if(!p) return "";
+  const rel = p.relation_type || "ученик";
+  if(rel === "ученик"){
+    if(p.gender === "m") return "Ученик";
+    if(p.gender === "f") return "Ученица";
+    return "Ученик(ца)";
+  }
+  if(rel === "коллега") return "Коллега";
+  return rel;
+}
+window.personRelationLabel = personRelationLabel;
 
 const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Другое" };
 
@@ -256,6 +290,17 @@ function initHeader(){
   document.getElementById("pRelation").addEventListener("change", e => {
     document.getElementById("pStudyWrap").style.display = e.target.value === "ученик" ? "block" : "none";
   });
+
+  const pChoirSchool = document.getElementById("pChoirSchool");
+  const pChoirBox = document.getElementById("pChoirBox");
+  if(pChoirSchool && pChoirBox){
+    pChoirSchool.addEventListener("change", () => pChoirBox.style.display = pChoirSchool.checked ? "block" : "none");
+  }
+  const pConservatory = document.getElementById("pConservatory");
+  const pConservatoryBox = document.getElementById("pConservatoryBox");
+  if(pConservatory && pConservatoryBox){
+    pConservatory.addEventListener("change", () => pConservatoryBox.style.display = pConservatory.checked ? "block" : "none");
+  }
 
   const whoChip = document.getElementById("whoChip");
   const whoDropdown = document.getElementById("whoDropdown");
@@ -373,11 +418,20 @@ function initHeader(){
 
   document.getElementById("btnSubmitPerson").addEventListener("click", async () => {
     const full_name = document.getElementById("pFullName").value.trim();
+    const gender = document.getElementById("pGender").value || null;
     const relation_type = document.getElementById("pRelation").value;
     const studyStartRaw = document.getElementById("pStudyStart").value;
     const studyEndRaw = document.getElementById("pStudyEnd").value;
-    const study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
-    const study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    const studied_choir_school = pChoirSchool ? pChoirSchool.checked : false;
+    const choir_school_end = (studied_choir_school && document.getElementById("pChoirEnd").value) ? parseInt(document.getElementById("pChoirEnd").value, 10) : null;
+    const studied_conservatory = pConservatory ? pConservatory.checked : false;
+    const conservatory_end = (studied_conservatory && document.getElementById("pConservatoryEnd").value) ? parseInt(document.getElementById("pConservatoryEnd").value, 10) : null;
+
+    let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
+    let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    if(!study_end && relation_type === "ученик"){
+      study_end = Math.max(choir_school_end || 0, conservatory_end || 0) || null;
+    }
     const institution = document.getElementById("pInstitution").value.trim();
     const notes = document.getElementById("pNotes").value.trim();
     const source = document.getElementById("pSource").value.trim();
@@ -385,13 +439,21 @@ function initHeader(){
     if(!full_name){ errEl.textContent = "Укажите имя и фамилию"; errEl.style.display = "block"; return; }
     errEl.style.display = "none";
     const { error } = await sb.from("people").insert({
-      full_name, relation_type, study_start, study_end,
+      full_name, gender, relation_type,
+      studied_choir_school, choir_school_end,
+      studied_conservatory, conservatory_end,
+      study_start, study_end,
       institution: institution || null, notes: notes || null, source: source || null,
       created_by: currentUser.id, created_by_name: myProfile.full_name
     });
     if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
     close_("addPersonOverlay");
     document.getElementById("pFullName").value = "";
+    document.getElementById("pGender").value = "";
+    if(pChoirSchool){ pChoirSchool.checked = false; pChoirBox.style.display = "none"; }
+    document.getElementById("pChoirEnd").value = "";
+    if(pConservatory){ pConservatory.checked = false; pConservatoryBox.style.display = "none"; }
+    document.getElementById("pConservatoryEnd").value = "";
     document.getElementById("pStudyStart").value = "";
     document.getElementById("pStudyEnd").value = "";
     document.getElementById("pInstitution").value = "";
