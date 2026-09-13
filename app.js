@@ -251,6 +251,7 @@ async function updateModBadge(){
 window.updateModBadge = updateModBadge;
 
 function initHeader(){
+  if(document.querySelector(".site-nav")) return;
   document.body.insertAdjacentHTML("afterbegin", MODALS_HTML);
   document.body.insertAdjacentHTML("afterbegin", HEADER_HTML);
 

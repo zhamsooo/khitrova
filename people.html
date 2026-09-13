@@ -108,9 +108,14 @@ function personCard(p){
   if(p.studied_assistantship) eduParts.push("Ассист.");
   const eduTag = eduParts.length ? " · " + eduParts.join(" + ") : "";
 
-  const yearsLine = p.relation_type === "ученик" && (p.study_start || p.study_end)
-    ? ` (${p.study_start ? p.study_start + "–" : ""}${p.study_end || "?"})`
-    : "";
+  let yearsLine = "";
+  if(p.relation_type === "ученик"){
+    if(p.study_start && p.study_end){
+      yearsLine = ` · ${p.study_start}–${p.study_end} гг.`;
+    } else if(p.study_end){
+      yearsLine = ` · выпуск ${p.study_end} г.`;
+    }
+  }
 
   const avatarEl = p.avatar_url
     ? `<img src="${escapeHtml(p.avatar_url)}" alt="" class="ppl-mini-avatar">`

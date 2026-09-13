@@ -133,6 +133,15 @@
   .peers-tab-btn:hover{color:var(--ink); border-color:var(--ink)}
   .peers-tab-btn.active{background:var(--ink); color:#fff; border-color:var(--ink)}
 
+  .peers-col-head{
+    display:flex; align-items:center; gap:8px; padding:0 8px 6px;
+    font-family:var(--font-head); font-weight:700; font-size:10px;
+    color:var(--muted); text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid #f0efec; margin-bottom:4px;
+  }
+  .col-yr-title{width:42px; text-align:right; flex:none}
+  .col-name-title{flex:1; padding-left:32px}
+
   .peers-scroll-pane{
     max-height:430px; overflow-y:auto; padding-right:4px; scroll-behavior:smooth;
     display:flex; flex-direction:column; gap:4px;
@@ -150,9 +159,15 @@
 
   .peer-year-tag{
     font-family:var(--font-head); font-weight:700; font-size:12px; color:var(--muted);
-    width:36px; flex:none; text-align:right;
+    width:42px; flex:none; text-align:right;
   }
   .peer-item.current .peer-year-tag{color:var(--accent)}
+  .peers-toggle-btn{
+    background:none; border:none; color:var(--muted); font-size:11px;
+    cursor:pointer; font-family:inherit; text-decoration:underline; padding:4px 6px;
+    transition:color .12s;
+  }
+  .peers-toggle-btn:hover{color:var(--ink)}
 
   .peer-avatar-mini{
     width:24px; height:24px; border-radius:50%; object-fit:cover; background:var(--paper);
@@ -357,28 +372,30 @@ function renderEducation(p){
     items.push({
       institution: "Хоровое училище им. М.И. Глинки",
       detail: "Класс Т.И. Хитровой",
-      year: p.choir_school_end ? `${p.choir_school_end} г.` : "выпуск"
+      year: p.choir_school_end ? `выпуск ${p.choir_school_end} г.` : "выпуск"
     });
   }
   if(p.studied_conservatory){
     items.push({
       institution: "СПбГК им. Н.А. Римского-Корсакова",
       detail: "Дирижёрско-хоровой факультет · класс проф. Т.И. Хитровой",
-      year: p.conservatory_end ? `${p.conservatory_end} г.` : "выпуск"
+      year: p.conservatory_end ? `выпуск ${p.conservatory_end} г.` : "выпуск"
     });
   }
   if(p.studied_assistantship){
     items.push({
       institution: "Ассистентура-стажировка в СПбГК",
       detail: "Класс проф. Т.И. Хитровой",
-      year: p.assistantship_end ? `${p.assistantship_end} г.` : "выпуск"
+      year: p.assistantship_end ? `выпуск ${p.assistantship_end} г.` : "выпуск"
     });
   }
   if(!items.length && (p.study_start || p.study_end)){
     items.push({
       institution: "Обучение у Т.И. Хитровой",
       detail: "Класс Т.И. Хитровой",
-      year: `${p.study_start || "…"}–${p.study_end || "…"} гг.`
+      year: p.study_start && p.study_end
+        ? `${p.study_start}–${p.study_end} гг.`
+        : (p.study_end ? `выпуск ${p.study_end} г.` : `с ${p.study_start} г.`)
     });
   }
   if(!items.length) return "";
@@ -500,10 +517,11 @@ function renderPeersWidget(p, students){
   }
 
   let activeTab = tabs[0];
+  let showAllYears = false;
 
   function buildListHtml(targetYear, tabId){
-    const withYear = [];
-    const withoutYear = [];
+    let withYear = [];
+    let withoutYear = [];
 
     students.forEach(s => {
       let yr = s.study_end;
@@ -518,6 +536,11 @@ function renderPeersWidget(p, students){
       else withoutYear.push(obj);
     });
 
+    const totalCount = withYear.length;
+    if(!showAllYears && targetYear){
+      withYear = withYear.filter(it => Math.abs(it.year - targetYear) <= 6);
+    }
+
     withYear.sort((a, b) => a.year - b.year);
 
     const renderItem = (it) => {
@@ -529,7 +552,7 @@ function renderPeersWidget(p, students){
 
       return `
         <a href="person.html?id=${s.id}" class="peer-item ${it.isCurrent ? "current" : ""}" data-id="${s.id}">
-          <div class="peer-year-tag">${it.year || "—"}</div>
+          <div class="peer-year-tag">${it.year ? it.year + " г." : "—"}</div>
           ${avHtml}
           <div class="peer-info">
             <div class="peer-name">${escapeHtml(s.full_name)}</div>
@@ -541,20 +564,32 @@ function renderPeersWidget(p, students){
       `;
     };
 
-    let html = withYear.map(renderItem).join("");
-    if(withoutYear.length){
+    let html = `<div class="peers-col-head"><span class="col-yr-title">Выпуск</span><span class="col-name-title">Ученик</span></div>`;
+
+    if(!withYear.length){
+      html += `<div style="font-size:12px; color:var(--muted); padding:16px 8px; text-align:center">В диапазоне ±6 лет других выпускников пока нет.</div>`;
+    } else {
+      html += withYear.map(renderItem).join("");
+    }
+
+    if(showAllYears && withoutYear.length){
       html += `<div style="font-size:10.5px; color:var(--muted); margin:8px 8px 4px; text-transform:uppercase; letter-spacing:.05em">Год выпуска не указан</div>`;
       html += withoutYear.map(renderItem).join("");
     }
-    return html;
+    return { html, totalCount };
   }
 
   function renderSideContent(){
+    const { html: listHtml, totalCount } = buildListHtml(activeTab.year, activeTab.id);
+    const subText = showAllYears
+      ? `Все выпуски (${totalCount} учеников)`
+      : `Выпуски ${activeTab.year - 6}–${activeTab.year + 6} гг. (±6 лет)`;
+
     sideEl.innerHTML = `
       <div class="peers-widget">
         <div class="peers-header">
           <div class="peers-title">Учились вместе</div>
-          <div class="peers-sub">Выпуски вокруг ${activeTab.year} г.</div>
+          <div class="peers-sub">${subText}</div>
           ${tabs.length > 1 ? `
             <div class="peers-tabs">
               ${tabs.map(t => `<button class="peers-tab-btn ${t.id === activeTab.id ? "active" : ""}" data-tab="${t.id}">${t.label} (${t.year})</button>`).join("")}
@@ -562,7 +597,12 @@ function renderPeersWidget(p, students){
           ` : ""}
         </div>
         <div class="peers-scroll-pane" id="peersPane">
-          ${buildListHtml(activeTab.year, activeTab.id)}
+          ${listHtml}
+        </div>
+        <div style="text-align:center; padding:6px 0 2px">
+          <button class="peers-toggle-btn" id="btnToggleRange">
+            ${showAllYears ? "Свернуть до диапазона ±6 лет" : `Показать все годы архива (${totalCount})`}
+          </button>
         </div>
         <div class="peers-jump-btns">
           <button class="peers-jump-btn" id="btnScrollTop">↑ Раньше</button>
@@ -583,6 +623,14 @@ function renderPeersWidget(p, students){
         }
       });
     });
+
+    const btnToggle = document.getElementById("btnToggleRange");
+    if(btnToggle){
+      btnToggle.addEventListener("click", () => {
+        showAllYears = !showAllYears;
+        renderSideContent();
+      });
+    }
 
     const pane = document.getElementById("peersPane");
     const currentEl = pane.querySelector(".peer-item.current");
@@ -842,7 +890,6 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
   }
 });
 
-initHeader();
 window.addEventListener("authReady", loadPerson, { once: true });
 </script>
 </body>
