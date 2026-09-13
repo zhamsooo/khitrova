@@ -23,6 +23,10 @@ const HEADER_HTML = `
           <div class="t">Событие на линию жизни</div>
           <div class="d">Дата, место, что произошло — появится на таймлайне</div>
         </button>
+        <button class="opt" id="optPerson">
+          <div class="t">Человека в «Людях»</div>
+          <div class="d">Ученик, коллега — появится в разделе «Люди»</div>
+        </button>
         <a class="opt" href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Материал для сайта памяти Т.И. Хитровой")}">
           <div class="t">Написать на почту</div>
           <div class="d">Фото, статья, воспоминание — что угодно, на ${CONTACT_EMAIL}</div>
@@ -109,6 +113,37 @@ const MODALS_HTML = `
     <div class="row-actions"><button class="primary" id="btnSubmitEvent">Отправить</button></div>
   </div>
 </div>
+
+<div class="overlay" id="addPersonOverlay">
+  <div class="modal">
+    <button class="close" data-close>×</button>
+    <h2>Добавить человека</h2>
+    <label>Имя и фамилия</label>
+    <input type="text" id="pFullName" placeholder="Имя Фамилия">
+    <label>Кем приходится Т.И.?</label>
+    <select id="pRelation">
+      <option value="ученик">Ученик(ца)</option>
+      <option value="коллега">Коллега</option>
+      <option value="другое">Другое</option>
+    </select>
+    <div id="pStudyWrap">
+      <label>Годы учёбы (необязательно)</label>
+      <div style="display:flex; gap:8px">
+        <input type="number" id="pStudyStart" placeholder="начало" min="1955" max="2026">
+        <input type="number" id="pStudyEnd" placeholder="окончание" min="1955" max="2026">
+      </div>
+    </div>
+    <label>Место работы / должность (необязательно)</label>
+    <input type="text" id="pInstitution" placeholder="например, преподаватель Хорового училища">
+    <label>Ещё что-то важное (необязательно)</label>
+    <textarea id="pNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
+    <label>Источник / ссылка (необязательно)</label>
+    <input type="text" id="pSource" placeholder="Откуда эта информация">
+    <div class="err" id="errPerson"></div>
+    <div class="hint">Появится в «Людях» с пометкой «не подтверждено», пока модератор не проверит.</div>
+    <div class="row-actions"><button class="primary" id="btnSubmitPerson">Отправить</button></div>
+  </div>
+</div>
 `;
 
 let currentUser = null;
@@ -178,6 +213,16 @@ function initHeader(){
     dropdown.classList.remove("open");
     if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
     open_("addOverlay");
+  });
+  document.getElementById("optPerson").addEventListener("click", e => {
+    e.stopPropagation();
+    dropdown.classList.remove("open");
+    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+    open_("addPersonOverlay");
+  });
+
+  document.getElementById("pRelation").addEventListener("change", e => {
+    document.getElementById("pStudyWrap").style.display = e.target.value === "ученик" ? "block" : "none";
   });
 
   const whoChip = document.getElementById("whoChip");
@@ -291,6 +336,35 @@ function initHeader(){
     document.getElementById("evDesc").value = "";
     document.getElementById("evSource").value = "";
     if(typeof window.onEventAdded === "function") window.onEventAdded();
+  });
+
+  document.getElementById("btnSubmitPerson").addEventListener("click", async () => {
+    const full_name = document.getElementById("pFullName").value.trim();
+    const relation_type = document.getElementById("pRelation").value;
+    const studyStartRaw = document.getElementById("pStudyStart").value;
+    const studyEndRaw = document.getElementById("pStudyEnd").value;
+    const study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
+    const study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    const institution = document.getElementById("pInstitution").value.trim();
+    const notes = document.getElementById("pNotes").value.trim();
+    const source = document.getElementById("pSource").value.trim();
+    const errEl = document.getElementById("errPerson");
+    if(!full_name){ errEl.textContent = "Укажите имя и фамилию"; errEl.style.display = "block"; return; }
+    errEl.style.display = "none";
+    const { error } = await sb.from("people").insert({
+      full_name, relation_type, study_start, study_end,
+      institution: institution || null, notes: notes || null, source: source || null,
+      created_by: currentUser.id, created_by_name: myProfile.full_name
+    });
+    if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+    close_("addPersonOverlay");
+    document.getElementById("pFullName").value = "";
+    document.getElementById("pStudyStart").value = "";
+    document.getElementById("pStudyEnd").value = "";
+    document.getElementById("pInstitution").value = "";
+    document.getElementById("pNotes").value = "";
+    document.getElementById("pSource").value = "";
+    if(typeof window.onPersonAdded === "function") window.onPersonAdded();
   });
 
   sb.auth.onAuthStateChange(async (event, session) => {

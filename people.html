@@ -5,17 +5,153 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Люди — сайт памяти Т.И. Хитровой</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  .ppl-wrap{max-width:900px; margin:0 auto; padding:8vh 24px 10vh}
+  .ppl-head h1{font-family:var(--font-head); font-weight:700; font-size:38px; margin:0 0 10px}
+  .ppl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 20px; max-width:560px}
+
+  .ppl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:26px}
+  .ppl-chip{
+    background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+    font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
+  }
+  .ppl-chip.active{background:var(--ink); color:#fff; border-color:var(--ink)}
+  .ppl-search{
+    margin-left:auto; background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:6px 13px; font:inherit; font-size:12.5px; min-width:180px;
+  }
+
+  .ppl-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:26px 0 12px}
+  .ppl-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px}
+  .ppl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
+
+  .ppl-card{border:1px solid var(--line); border-radius:10px; padding:14px 16px; background:#fff}
+  .ppl-card .badge{font-family:var(--font-head); font-weight:700; font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--warn); display:block; margin-bottom:6px}
+  .ppl-card .badge.st-rejected{color:#b0413e}
+  .ppl-card .name{font-family:var(--font-head); font-weight:700; font-size:16px; margin:0 0 3px}
+  .ppl-card .rel{font-size:12px; color:var(--accent); margin-bottom:6px}
+  .ppl-card .inst{font-size:13.5px; color:var(--ink); line-height:1.45; margin-bottom:4px}
+  .ppl-card .notes{font-size:12.5px; color:var(--muted); line-height:1.45; margin-bottom:8px}
+  .ppl-card .meta{font-size:11px; color:var(--muted); border-top:1px solid #f0efec; padding-top:7px; margin-top:auto}
+  .ppl-card .meta a{color:var(--muted)}
+
+  @media (max-width:640px){
+    .ppl-head h1{font-size:30px}
+    .ppl-search{margin-left:0; width:100%}
+    .ppl-grid{grid-template-columns:1fr 1fr}
+  }
+</style>
 </head>
 <body data-page="people">
 
-<div class="stub">
-  <div class="k">Раздел в разработке</div>
-  <h1>Люди</h1>
-  <p>Здесь появятся ученики, коллеги и все, с кем была знакома Татьяна Ивановна — с годами учёбы или совместной работы и короткими карточками, кто есть кто.</p>
-  <p class="mail">Раздел ещё строится. Если хотите рассказать о ком-то или прислать фото уже сейчас — пишите на <a href="mailto:post@khitrova.org">post@khitrova.org</a>, ничего не потеряется.</p>
+<div class="ppl-wrap">
+  <div class="ppl-head">
+    <h1>Люди</h1>
+    <p class="sub">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный и таким и останется — дополняйте его.</p>
+  </div>
+
+  <div class="ppl-controls">
+    <button class="ppl-chip active" data-filter="все">Все</button>
+    <button class="ppl-chip" data-filter="ученик">Ученики</button>
+    <button class="ppl-chip" data-filter="коллега">Коллеги</button>
+    <button class="ppl-chip" data-filter="другое">Другое</button>
+    <input type="text" class="ppl-search" id="pplSearch" placeholder="Поиск по имени…">
+  </div>
+
+  <div id="pplList"><div class="ppl-state">Загрузка…</div></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
+<script>
+const REL_LABEL_P = { "ученик":"Ученик(ца)", "коллега":"Коллега", "другое":"Другое" };
+const STATUS_LABEL_P = { unconfirmed:"На проверке", rejected:"Отклонено" };
+
+let allPeople = [];
+let activeFilter = "все";
+
+function decadeLabel(year){
+  if(!year) return "Год выпуска неизвестен";
+  return `${Math.floor(year / 10) * 10}-е`;
+}
+
+function personMeta(p){
+  const parts = [];
+  if(p.created_by_name) parts.push(`Добавил(а): ${escapeHtml(p.created_by_name)}`);
+  if(p.source){
+    const isUrl = /^https?:\/\//.test(p.source);
+    parts.push(`Источник: ${isUrl ? `<a href="${p.source}" target="_blank" rel="noopener">ссылка</a>` : escapeHtml(p.source)}`);
+  }
+  return parts.join(" · ");
+}
+
+function personCard(p){
+  const isMine = p.status !== "confirmed";
+  const yearsLine = p.relation_type === "ученик" && (p.study_start || p.study_end)
+    ? ` · ${p.study_start || "?"}–${p.study_end || "?"}`
+    : "";
+  return `
+    <div class="ppl-card">
+      ${isMine ? `<span class="badge st-${p.status}">${STATUS_LABEL_P[p.status] || p.status}</span>` : ""}
+      <div class="name">${escapeHtml(p.full_name)}</div>
+      <div class="rel">${REL_LABEL_P[p.relation_type] || p.relation_type}${yearsLine}</div>
+      ${p.institution ? `<div class="inst">${escapeHtml(p.institution)}</div>` : ""}
+      ${p.notes ? `<div class="notes">${escapeHtml(p.notes)}</div>` : ""}
+      <div class="meta">${personMeta(p)}</div>
+    </div>
+  `;
+}
+
+function render(){
+  const q = document.getElementById("pplSearch").value.trim().toLowerCase();
+  let list = allPeople;
+  if(activeFilter !== "все") list = list.filter(p => p.relation_type === activeFilter);
+  if(q) list = list.filter(p => p.full_name.toLowerCase().includes(q));
+
+  const elList = document.getElementById("pplList");
+  if(!list.length){ elList.innerHTML = `<div class="ppl-state">Никого не нашлось.</div>`; return; }
+
+  const students = list.filter(p => p.relation_type === "ученик").sort((a,b) => (b.study_end||0) - (a.study_end||0));
+  const others = list.filter(p => p.relation_type !== "ученик");
+
+  const groups = new Map();
+  students.forEach(p => {
+    const key = decadeLabel(p.study_end);
+    if(!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
+  });
+
+  let html = "";
+  for(const [label, people] of groups){
+    html += `<div class="ppl-section-title">${escapeHtml(label)}</div><div class="ppl-grid">${people.map(personCard).join("")}</div>`;
+  }
+  if(others.length){
+    html += `<div class="ppl-section-title">Коллеги и другие</div><div class="ppl-grid">${others.map(personCard).join("")}</div>`;
+  }
+  elList.innerHTML = html;
+}
+
+async function loadPeople(){
+  let q = sb.from("people").select("*");
+  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
+  const { data, error } = await q;
+  if(error){ document.getElementById("pplList").innerHTML = `<div class="ppl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+  allPeople = data || [];
+  render();
+}
+
+document.querySelectorAll(".ppl-chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    document.querySelectorAll(".ppl-chip").forEach(c => c.classList.remove("active"));
+    chip.classList.add("active");
+    activeFilter = chip.dataset.filter;
+    render();
+  });
+});
+document.getElementById("pplSearch").addEventListener("input", render);
+
+window.onPersonAdded = loadPeople;
+window.addEventListener("authReady", loadPeople, { once: true });
+</script>
 </body>
 </html>
