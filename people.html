@@ -139,10 +139,25 @@ function personCard(p){
 }
 
 function render(){
-  const q = document.getElementById("pplSearch").value.trim().toLowerCase();
+  const navInput = document.getElementById("navSearchInput");
+  const pplInput = document.getElementById("pplSearch");
+  const rawQ = (navInput && navInput.value.trim()) || (pplInput && pplInput.value.trim()) || "";
   let list = allPeople;
   if(activeFilter !== "все") list = list.filter(p => p.relation_type === activeFilter);
-  if(q) list = list.filter(p => p.full_name.toLowerCase().includes(q));
+  if(rawQ){
+    const normQ = rawQ.toLowerCase().replace(/ё/g, "е").trim();
+    const words = normQ.split(/\s+/).filter(Boolean);
+    list = list.filter(p => {
+      const years = [
+        p.study_start, p.study_end,
+        p.choir_school_start, p.choir_school_end,
+        p.conservatory_start, p.conservatory_end,
+        p.assistantship_start, p.assistantship_end
+      ].filter(Boolean).join(" ");
+      const text = `${p.full_name || ""} ${p.relation_type || ""} ${years} ${p.institution || ""} ${p.notes || ""}`.toLowerCase().replace(/ё/g, "е");
+      return words.every(w => text.includes(w));
+    });
+  }
 
   const elList = document.getElementById("pplList");
   if(!list.length){ elList.innerHTML = `<div class="ppl-state">Никого не нашлось.</div>`; return; }
@@ -192,7 +207,23 @@ document.querySelectorAll(".ppl-chip").forEach(chip => {
     render();
   });
 });
-document.getElementById("pplSearch").addEventListener("input", render);
+
+const pplSearch = document.getElementById("pplSearch");
+if(pplSearch){
+  pplSearch.addEventListener("input", () => {
+    const navSearch = document.getElementById("navSearchInput");
+    if(navSearch && navSearch.value !== pplSearch.value) navSearch.value = pplSearch.value;
+    render();
+  });
+}
+
+const navSearch = document.getElementById("navSearchInput");
+if(navSearch){
+  navSearch.addEventListener("input", () => {
+    if(pplSearch && pplSearch.value !== navSearch.value) pplSearch.value = navSearch.value;
+    render();
+  });
+}
 
 window.onPersonAdded = loadPeople;
 window.addEventListener("authReady", loadPeople, { once: true });
