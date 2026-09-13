@@ -125,6 +125,7 @@ async function loadEvents(){
       }).eq("id", id);
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
       card.remove();
+      if(window.updateModBadge) window.updateModBadge();
       if(!content.querySelectorAll(".mod-card").length){
         content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
       }
@@ -186,6 +187,7 @@ async function loadArticles(){
       }).eq("id", id);
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
       card.remove();
+      if(window.updateModBadge) window.updateModBadge();
       if(!content.querySelectorAll(".mod-card").length){
         content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
       }

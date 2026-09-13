@@ -33,6 +33,10 @@ const HEADER_HTML = `
         </a>
       </div>
     </div>
+    <a class="nav-mod-link" id="navModBtn" href="moderation.html" style="display:none">
+      <span>Модерация</span>
+      <span class="nav-mod-badge" id="navModBadge" style="display:none">0</span>
+    </a>
     <span class="nav-divider"></span>
     <button class="auth-link" id="btnAuth">Войти</button>
     <div class="who-wrap" id="whoWrap">
@@ -175,8 +179,36 @@ function onLoggedIn(profile){
   rows += `</div>`;
   document.getElementById("profileCard").innerHTML = rows;
 
-  if(profile.is_moderator) document.getElementById("modLink").style.display = "block";
+  if(profile.is_moderator){
+    document.getElementById("modLink").style.display = "block";
+    const navModBtn = document.getElementById("navModBtn");
+    if(navModBtn) navModBtn.style.display = "inline-flex";
+    updateModBadge();
+  }
 }
+
+async function updateModBadge(){
+  if(!myProfile || !myProfile.is_moderator) return;
+  const badge = document.getElementById("navModBadge");
+  if(!badge) return;
+  try{
+    const { count: evCount, error: evErr } = await sb.from("events").select("*", { count: "exact", head: true }).eq("status", "unconfirmed");
+    let total = (!evErr && evCount) ? evCount : 0;
+    try{
+      const { count: artCount, error: artErr } = await sb.from("articles").select("*", { count: "exact", head: true }).eq("status", "unconfirmed");
+      if(!artErr && artCount) total += artCount;
+    }catch(e){}
+    if(total > 0){
+      badge.textContent = total;
+      badge.style.display = "inline-flex";
+    } else {
+      badge.style.display = "none";
+    }
+  }catch(e){
+    console.error("Failed to load moderation count:", e);
+  }
+}
+window.updateModBadge = updateModBadge;
 
 function initHeader(){
   document.body.insertAdjacentHTML("afterbegin", MODALS_HTML);
@@ -336,6 +368,7 @@ function initHeader(){
     document.getElementById("evDesc").value = "";
     document.getElementById("evSource").value = "";
     if(typeof window.onEventAdded === "function") window.onEventAdded();
+    if(typeof updateModBadge === "function") updateModBadge();
   });
 
   document.getElementById("btnSubmitPerson").addEventListener("click", async () => {
