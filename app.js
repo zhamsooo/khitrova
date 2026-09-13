@@ -102,10 +102,10 @@ const MODALS_HTML = `
     <input type="text" id="evTitle" placeholder="Короткое название события">
     <label>Подробности (необязательно)</label>
     <textarea id="evDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
-    <label>Источник / ссылка (необязательно)</label>
-    <input type="text" id="evSource" placeholder="Фото афиши, ссылка на статью и т.п.">
+    <label>Источник / ссылка</label>
+    <input type="text" id="evSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
     <div class="err" id="errEvent"></div>
-    <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
+    <div class="hint">Источник обязателен — так читатели видят, откуда факт, а не просто «кто-то сказал». Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
     <div class="row-actions"><button class="primary" id="btnSubmitEvent">Отправить</button></div>
   </div>
 </div>
@@ -280,9 +280,10 @@ function initHeader(){
     const source = document.getElementById("evSource").value.trim();
     const errEl = document.getElementById("errEvent");
     if(!event_year || !title){ errEl.textContent = "Заполните год и название"; errEl.style.display = "block"; return; }
+    if(!source){ errEl.textContent = "Укажите источник — без него факт не примут"; errEl.style.display = "block"; return; }
     errEl.style.display = "none";
     const { error } = await sb.from("events").insert({
-      event_year, title, description, source: source || null, created_by: currentUser.id, created_by_name: myProfile.full_name
+      event_year, title, description, source, created_by: currentUser.id, created_by_name: myProfile.full_name
     });
     if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
     close_("addOverlay");
