@@ -6,38 +6,46 @@
 <title>Карточка человека — сайт памяти Т.И. Хитровой</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .person-wrap{max-width:720px; margin:0 auto; padding:6vh 24px 10vh}
+  .person-wrap{max-width:1040px; margin:0 auto; padding:5vh 24px 10vh}
   .btn-back{
     display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none;
-    font-size:13px; margin-bottom:28px; transition:color .15s; font-family:inherit;
+    font-size:13px; margin-bottom:24px; transition:color .15s; font-family:inherit;
   }
   .btn-back:hover{color:var(--ink)}
 
+  .person-layout{
+    display:grid;
+    grid-template-columns:1fr 310px;
+    gap:28px;
+    align-items:start;
+  }
+
+  /* Основная карточка человека */
   .person-card-view{
-    background:#fff; border:1px solid var(--line); border-radius:14px; padding:32px 34px;
-    box-shadow:0 4px 20px rgba(0,0,0,.03);
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:32px 36px;
+    box-shadow:0 2px 16px rgba(0,0,0,.03);
   }
 
   .person-head-row{
-    display:flex; align-items:flex-start; gap:24px; margin-bottom:28px; padding-bottom:24px;
+    display:flex; align-items:flex-start; gap:22px; margin-bottom:26px; padding-bottom:24px;
     border-bottom:1px solid var(--line);
   }
 
   .person-avatar-wrap{flex:none}
   .person-avatar{
-    width:90px; height:90px; border-radius:50%; object-fit:cover; display:block;
+    width:92px; height:92px; border-radius:50%; object-fit:cover; display:block;
     background:var(--paper); border:1px solid var(--line);
   }
   .person-avatar-placeholder{
-    width:90px; height:90px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    width:92px; height:92px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
     display:flex; align-items:center; justify-content:center;
     font-family:var(--font-head); font-weight:700; font-size:36px; color:var(--accent);
   }
 
   .person-title-area{flex:1; min-width:0}
   .person-name{
-    font-family:var(--font-head); font-weight:700; font-size:32px; margin:0 0 6px;
-    line-height:1.15; color:var(--ink);
+    font-family:var(--font-head); font-weight:700; font-size:30px; margin:0 0 6px;
+    line-height:1.18; color:var(--ink);
   }
   .person-role-line{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px}
   .person-role{font-size:14px; color:var(--accent); font-weight:600}
@@ -50,33 +58,134 @@
 
   .person-actions{margin-top:14px}
   .btn-edit-card{
-    background:none; border:1px solid var(--line); color:var(--ink); cursor:pointer;
-    font-size:12.5px; font-family:inherit; padding:6px 14px; border-radius:14px;
-    transition:border-color .15s, background .15s;
+    background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
+    font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
+    transition:border-color .15s, color .15s, background .15s;
   }
-  .btn-edit-card:hover{border-color:var(--ink); background:#fcfbfa}
+  .btn-edit-card:hover{border-color:var(--ink); color:var(--ink); background:#faf8f5}
 
-  .person-section{margin-bottom:22px}
+  .person-section{margin-bottom:24px}
   .person-section:last-of-type{margin-bottom:0}
   .person-section-label{
     font-family:var(--font-head); font-weight:700; font-size:11.5px; letter-spacing:.08em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:6px;
+    text-transform:uppercase; color:var(--muted); margin-bottom:10px;
   }
-  .person-section-content{font-size:15px; line-height:1.55; color:var(--ink)}
-  .person-section-content.notes-text{white-space:pre-wrap; color:#3a3e45}
 
-  .edu-item{display:flex; align-items:baseline; gap:8px; margin-bottom:5px}
-  .edu-dot{width:5px; height:5px; border-radius:50%; background:var(--accent); flex:none; transform:translateY(-3px)}
+  /* Вехи образования — визуальные блоки вместо сплошного текста */
+  .edu-list{display:flex; flex-direction:column; gap:8px}
+  .edu-item-card{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    padding:10px 14px;
+  }
+  .edu-item-info{display:flex; flex-direction:column; gap:2px; min-width:0}
+  .edu-item-title{
+    font-family:var(--font-head); font-weight:700; font-size:14.5px; color:var(--ink);
+    line-height:1.3;
+  }
+  .edu-item-detail{font-size:12px; color:var(--muted)}
+  .edu-item-year-badge{
+    font-family:var(--font-head); font-weight:700; font-size:13px; color:var(--accent);
+    background:#fff; border:1px solid var(--line); border-radius:6px;
+    padding:3px 9px; white-space:nowrap; flex:none;
+  }
+
+  .inst-box{
+    background:#fff; border-left:3px solid var(--accent); padding:2px 0 2px 12px;
+    font-size:14.5px; color:var(--ink); line-height:1.45;
+  }
+
+  /* Форматированные заметки и биография */
+  .notes-paragraph{
+    margin:0 0 10px 0; color:#2c3036; line-height:1.65; font-size:14.5px;
+  }
+  .notes-bullet-list{
+    margin:6px 0 12px 0; padding-left:18px; color:#2c3036; line-height:1.65; font-size:14.5px;
+  }
+  .notes-bullet-list li{margin-bottom:6px}
 
   .person-meta{
-    margin-top:32px; padding-top:18px; border-top:1px solid #f0efec;
-    font-size:12px; color:var(--muted); line-height:1.6;
+    margin-top:30px; padding-top:16px; border-top:1px solid #f0efec;
+    font-size:11.5px; color:var(--muted); line-height:1.6;
   }
-  .person-meta a{color:var(--accent)}
+  .person-meta a{color:var(--accent); text-decoration:none}
+  .person-meta a:hover{text-decoration:underline}
 
   .person-state{padding:60px 24px; text-align:center; color:var(--muted); font-size:15px}
 
-  /* Редактирование аватарки в модалке */
+  /* Виджет «Учились вместе» (правая колонка) */
+  .peers-widget{
+    background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 16px;
+    box-shadow:0 2px 14px rgba(0,0,0,.02); position:sticky; top:20px;
+  }
+  .peers-header{margin-bottom:12px}
+  .peers-title{
+    font-family:var(--font-head); font-weight:700; font-size:15px; color:var(--ink); margin:0 0 2px;
+  }
+  .peers-sub{font-size:11.5px; color:var(--muted)}
+
+  .peers-tabs{display:flex; flex-wrap:wrap; gap:5px; margin:10px 0}
+  .peers-tab-btn{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px;
+    font-size:11px; font-family:inherit; padding:3px 9px; cursor:pointer; color:var(--muted);
+    transition:all .12s;
+  }
+  .peers-tab-btn:hover{color:var(--ink); border-color:var(--ink)}
+  .peers-tab-btn.active{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+  .peers-scroll-pane{
+    max-height:430px; overflow-y:auto; padding-right:4px; scroll-behavior:smooth;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .peers-scroll-pane::-webkit-scrollbar{width:4px}
+  .peers-scroll-pane::-webkit-scrollbar-thumb{background:#dedad4; border-radius:4px}
+
+  .peer-item{
+    display:flex; align-items:center; gap:8px; padding:6px 8px; border-radius:7px;
+    text-decoration:none; color:inherit; transition:background .1s, border-color .1s;
+    border:1px solid transparent; font-size:12.5px;
+  }
+  .peer-item:hover{background:var(--paper)}
+  .peer-item.current{background:#fbf8f2; border-color:var(--accent)}
+
+  .peer-year-tag{
+    font-family:var(--font-head); font-weight:700; font-size:12px; color:var(--muted);
+    width:36px; flex:none; text-align:right;
+  }
+  .peer-item.current .peer-year-tag{color:var(--accent)}
+
+  .peer-avatar-mini{
+    width:24px; height:24px; border-radius:50%; object-fit:cover; background:var(--paper);
+    border:1px solid var(--line); flex:none;
+  }
+  .peer-avatar-initial{
+    width:24px; height:24px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-head); font-weight:700; font-size:11px; color:var(--muted); flex:none;
+  }
+
+  .peer-info{min-width:0; flex:1}
+  .peer-name{
+    font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; font-size:12px;
+  }
+  .peer-sub{font-size:10.5px; color:var(--muted); display:flex; gap:4px; align-items:center}
+  .peer-here-badge{
+    font-family:var(--font-head); font-weight:700; font-size:9.5px; color:var(--accent);
+    text-transform:uppercase; letter-spacing:.04em;
+  }
+
+  .peers-jump-btns{
+    display:flex; justify-content:space-between; padding-top:10px; margin-top:10px;
+    border-top:1px solid #f0efec; font-size:11px;
+  }
+  .peers-jump-btn{
+    background:none; border:none; color:var(--muted); cursor:pointer; font-family:inherit;
+    padding:2px 4px; border-radius:4px; transition:color .1s;
+  }
+  .peers-jump-btn:hover{color:var(--ink)}
+
+  /* Модалка редактирования */
   .avatar-edit-box{
     display:flex; align-items:center; gap:16px; margin:8px 0 14px;
     padding:12px 14px; background:var(--paper); border:1px solid var(--line); border-radius:10px;
@@ -101,6 +210,10 @@
     padding:0; text-align:left; text-decoration:underline; font-family:inherit;
   }
 
+  @media (max-width:860px){
+    .person-layout{grid-template-columns:1fr; gap:24px}
+    .peers-widget{position:static; max-width:100%}
+  }
   @media (max-width:640px){
     .person-wrap{padding:4vh 16px 8vh}
     .person-card-view{padding:22px 18px}
@@ -108,6 +221,7 @@
     .person-role-line{justify-content:center}
     .person-name{font-size:26px}
     .person-actions{display:flex; justify-content:center}
+    .edu-item-card{flex-direction:column; align-items:flex-start; gap:8px}
   }
 </style>
 </head>
@@ -115,8 +229,11 @@
 
 <div class="person-wrap">
   <a href="people.html" class="btn-back">← Все люди</a>
-  <div id="personContent">
-    <div class="person-state">Загрузка информации…</div>
+  <div class="person-layout">
+    <div id="personContent">
+      <div class="person-state">Загрузка информации…</div>
+    </div>
+    <div id="peersSidebar" style="display:none"></div>
   </div>
 </div>
 
@@ -202,32 +319,83 @@
 <script src="app.js"></script>
 <script>
 let currentPerson = null;
+let allStudentsList = [];
 let editingAvatarUrl = null;
 let pendingAvatarFile = null;
 
 const params = new URLSearchParams(location.search);
 const personId = params.get("id");
 
+function formatNotes(text){
+  if(!text) return "";
+  const lines = text.split("\n");
+  let html = "";
+  let inList = false;
+
+  for(const rawLine of lines){
+    const line = rawLine.trim();
+    if(!line){
+      if(inList){ html += "</ul>"; inList = false; }
+      continue;
+    }
+    if(line.startsWith("•") || line.startsWith("-")){
+      if(!inList){ html += '<ul class="notes-bullet-list">'; inList = true; }
+      const itemContent = line.replace(/^[•\-]\s*/, "");
+      html += `<li>${escapeHtml(itemContent)}</li>`;
+    } else {
+      if(inList){ html += "</ul>"; inList = false; }
+      html += `<p class="notes-paragraph">${escapeHtml(line)}</p>`;
+    }
+  }
+  if(inList) html += "</ul>";
+  return html;
+}
+
 function renderEducation(p){
   const items = [];
   if(p.studied_choir_school){
-    items.push(`Хоровое училище им. М.И. Глинки${p.choir_school_end ? ` · выпуск ${p.choir_school_end}` : ""}`);
+    items.push({
+      institution: "Хоровое училище им. М.И. Глинки",
+      detail: "Класс Т.И. Хитровой",
+      year: p.choir_school_end ? `${p.choir_school_end} г.` : "выпуск"
+    });
   }
   if(p.studied_conservatory){
-    items.push(`СПбГК им. Н.А. Римского-Корсакова${p.conservatory_end ? ` · выпуск ${p.conservatory_end}` : ""}`);
+    items.push({
+      institution: "СПбГК им. Н.А. Римского-Корсакова",
+      detail: "Дирижёрско-хоровой факультет · класс проф. Т.И. Хитровой",
+      year: p.conservatory_end ? `${p.conservatory_end} г.` : "выпуск"
+    });
   }
   if(p.studied_assistantship){
-    items.push(`Ассистентура-стажировка в СПбГК${p.assistantship_end ? ` · выпуск ${p.assistantship_end}` : ""}`);
+    items.push({
+      institution: "Ассистентура-стажировка в СПбГК",
+      detail: "Класс проф. Т.И. Хитровой",
+      year: p.assistantship_end ? `${p.assistantship_end} г.` : "выпуск"
+    });
   }
   if(!items.length && (p.study_start || p.study_end)){
-    items.push(`Годы учёбы: ${p.study_start || "…"}–${p.study_end || "…"}`);
+    items.push({
+      institution: "Обучение у Т.И. Хитровой",
+      detail: "Класс Т.И. Хитровой",
+      year: `${p.study_start || "…"}–${p.study_end || "…"} гг.`
+    });
   }
   if(!items.length) return "";
+
   return `
     <div class="person-section">
       <div class="person-section-label">Обучение у Т.И. Хитровой</div>
-      <div class="person-section-content">
-        ${items.map(it => `<div class="edu-item"><span class="edu-dot"></span><span>${escapeHtml(it)}</span></div>`).join("")}
+      <div class="edu-list">
+        ${items.map(it => `
+          <div class="edu-item-card">
+            <div class="edu-item-info">
+              <div class="edu-item-title">${escapeHtml(it.institution)}</div>
+              <div class="edu-item-detail">${escapeHtml(it.detail)}</div>
+            </div>
+            <div class="edu-item-year-badge">${escapeHtml(it.year)}</div>
+          </div>
+        `).join("")}
       </div>
     </div>
   `;
@@ -283,14 +451,14 @@ function renderPerson(p){
       ${p.institution ? `
         <div class="person-section">
           <div class="person-section-label">Место работы / должность</div>
-          <div class="person-section-content">${escapeHtml(p.institution)}</div>
+          <div class="inst-box">${escapeHtml(p.institution)}</div>
         </div>
       ` : ""}
 
       ${p.notes ? `
         <div class="person-section">
           <div class="person-section-label">Заметки и биография</div>
-          <div class="person-section-content notes-text">${escapeHtml(p.notes)}</div>
+          <div class="notes-wrap">${formatNotes(p.notes)}</div>
         </div>
       ` : ""}
 
@@ -310,6 +478,136 @@ function renderPerson(p){
   });
 }
 
+function renderPeersWidget(p, students){
+  const sideEl = document.getElementById("peersSidebar");
+  if(!students || !students.length || p.relation_type !== "ученик"){
+    sideEl.style.display = "none";
+    return;
+  }
+
+  const tabs = [];
+  if(p.studied_conservatory || p.conservatory_end){
+    tabs.push({ id: "cons", label: "СПбГК", year: p.conservatory_end || p.study_end || 2003 });
+  }
+  if(p.studied_choir_school || p.choir_school_end){
+    tabs.push({ id: "choir", label: "Хор. училище", year: p.choir_school_end || 1998 });
+  }
+  if(p.studied_assistantship || p.assistantship_end){
+    tabs.push({ id: "assist", label: "Ассистентура", year: p.assistantship_end || 2005 });
+  }
+  if(!tabs.length){
+    tabs.push({ id: "all", label: "Все годы", year: p.study_end || 2000 });
+  }
+
+  let activeTab = tabs[0];
+
+  function buildListHtml(targetYear, tabId){
+    const withYear = [];
+    const withoutYear = [];
+
+    students.forEach(s => {
+      let yr = s.study_end;
+      if(tabId === "choir" && s.choir_school_end) yr = s.choir_school_end;
+      if(tabId === "cons" && s.conservatory_end) yr = s.conservatory_end;
+      if(tabId === "assist" && s.assistantship_end) yr = s.assistantship_end;
+      if(s.id === p.id) yr = targetYear;
+
+      const tag = s.studied_conservatory ? "СПбГК" : (s.studied_choir_school ? "Хор. уч." : "");
+      const obj = { student: s, year: yr, tag, isCurrent: s.id === p.id };
+      if(yr) withYear.push(obj);
+      else withoutYear.push(obj);
+    });
+
+    withYear.sort((a, b) => a.year - b.year);
+
+    const renderItem = (it) => {
+      const s = it.student;
+      const initial = (s.full_name || "?").trim().charAt(0).toUpperCase();
+      const avHtml = s.avatar_url
+        ? `<img src="${escapeHtml(s.avatar_url)}" alt="" class="peer-avatar-mini">`
+        : `<div class="peer-avatar-initial">${initial}</div>`;
+
+      return `
+        <a href="person.html?id=${s.id}" class="peer-item ${it.isCurrent ? "current" : ""}" data-id="${s.id}">
+          <div class="peer-year-tag">${it.year || "—"}</div>
+          ${avHtml}
+          <div class="peer-info">
+            <div class="peer-name">${escapeHtml(s.full_name)}</div>
+            <div class="peer-sub">
+              ${it.isCurrent ? `<span class="peer-here-badge">● Вы просматриваете</span>` : (it.tag ? `<span>${it.tag}</span>` : "")}
+            </div>
+          </div>
+        </a>
+      `;
+    };
+
+    let html = withYear.map(renderItem).join("");
+    if(withoutYear.length){
+      html += `<div style="font-size:10.5px; color:var(--muted); margin:8px 8px 4px; text-transform:uppercase; letter-spacing:.05em">Год выпуска не указан</div>`;
+      html += withoutYear.map(renderItem).join("");
+    }
+    return html;
+  }
+
+  function renderSideContent(){
+    sideEl.innerHTML = `
+      <div class="peers-widget">
+        <div class="peers-header">
+          <div class="peers-title">Учились вместе</div>
+          <div class="peers-sub">Выпуски вокруг ${activeTab.year} г.</div>
+          ${tabs.length > 1 ? `
+            <div class="peers-tabs">
+              ${tabs.map(t => `<button class="peers-tab-btn ${t.id === activeTab.id ? "active" : ""}" data-tab="${t.id}">${t.label} (${t.year})</button>`).join("")}
+            </div>
+          ` : ""}
+        </div>
+        <div class="peers-scroll-pane" id="peersPane">
+          ${buildListHtml(activeTab.year, activeTab.id)}
+        </div>
+        <div class="peers-jump-btns">
+          <button class="peers-jump-btn" id="btnScrollTop">↑ Раньше</button>
+          <button class="peers-jump-btn" id="btnScrollCurrent">● К выпуску ${activeTab.year}</button>
+          <button class="peers-jump-btn" id="btnScrollBottom">↓ Позже</button>
+        </div>
+      </div>
+    `;
+
+    sideEl.style.display = "block";
+
+    sideEl.querySelectorAll(".peers-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const found = tabs.find(t => t.id === btn.dataset.tab);
+        if(found && found.id !== activeTab.id){
+          activeTab = found;
+          renderSideContent();
+        }
+      });
+    });
+
+    const pane = document.getElementById("peersPane");
+    const currentEl = pane.querySelector(".peer-item.current");
+
+    function scrollToCurrent(){
+      if(currentEl){
+        currentEl.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }
+
+    setTimeout(scrollToCurrent, 100);
+
+    const btnCurrent = document.getElementById("btnScrollCurrent");
+    if(btnCurrent) btnCurrent.addEventListener("click", scrollToCurrent);
+
+    const btnTop = document.getElementById("btnScrollTop");
+    if(btnTop) btnTop.addEventListener("click", () => pane.scrollTo({ top: 0, behavior: "smooth" }));
+
+    const btnBottom = document.getElementById("btnScrollBottom");
+    if(btnBottom) btnBottom.addEventListener("click", () => pane.scrollTo({ top: pane.scrollHeight, behavior: "smooth" }));
+  }
+
+  renderSideContent();
+}
+
 async function loadPerson(){
   if(!personId){
     location.href = "people.html";
@@ -324,6 +622,19 @@ async function loadPerson(){
   }
   currentPerson = data;
   renderPerson(data);
+
+  try{
+    const { data: students } = await sb.from("people")
+      .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_end, studied_conservatory, conservatory_end, studied_assistantship, assistantship_end, avatar_url")
+      .eq("relation_type", "ученик")
+      .eq("status", "confirmed");
+    if(students){
+      allStudentsList = students;
+      renderPeersWidget(data, students);
+    }
+  }catch(e){
+    console.error("Failed to load peers:", e);
+  }
 }
 
 function updateAvatarPreview(url, name){
@@ -348,8 +659,8 @@ function openEditModal(p){
   document.getElementById("editGender").value = p.gender || "";
   document.getElementById("editRelation").value = p.relation_type || "ученик";
 
-  const isStudent = (p.relation_type || "ученик") === "ученик";
-  document.getElementById("editStudyBlock").style.display = isStudent ? "block" : "none";
+  const studyBlock = document.getElementById("editStudyBlock");
+  studyBlock.style.display = p.relation_type === "ученик" ? "block" : "none";
 
   const choirCheck = document.getElementById("editChoirSchool");
   const choirBox = document.getElementById("editChoirBox");
@@ -403,46 +714,62 @@ document.getElementById("btnTriggerUpload").addEventListener("click", () => {
 document.getElementById("editAvatarInput").addEventListener("change", e => {
   const file = e.target.files && e.target.files[0];
   if(!file) return;
+  if(!file.type.startsWith("image/")){
+    alert("Пожалуйста, выберите файл изображения (JPG, PNG, WebP)");
+    return;
+  }
+  if(file.size > 5 * 1024 * 1024){
+    alert("Размер файла не должен превышать 5 МБ");
+    return;
+  }
   pendingAvatarFile = file;
-  const localUrl = URL.createObjectURL(file);
-  updateAvatarPreview(localUrl, document.getElementById("editFullName").value);
+  const tempUrl = URL.createObjectURL(file);
+  updateAvatarPreview(tempUrl, document.getElementById("editFullName").value);
 });
 
 document.getElementById("btnRemoveAvatar").addEventListener("click", () => {
-  pendingAvatarFile = null;
   editingAvatarUrl = null;
+  pendingAvatarFile = null;
   document.getElementById("editAvatarInput").value = "";
   updateAvatarPreview(null, document.getElementById("editFullName").value);
 });
 
 document.getElementById("btnSavePersonEdit").addEventListener("click", async () => {
-  const full_name = document.getElementById("editFullName").value.trim();
-  const gender = document.getElementById("editGender").value || null;
-  const relation_type = document.getElementById("editRelation").value;
+  if(!currentPerson) return;
   const errEl = document.getElementById("errEditPerson");
-  const saveBtn = document.getElementById("btnSavePersonEdit");
+  errEl.style.display = "none";
 
+  const full_name = document.getElementById("editFullName").value.trim();
   if(!full_name){
     errEl.textContent = "Укажите имя и фамилию";
     errEl.style.display = "block";
     return;
   }
-  errEl.style.display = "none";
+
+  const saveBtn = document.getElementById("btnSavePersonEdit");
   saveBtn.disabled = true;
   saveBtn.textContent = "Сохранение…";
 
-  try {
+  try{
     let finalAvatarUrl = editingAvatarUrl;
+
     if(pendingAvatarFile){
-      const ext = (pendingAvatarFile.name.split(".").pop() || "jpg").toLowerCase();
-      const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
-      const { error: upErr } = await sb.storage.from("person-avatars").upload(path, pendingAvatarFile);
-      if(upErr){
-        throw new Error("Не удалось загрузить фото: " + upErr.message);
-      }
-      const { data: pubData } = sb.storage.from("person-avatars").getPublicUrl(path);
-      finalAvatarUrl = pubData.publicUrl;
+      const ext = pendingAvatarFile.name.split(".").pop().toLowerCase() || "jpg";
+      const filePath = `${currentPerson.id}_${Date.now()}.${ext}`;
+      const { data: uploadData, error: uploadErr } = await sb.storage
+        .from("person-avatars")
+        .upload(filePath, pendingAvatarFile, { upsert: true });
+
+      if(uploadErr) throw new Error("Ошибка загрузки фото: " + uploadErr.message);
+
+      const { data: publicUrlData } = sb.storage
+        .from("person-avatars")
+        .getPublicUrl(filePath);
+      finalAvatarUrl = publicUrlData.publicUrl;
     }
+
+    const gender = document.getElementById("editGender").value || null;
+    const relation_type = document.getElementById("editRelation").value;
 
     const studied_choir_school = document.getElementById("editChoirSchool").checked;
     const choir_school_end = (studied_choir_school && document.getElementById("editChoirEnd").value)
@@ -468,7 +795,7 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     const notes = document.getElementById("editNotes").value.trim() || null;
     const source = document.getElementById("editSource").value.trim() || null;
 
-    const updatePayload = {
+    const updates = {
       full_name,
       gender,
       relation_type,
@@ -485,25 +812,38 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
       source,
       avatar_url: finalAvatarUrl,
       updated_by: currentUser.id,
-      updated_by_name: myProfile ? myProfile.full_name : "Участник сайта",
+      updated_by_name: (myProfile && myProfile.full_name) || currentUser.email,
       updated_at: new Date().toISOString()
     };
 
-    const { error: updateErr } = await sb.from("people").update(updatePayload).eq("id", personId);
-    if(updateErr) throw updateErr;
+    const { data: updatedPerson, error: updateErr } = await sb
+      .from("people")
+      .update(updates)
+      .eq("id", currentPerson.id)
+      .select()
+      .single();
 
+    if(updateErr) throw new Error(updateErr.message);
+
+    currentPerson = updatedPerson;
+    renderPerson(updatedPerson);
+    if(allStudentsList.length){
+      const idx = allStudentsList.findIndex(s => s.id === updatedPerson.id);
+      if(idx !== -1) allStudentsList[idx] = updatedPerson;
+      renderPeersWidget(updatedPerson, allStudentsList);
+    }
     close_("editPersonOverlay");
-    await loadPerson();
-  } catch(err){
+  }catch(err){
     errEl.textContent = err.message;
     errEl.style.display = "block";
-  } finally {
+  }finally{
     saveBtn.disabled = false;
     saveBtn.textContent = "Сохранить";
   }
 });
 
-loadPerson();
+initHeader();
+window.addEventListener("authReady", loadPerson, { once: true });
 </script>
 </body>
 </html>
