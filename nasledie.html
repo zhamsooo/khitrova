@@ -5,17 +5,333 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Наследие — сайт памяти Т.И. Хитровой</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  .nsl-wrap{max-width:720px; margin:0 auto; padding:8vh 24px 10vh}
+  .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:38px; margin:0 0 10px}
+  .nsl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 22px; max-width:520px}
+  .write-wrap{position:relative; display:inline-block; margin-bottom:8px}
+
+  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
+  .nsl-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:28px 0 12px}
+
+  .art-card{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px; background:#fff; cursor:pointer; font:inherit; color:inherit}
+  .art-card:hover{border-color:var(--ink)}
+  .art-card .badge{font-family:var(--font-head); font-weight:700; font-size:10.5px; letter-spacing:.05em; text-transform:uppercase; color:var(--accent); display:block; margin-bottom:6px}
+  .art-card .badge.st-draft{color:var(--muted)}
+  .art-card .badge.st-unconfirmed{color:var(--warn)}
+  .art-card .badge.st-rejected{color:#b0413e}
+  .art-card .ti{font-family:var(--font-head); font-weight:700; font-size:17px; margin:0 0 6px}
+  .art-card .ex{font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:8px}
+  .art-card .meta{font-size:11.5px; color:var(--muted)}
+
+  .nsl-editor{max-width:720px; margin:0 auto; padding:24px 24px 80px}
+  .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--line)}
+  .btn-plain{background:none; border:none; color:var(--muted); font-size:13px; padding:0; cursor:pointer; font-family:inherit}
+  .btn-plain:hover{color:var(--ink)}
+  .save-state{flex:1; font-size:12px; color:var(--muted); text-align:center}
+  .btn-publish{background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:12.5px; font-family:inherit; cursor:pointer}
+  .art-title{width:100%; border:none; outline:none; font-family:var(--font-head); font-weight:700; font-size:30px; margin-bottom:18px; color:var(--ink); background:transparent}
+  .art-title::placeholder{color:var(--muted)}
+  #editorjs{font-family:var(--font-body); font-size:16px; line-height:1.7}
+
+  .nsl-read{max-width:640px; margin:0 auto; padding:8vh 24px 10vh}
+  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:34px; margin:14px 0 8px}
+  .nsl-read .meta{font-size:13px; color:var(--muted); margin-bottom:32px}
+  .read-body{font-family:var(--font-body); font-size:17px; line-height:1.75; color:var(--ink)}
+  .read-body h2{font-family:var(--font-head); font-weight:700; font-size:23px; margin:32px 0 12px}
+  .read-body h3{font-family:var(--font-head); font-weight:700; font-size:19px; margin:26px 0 10px}
+  .read-body h4{font-family:var(--font-head); font-weight:700; font-size:16px; margin:22px 0 8px}
+  .read-body p{margin:0 0 18px}
+  .read-body blockquote{margin:0 0 18px; padding:4px 0 4px 18px; border-left:3px solid var(--accent); color:var(--ink); font-style:italic}
+  .read-body blockquote cite{display:block; font-style:normal; font-size:13px; color:var(--muted); margin-top:6px}
+  .read-body ul, .read-body ol{margin:0 0 18px; padding-left:22px}
+  .read-body table{width:100%; border-collapse:collapse; margin:0 0 18px; font-size:14.5px}
+  .read-body td, .read-body th{border:1px solid var(--line); padding:8px 10px; text-align:left}
+  .read-body th{background:var(--paper)}
+  .read-body figure{margin:0 0 22px}
+  .read-body img{width:100%; border-radius:6px; display:block}
+  .read-body figcaption{font-size:12.5px; color:var(--muted); margin-top:6px; text-align:center}
+
+  @media (max-width:640px){
+    .nsl-head h1{font-size:30px}
+    .art-title{font-size:24px}
+    .nsl-read h1{font-size:26px}
+  }
+</style>
 </head>
 <body data-page="nasledie">
 
-<div class="stub">
-  <div class="k">Раздел в разработке</div>
-  <h1>Наследие</h1>
-  <p>Здесь соберутся статьи и интервью самой Татьяны Ивановны, фото, видео и аудиозаписи, а также воспоминания её учеников и коллег — каждый сможет опубликовать свой текст.</p>
-  <p class="mail">Раздел ещё строится. Материалы можно присылать уже сейчас — на <a href="mailto:post@khitrova.org">post@khitrova.org</a>, всё сохраним и опубликуем, как только раздел заработает.</p>
+<div class="nsl-wrap" id="nslWrap">
+  <div class="nsl-head">
+    <h1>Наследие</h1>
+    <p class="sub">Статьи и интервью Татьяны Ивановны, воспоминания её учеников и коллег — каждый может опубликовать свой текст.</p>
+    <div class="write-wrap">
+      <button class="add-link" id="writeBtn">+ Написать</button>
+      <div class="dropdown" id="writeDropdown">
+        <button class="opt" data-type="воспоминание"><div class="t">Воспоминание</div><div class="d">Личная история о Татьяне Ивановне</div></button>
+        <button class="opt" data-type="статья"><div class="t">Статья</div><div class="d">Более развёрнутый текст, интервью, разбор</div></button>
+        <button class="opt" data-type="другое"><div class="t">Другой материал</div><div class="d">Всё, что не подходит под первые два</div></button>
+      </div>
+    </div>
+  </div>
+  <div id="nslList"><div class="nsl-state">Загрузка…</div></div>
+</div>
+
+<div class="nsl-editor" id="nslEditor" style="display:none">
+  <div class="nsl-editor-bar">
+    <button class="btn-plain" id="btnBackToList">← К списку</button>
+    <span class="save-state" id="saveState"></span>
+    <button class="btn-publish" id="btnPublish">Отправить на публикацию</button>
+  </div>
+  <input type="text" id="artTitle" class="art-title" placeholder="Заголовок">
+  <div id="editorjs"></div>
+</div>
+
+<div class="nsl-read" id="nslRead" style="display:none">
+  <button class="btn-plain" id="btnBackToList2">← К списку</button>
+  <div class="nsl-section-title" id="readType"></div>
+  <h1 id="readTitle"></h1>
+  <div class="meta" id="readMeta"></div>
+  <div class="read-body" id="readBody"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2.31.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@2.8.9"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@2.0.9"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2.7.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/table@2.4.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/image@2.10.3"></script>
 <script src="app.js"></script>
+<script>
+const TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "другое":"Материал" };
+const STATUS_LABEL = { draft:"Черновик", unconfirmed:"На проверке", rejected:"Отклонено" };
+
+let editor = null;
+let currentArticleId = null;
+let dirty = false;
+let saveTimer = null;
+let periodicTimer = null;
+
+const elWrap = document.getElementById("nslWrap");
+const elList = document.getElementById("nslList");
+const elEditor = document.getElementById("nslEditor");
+const elRead = document.getElementById("nslRead");
+const titleInput = document.getElementById("artTitle");
+const saveStateEl = document.getElementById("saveState");
+const btnPublish = document.getElementById("btnPublish");
+
+function showView(name){
+  elWrap.style.display = name === "list" ? "block" : "none";
+  elEditor.style.display = name === "editor" ? "block" : "none";
+  elRead.style.display = name === "read" ? "block" : "none";
+}
+
+function cardHtml(a){
+  const excerpt = excerptFromContent(a.content);
+  const isMine = a.status !== "confirmed";
+  const badge = isMine ? `${TYPE_LABEL[a.type] || ""} · ${STATUS_LABEL[a.status] || a.status}` : (TYPE_LABEL[a.type] || "");
+  const badgeClass = isMine ? `st-${a.status}` : "";
+  return `
+    <button class="art-card" data-id="${a.id}" data-status="${a.status}">
+      <span class="badge ${badgeClass}">${escapeHtml(badge)}</span>
+      <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
+      ${excerpt ? `<div class="ex">${escapeHtml(excerpt)}</div>` : ""}
+      <div class="meta">${escapeHtml(a.created_by_name || "")} · ${formatDate(a.created_at)}</div>
+    </button>
+  `;
+}
+
+async function loadList(){
+  elList.innerHTML = `<div class="nsl-state">Загрузка…</div>`;
+  let q = sb.from("articles").select("*").order("created_at", { ascending:false });
+  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
+  const { data, error } = await q;
+  if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+
+  const mine = currentUser ? data.filter(a => a.created_by === currentUser.id && a.status !== "confirmed") : [];
+  const published = data.filter(a => a.status === "confirmed");
+
+  let html = "";
+  if(mine.length){
+    html += `<div class="nsl-section-title">Моё</div>${mine.map(cardHtml).join("")}`;
+  }
+  html += `<div class="nsl-section-title">Опубликовано</div>`;
+  html += published.length ? published.map(cardHtml).join("") : `<div class="nsl-state">Пока ничего не опубликовано — станьте первым.</div>`;
+  elList.innerHTML = html;
+
+  elList.querySelectorAll(".art-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
+    });
+  });
+}
+
+const EDITOR_TOOLS = {
+  header: { class: Header, inlineToolbar: true, config: { levels: [2,3,4], defaultLevel: 2 } },
+  list: { class: EditorjsList, inlineToolbar: true },
+  quote: { class: Quote, inlineToolbar: true },
+  table: { class: Table, inlineToolbar: true },
+  image: {
+    class: ImageTool,
+    config: {
+      uploader: {
+        async uploadByFile(file){
+          const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+          const path = `${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2,8)}.${ext}`;
+          const { error } = await sb.storage.from("article-images").upload(path, file);
+          if(error) return { success: 0 };
+          const { data } = sb.storage.from("article-images").getPublicUrl(path);
+          return { success: 1, file: { url: data.publicUrl } };
+        },
+        async uploadByUrl(url){
+          return { success: 1, file: { url } };
+        }
+      }
+    }
+  }
+};
+
+function scheduleLocalSave(){
+  dirty = true;
+  saveStateEl.textContent = "Есть несохранённые изменения…";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    if(!editor) return;
+    try{
+      const data = await editor.save();
+      localStorage.setItem("nsl_draft_" + currentArticleId, JSON.stringify({ title: titleInput.value, content: data, ts: Date.now() }));
+    }catch(e){}
+  }, 1500);
+}
+
+async function saveToServer(){
+  if(!dirty || !editor || !currentArticleId) return;
+  let data;
+  try{ data = await editor.save(); } catch(e){ return; }
+  const title = titleInput.value.trim();
+  saveStateEl.textContent = "Сохранение…";
+  const { error } = await sb.from("articles").update({ title, content: data, updated_at: new Date().toISOString() }).eq("id", currentArticleId);
+  if(error){ saveStateEl.textContent = "Ошибка автосохранения: " + error.message; return; }
+  dirty = false;
+  saveStateEl.textContent = "Сохранено " + new Date().toLocaleTimeString("ru-RU", { hour:"2-digit", minute:"2-digit" });
+  try{ localStorage.removeItem("nsl_draft_" + currentArticleId); }catch(e){}
+}
+
+async function leaveEditor(){
+  clearTimeout(saveTimer);
+  clearInterval(periodicTimer);
+  await saveToServer();
+  if(editor){ try{ await editor.destroy(); }catch(e){} editor = null; }
+  currentArticleId = null;
+}
+
+async function openEditor(id){
+  const { data: art, error } = await sb.from("articles").select("*").eq("id", id).maybeSingle();
+  if(error || !art || art.created_by !== currentUser.id){ location.hash = "#list"; return; }
+
+  currentArticleId = art.id;
+  dirty = false;
+  saveStateEl.textContent = "";
+  titleInput.value = art.title || "";
+  let initialData = (art.content && art.content.blocks) ? art.content : { blocks: [] };
+
+  try{
+    const raw = localStorage.getItem("nsl_draft_" + id);
+    if(raw){
+      const local = JSON.parse(raw);
+      if(local.ts > new Date(art.updated_at).getTime() + 2000){
+        if(confirm("Найден несохранённый черновик — возможно, после разрыва связи. Восстановить его вместо сохранённой версии?")){
+          initialData = local.content;
+          if(local.title) titleInput.value = local.title;
+        } else {
+          localStorage.removeItem("nsl_draft_" + id);
+        }
+      }
+    }
+  }catch(e){}
+
+  document.getElementById("editorjs").innerHTML = "";
+  editor = new EditorJS({
+    holder: "editorjs",
+    placeholder: "Начните писать…",
+    data: initialData,
+    tools: EDITOR_TOOLS,
+    onChange: scheduleLocalSave
+  });
+  titleInput.oninput = scheduleLocalSave;
+
+  btnPublish.textContent = art.status === "rejected" ? "Отправить повторно" : "Отправить на публикацию";
+  btnPublish.onclick = async () => {
+    clearTimeout(saveTimer); clearInterval(periodicTimer);
+    dirty = true;
+    await saveToServer();
+    const { error } = await sb.from("articles").update({ status: "unconfirmed" }).eq("id", currentArticleId);
+    if(error){ alert(error.message); return; }
+    alert("Отправлено на публикацию — модератор проверит, и материал появится на сайте.");
+    location.hash = "#list";
+  };
+
+  clearInterval(periodicTimer);
+  periodicTimer = setInterval(saveToServer, 10000);
+
+  showView("editor");
+}
+
+async function openRead(id){
+  const { data: art, error } = await sb.from("articles").select("*").eq("id", id).maybeSingle();
+  if(error || !art || (art.status !== "confirmed" && (!currentUser || art.created_by !== currentUser.id))){ location.hash = "#list"; return; }
+  document.getElementById("readType").textContent = TYPE_LABEL[art.type] || "";
+  document.getElementById("readTitle").textContent = art.title || "Без названия";
+  document.getElementById("readMeta").textContent = `${art.created_by_name || ""} · ${formatDate(art.created_at)}`;
+  document.getElementById("readBody").innerHTML = renderArticleContent(art.content);
+  showView("read");
+}
+
+async function router(){
+  if(editor && currentArticleId) await leaveEditor();
+  const hash = location.hash.slice(1);
+  const [route, id] = hash.split("/");
+  if(route === "edit" && id){
+    if(!currentUser){ location.hash = "#list"; return; }
+    await openEditor(id);
+  } else if(route === "read" && id){
+    await openRead(id);
+  } else {
+    showView("list");
+    await loadList();
+  }
+}
+
+document.getElementById("btnBackToList").addEventListener("click", () => location.hash = "#list");
+document.getElementById("btnBackToList2").addEventListener("click", () => location.hash = "#list");
+
+document.getElementById("writeBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  document.getElementById("writeDropdown").classList.toggle("open");
+});
+document.addEventListener("click", () => document.getElementById("writeDropdown").classList.remove("open"));
+
+document.querySelectorAll("#writeDropdown .opt").forEach(opt => {
+  opt.addEventListener("click", async e => {
+    e.stopPropagation();
+    document.getElementById("writeDropdown").classList.remove("open");
+    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+    const type = opt.dataset.type;
+    const { data, error } = await sb.from("articles").insert({
+      type, title: "", content: {}, status: "draft",
+      created_by: currentUser.id, created_by_name: myProfile.full_name
+    }).select().single();
+    if(error){ alert(error.message); return; }
+    location.hash = `#edit/${data.id}`;
+  });
+});
+
+window.addEventListener("hashchange", router);
+window.addEventListener("authReady", router, { once: true });
+window.addEventListener("beforeunload", () => { if(dirty && editor) saveToServer(); });
+</script>
 </body>
 </html>

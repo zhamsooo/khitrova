@@ -304,4 +304,86 @@ function initHeader(){
   });
 }
 
+// ---------- общие хелперы для статей "Наследия" (используются на nasledie.html и moderation.html) ----------
+function escapeHtml(s){
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+function formatDate(iso){
+  if(!iso) return "";
+  return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
+}
+
+// текст из Editor.js хранится с инлайн-разметкой (<b>, <i>, <a>...) — просто escapeHtml её сломает,
+// а доверять как есть нельзя (paste может принести произвольный HTML), поэтому чистим DOMPurify
+function sanitizeInline(html){
+  if(window.DOMPurify) return DOMPurify.sanitize(html || "", { ALLOWED_TAGS: ["b","i","u","s","a","mark","code","br"], ALLOWED_ATTR: ["href","target","rel"] });
+  return escapeHtml(html);
+}
+
+function renderListItems(items){
+  if(!items || !items.length) return "";
+  return items.map(it => {
+    const content = typeof it === "string" ? it : (it.content || "");
+    const nested = (it && typeof it === "object" && it.items && it.items.length) ? `<ul>${renderListItems(it.items)}</ul>` : "";
+    return `<li>${sanitizeInline(content)}${nested}</li>`;
+  }).join("");
+}
+
+// JSON-блоки Editor.js -> HTML для чтения/предпросмотра
+function renderArticleContent(content){
+  const blocks = (content && content.blocks) || [];
+  return blocks.map(b => {
+    const d = b.data || {};
+    switch(b.type){
+      case "header": {
+        const lvl = Math.min(Math.max(parseInt(d.level, 10) || 2, 2), 4);
+        return `<h${lvl}>${sanitizeInline(d.text)}</h${lvl}>`;
+      }
+      case "paragraph":
+        return `<p>${sanitizeInline(d.text)}</p>`;
+      case "quote":
+        return `<blockquote><p>${sanitizeInline(d.text)}</p>${d.caption ? `<cite>${sanitizeInline(d.caption)}</cite>` : ""}</blockquote>`;
+      case "list": {
+        const tag = d.style === "ordered" ? "ol" : "ul";
+        return `<${tag}>${renderListItems(d.items)}</${tag}>`;
+      }
+      case "table": {
+        const rows = d.content || [];
+        return `<table>${rows.map((row, i) => {
+          const cellTag = (d.withHeadings && i === 0) ? "th" : "td";
+          return `<tr>${row.map(cell => `<${cellTag}>${sanitizeInline(cell)}</${cellTag}>`).join("")}</tr>`;
+        }).join("")}</table>`;
+      }
+      case "image":
+        return `<figure><img src="${escapeHtml(d.file && d.file.url)}" alt="">${d.caption ? `<figcaption>${sanitizeInline(d.caption)}</figcaption>` : ""}</figure>`;
+      default:
+        return "";
+    }
+  }).join("");
+}
+
+// короткая выдержка для карточки в списке
+function excerptFromContent(content, maxLen){
+  maxLen = maxLen || 140;
+  const blocks = (content && content.blocks) || [];
+  for(const b of blocks){
+    let text = null;
+    if(b.data){
+      if(b.data.text) text = b.data.text;
+      else if(b.data.items && b.data.items.length){
+        const first = b.data.items[0];
+        text = typeof first === "string" ? first : (first && first.content);
+      }
+    }
+    if(text){
+      const plain = text.replace(/<[^>]+>/g, "");
+      return plain.length > maxLen ? plain.slice(0, maxLen).trim() + "…" : plain;
+    }
+  }
+  return "";
+}
+
 document.addEventListener("DOMContentLoaded", initHeader);

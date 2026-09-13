@@ -9,8 +9,9 @@
   .mod-wrap{max-width:640px; margin:0 auto; padding:40px 24px 60px}
   .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:24px; margin:0 0 6px}
   .mod-wrap .sub{color:var(--muted); font-size:13.5px; margin-bottom:28px}
+  .mod-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:26px 0 12px}
 
-  .mod-state{padding:60px 24px; text-align:center; color:var(--muted); font-size:14px}
+  .mod-state{padding:30px 24px; text-align:center; color:var(--muted); font-size:14px}
 
   .mod-card{border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; background:#fff}
   .mod-card .yr{font-family:var(--font-head); font-weight:700; font-size:15px; color:var(--accent)}
@@ -30,41 +31,59 @@
   .mod-card .btn-confirm{background:var(--confirmed); color:#fff}
   .mod-card .btn-reject{background:#fff; border:1px solid #b0413e; color:#b0413e}
   .mod-card .err{color:#b0413e; font-size:12px; margin-top:6px; display:none}
+
+  .mod-card .btn-toggle{flex:none; width:auto; background:none; border:none; color:var(--accent); font-family:inherit; font-weight:400; text-decoration:underline; padding:0; margin-bottom:10px; font-size:12.5px}
+  .art-preview{font-family:var(--font-body); font-size:14.5px; line-height:1.65; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:10px}
+  .art-preview h2{font-size:18px; margin:14px 0 8px}
+  .art-preview h3{font-size:16px; margin:12px 0 6px}
+  .art-preview p{margin:0 0 10px}
+  .art-preview blockquote{margin:0 0 10px; padding:2px 0 2px 12px; border-left:3px solid var(--accent); font-style:italic}
+  .art-preview table{width:100%; border-collapse:collapse; margin:0 0 10px; font-size:13px}
+  .art-preview td, .art-preview th{border:1px solid var(--line); padding:5px 7px}
+  .art-preview img{max-width:100%; border-radius:6px}
 </style>
 </head>
 <body data-page="moderation">
 
 <div class="mod-wrap">
   <h1>Модерация</h1>
-  <div class="sub">События, предложенные на таймлайн, — подтвердите или отклоните.</div>
-  <div id="modContent"><div class="mod-state">Проверяем доступ…</div></div>
+  <div class="sub">События и материалы «Наследия», предложенные читателями, — подтвердите или отклоните.</div>
+  <div id="modGate"><div class="mod-state">Проверяем доступ…</div></div>
+  <div id="modBody" style="display:none">
+    <div class="mod-section-title">События на таймлайн</div>
+    <div id="modEvents"><div class="mod-state">Загрузка…</div></div>
+    <div class="mod-section-title">Материалы «Наследия»</div>
+    <div id="modArticles"><div class="mod-state">Загрузка…</div></div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="app.js"></script>
 <script>
-function escapeHtml(s){
-  const d = document.createElement("div");
-  d.textContent = s || "";
-  return d.innerHTML;
-}
-function formatDate(iso){
-  if(!iso) return "";
-  return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
-}
+const ART_TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "другое":"Материал" };
 
 async function initModeration(){
-  const content = document.getElementById("modContent");
+  const gate = document.getElementById("modGate");
+  const body = document.getElementById("modBody");
 
   if(!currentUser){
-    content.innerHTML = `<div class="mod-state">Эта страница только для модераторов. <a href="#" onclick="document.getElementById('btnAuth').click(); return false;" style="color:var(--accent)">Войдите</a>, чтобы проверить доступ.</div>`;
+    gate.innerHTML = `<div class="mod-state">Эта страница только для модераторов. <a href="#" onclick="document.getElementById('btnAuth').click(); return false;" style="color:var(--accent)">Войдите</a>, чтобы проверить доступ.</div>`;
     return;
   }
   if(!myProfile || !myProfile.is_moderator){
-    content.innerHTML = `<div class="mod-state">Эта страница только для модераторов.</div>`;
+    gate.innerHTML = `<div class="mod-state">Эта страница только для модераторов.</div>`;
     return;
   }
+  gate.style.display = "none";
+  body.style.display = "block";
 
+  loadEvents();
+  loadArticles();
+}
+
+async function loadEvents(){
+  const content = document.getElementById("modEvents");
   const { data, error } = await sb.from("events").select("*").eq("status", "unconfirmed").order("created_at");
   if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
 
@@ -106,8 +125,69 @@ async function initModeration(){
       }).eq("id", id);
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
       card.remove();
-      if(!document.querySelectorAll(".mod-card").length){
+      if(!content.querySelectorAll(".mod-card").length){
         content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
+      }
+    }
+
+    card.querySelector(".btn-confirm").addEventListener("click", () => moderate("confirmed"));
+    card.querySelector(".btn-reject").addEventListener("click", () => moderate("rejected"));
+  });
+}
+
+async function loadArticles(){
+  const content = document.getElementById("modArticles");
+  const { data, error } = await sb.from("articles").select("*").eq("status", "unconfirmed").order("created_at");
+  if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+
+  if(!data || !data.length){
+    content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
+    return;
+  }
+
+  content.innerHTML = data.map(a => `
+    <div class="mod-card" data-id="${a.id}">
+      <div class="yr">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}</div>
+      <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
+      <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
+      <div class="art-preview" style="display:none"></div>
+      <div class="meta">Автор: <b>${escapeHtml(a.created_by_name || "неизвестно")}</b> · ${formatDate(a.created_at)}</div>
+      <textarea placeholder="Заметка (необязательно) — увидит автор, особенно полезно при отклонении"></textarea>
+      <div class="row">
+        <button class="btn-confirm">Подтвердить</button>
+        <button class="btn-reject">Отклонить</button>
+      </div>
+      <div class="err"></div>
+    </div>
+  `).join("");
+
+  content.querySelectorAll(".mod-card").forEach(card => {
+    const id = card.dataset.id;
+    const article = data.find(a => a.id === id);
+    const note = card.querySelector("textarea");
+    const errEl = card.querySelector(".err");
+    const preview = card.querySelector(".art-preview");
+    const toggleBtn = card.querySelector("[data-toggle]");
+
+    toggleBtn.addEventListener("click", () => {
+      const show = preview.style.display === "none";
+      if(show && !preview.innerHTML) preview.innerHTML = renderArticleContent(article.content) || "<p><i>Пусто</i></p>";
+      preview.style.display = show ? "block" : "none";
+      toggleBtn.textContent = show ? "Скрыть текст" : "Показать текст";
+    });
+
+    async function moderate(status){
+      const { error } = await sb.from("articles").update({
+        status,
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: note.value.trim() || null
+      }).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+      card.remove();
+      if(!content.querySelectorAll(".mod-card").length){
+        content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
       }
     }
 
