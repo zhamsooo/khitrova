@@ -6,33 +6,83 @@
 <title>Модерация — сайт памяти Т.И. Хитровой</title>
 <link rel="stylesheet" href="style.css">
 <style>
-  .mod-wrap{max-width:640px; margin:0 auto; padding:40px 24px 60px}
-  .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:24px; margin:0 0 6px}
-  .mod-wrap .sub{color:var(--muted); font-size:13.5px; margin-bottom:28px}
-  .mod-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:26px 0 12px}
-
-  .mod-state{padding:30px 24px; text-align:center; color:var(--muted); font-size:14px}
-
-  .mod-card{border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:14px; background:#fff}
-  .mod-card .yr{font-family:var(--font-head); font-weight:700; font-size:15px; color:var(--accent)}
-  .mod-card .ti{font-weight:600; font-size:15px; margin:4px 0 6px}
-  .mod-card .de{font-size:13.5px; color:var(--ink); line-height:1.5; margin-bottom:8px}
-  .mod-card .meta{font-size:12px; color:var(--muted); margin-bottom:10px; line-height:1.6}
-  .mod-card .meta a{color:var(--accent)}
-  .mod-card textarea{
-    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
-    padding:8px 10px; border-radius:8px; font:inherit; font-size:13px; min-height:50px; resize:vertical; margin-bottom:10px;
+  .mod-wrap{max-width:680px; margin:0 auto; padding:40px 24px 60px}
+  .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:26px; margin:0 0 6px}
+  .mod-wrap .sub{color:var(--muted); font-size:13.5px; margin-bottom:28px; line-height:1.5}
+  .mod-section-title{
+    font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); margin:32px 0 14px;
+    display:flex; align-items:center; justify-content:space-between;
   }
-  .mod-card .row{display:flex; gap:10px}
+  .mod-section-count{
+    font-size:11px; background:var(--paper); border:1px solid var(--line);
+    padding:1px 8px; border-radius:10px; color:var(--ink);
+  }
+
+  .mod-state{padding:30px 24px; text-align:center; color:var(--muted); font-size:14px; background:#fff; border:1px dashed var(--line); border-radius:10px}
+
+  .mod-card{border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:16px; background:#fff; transition:border-color .15s}
+  .mod-card:hover{border-color:#d4d1ca}
+  .mod-card .yr{font-family:var(--font-head); font-weight:700; font-size:14px; color:var(--accent); letter-spacing:.03em; text-transform:uppercase}
+  .mod-card .ti{font-weight:600; font-size:16px; margin:4px 0 8px; color:var(--ink)}
+  .mod-card .de{font-size:13.5px; color:var(--ink); line-height:1.55; margin-bottom:10px}
+  .mod-card .meta{font-size:12px; color:var(--muted); margin-bottom:12px; line-height:1.6}
+  .mod-card .meta a{color:var(--accent)}
+  .mod-card .meta b{color:var(--ink)}
+
+  .mod-card textarea.mod-note{
+    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
+    padding:8px 10px; border-radius:8px; font:inherit; font-size:12.5px; min-height:48px; resize:vertical; margin-bottom:12px;
+  }
+
+  .mod-card .row{display:flex; gap:8px; flex-wrap:wrap}
   .mod-card button{
-    flex:1; border:none; border-radius:8px; padding:9px 0; font-size:13px; cursor:pointer;
-    font-family:var(--font-head); font-weight:700;
+    flex:1; min-width:120px; border:none; border-radius:8px; padding:9px 12px; font-size:12.5px; cursor:pointer;
+    font-family:var(--font-head); font-weight:700; transition:background .15s, border-color .15s, opacity .15s;
   }
   .mod-card .btn-confirm{background:var(--confirmed); color:#fff}
+  .mod-card .btn-confirm:hover{opacity:.9}
+  .mod-card .btn-edit-toggle{background:#fff; border:1px solid var(--line); color:var(--ink)}
+  .mod-card .btn-edit-toggle:hover{border-color:var(--ink)}
   .mod-card .btn-reject{background:#fff; border:1px solid #b0413e; color:#b0413e}
-  .mod-card .err{color:#b0413e; font-size:12px; margin-top:6px; display:none}
+  .mod-card .btn-reject:hover{background:rgba(176,65,62,.06)}
+  .mod-card .btn-save-confirm{background:var(--confirmed); color:#fff}
+  .mod-card .btn-save-confirm:hover{opacity:.9}
+  .mod-card .btn-save-only{background:#fff; border:1px solid var(--ink); color:var(--ink)}
+  .mod-card .btn-edit-cancel{background:#fff; border:1px solid var(--line); color:var(--muted)}
+  .mod-card .btn-edit-cancel:hover{color:var(--ink); border-color:var(--ink)}
 
-  .mod-card .btn-toggle{flex:none; width:auto; background:none; border:none; color:var(--accent); font-family:inherit; font-weight:400; text-decoration:underline; padding:0; margin-bottom:10px; font-size:12.5px}
+  .mod-card .err{color:#b0413e; font-size:12px; margin-top:8px; display:none}
+
+  /* Inline edit mode inside mod-card */
+  .card-edit{margin-top:12px; padding-top:14px; border-top:1px solid var(--line)}
+  .edit-field{margin-bottom:10px}
+  .edit-field label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:4px; font-weight:600}
+  .edit-field input[type="text"], .edit-field input[type="number"], .edit-field select, .edit-field textarea{
+    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
+    padding:8px 10px; border-radius:8px; font:inherit; font-size:13px; outline:none;
+  }
+  .edit-field input:focus, .edit-field select:focus, .edit-field textarea:focus{
+    border-color:var(--ink); background:#fff;
+  }
+  .edit-field textarea{resize:vertical; min-height:55px}
+
+  .edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  @media(max-width:540px){ .edit-grid{grid-template-columns:1fr} }
+
+  .edit-study-wrap{
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; margin:10px 0;
+  }
+  .edit-study-wrap .legend{
+    font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); margin-bottom:6px;
+  }
+
+  .mod-card .btn-toggle{
+    flex:none; width:auto; background:none; border:none; color:var(--accent); font-family:inherit;
+    font-weight:400; text-decoration:underline; padding:0; margin-bottom:10px; font-size:12.5px; cursor:pointer;
+  }
   .art-preview{font-family:var(--font-body); font-size:14.5px; line-height:1.65; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:10px}
   .art-preview h2{font-size:18px; margin:14px 0 8px}
   .art-preview h3{font-size:16px; margin:12px 0 6px}
@@ -41,18 +91,37 @@
   .art-preview table{width:100%; border-collapse:collapse; margin:0 0 10px; font-size:13px}
   .art-preview td, .art-preview th{border:1px solid var(--line); padding:5px 7px}
   .art-preview img{max-width:100%; border-radius:6px}
+
+  .art-editor-link{
+    display:inline-block; font-size:12px; color:var(--accent); text-decoration:none;
+    margin-bottom:10px; font-weight:600;
+  }
+  .art-editor-link:hover{text-decoration:underline}
 </style>
 </head>
 <body data-page="moderation">
 
 <div class="mod-wrap">
   <h1>Модерация</h1>
-  <div class="sub">События и материалы «Наследия», предложенные читателями, — подтвердите или отклоните.</div>
+  <div class="sub">События, люди и материалы «Наследия», предложенные читателями, — отредактируйте неточности при необходимости и подтвердите или отклоните.</div>
   <div id="modGate"><div class="mod-state">Проверяем доступ…</div></div>
   <div id="modBody" style="display:none">
-    <div class="mod-section-title">События на таймлайн</div>
+    <div class="mod-section-title">
+      <span>События на таймлайн</span>
+      <span class="mod-section-count" id="countEvents">0</span>
+    </div>
     <div id="modEvents"><div class="mod-state">Загрузка…</div></div>
-    <div class="mod-section-title">Материалы «Наследия»</div>
+
+    <div class="mod-section-title">
+      <span>Люди на проверке</span>
+      <span class="mod-section-count" id="countPeople">0</span>
+    </div>
+    <div id="modPeople"><div class="mod-state">Загрузка…</div></div>
+
+    <div class="mod-section-title">
+      <span>Материалы «Наследия»</span>
+      <span class="mod-section-count" id="countArticles">0</span>
+    </div>
     <div id="modArticles"><div class="mod-state">Загрузка…</div></div>
   </div>
 </div>
@@ -62,6 +131,14 @@
 <script src="app.js"></script>
 <script>
 const ART_TYPE_LABEL = { "воспоминание":"Воспоминание", "статья":"Статья", "другое":"Материал" };
+
+function formatSourceLink(s){
+  if(!s) return "";
+  if(/^https?:\/\//.test(s)){
+    return `<a href="${escapeHtml(s)}" target="_blank" rel="noopener">${escapeHtml(s)}</a>`;
+  }
+  return escapeHtml(s);
+}
 
 async function initModeration(){
   const gate = document.getElementById("modGate");
@@ -79,32 +156,63 @@ async function initModeration(){
   body.style.display = "block";
 
   loadEvents();
+  loadPeople();
   loadArticles();
 }
 
+// -------------------- 1. СОБЫТИЯ --------------------
 async function loadEvents(){
   const content = document.getElementById("modEvents");
+  const countEl = document.getElementById("countEvents");
   const { data, error } = await sb.from("events").select("*").eq("status", "unconfirmed").order("created_at");
   if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
 
+  countEl.textContent = data ? data.length : 0;
   if(!data || !data.length){
-    content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
+    content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку событий нет.</div>`;
     return;
   }
 
   content.innerHTML = data.map(e => `
     <div class="mod-card" data-id="${e.id}">
-      <div class="yr">${e.event_year}</div>
-      <div class="ti">${escapeHtml(e.title)}</div>
-      ${e.description ? `<div class="de">${escapeHtml(e.description)}</div>` : ""}
-      <div class="meta">
-        Добавил(а): <b>${escapeHtml(e.created_by_name || "неизвестно")}</b> · ${formatDate(e.created_at)}
-        ${e.source ? `<br>Источник: ${/^https?:\/\//.test(e.source) ? `<a href="${escapeHtml(e.source)}" target="_blank" rel="noopener">${escapeHtml(e.source)}</a>` : escapeHtml(e.source)}` : ""}
+      <div class="card-view">
+        <div class="yr">${e.event_year} г.</div>
+        <div class="ti">${escapeHtml(e.title)}</div>
+        ${e.description ? `<div class="de">${escapeHtml(e.description)}</div>` : ""}
+        <div class="meta">
+          Добавил(а): <b>${escapeHtml(e.created_by_name || "неизвестно")}</b> · ${formatDate(e.created_at)}
+          ${e.source ? `<br>Источник: ${formatSourceLink(e.source)}` : ""}
+        </div>
+        <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
+        <div class="row">
+          <button type="button" class="btn-confirm">Подтвердить</button>
+          <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+          <button type="button" class="btn-reject">Отклонить</button>
+        </div>
       </div>
-      <textarea placeholder="Заметка (необязательно) — увидит автор, особенно полезно при отклонении"></textarea>
-      <div class="row">
-        <button class="btn-confirm">Подтвердить</button>
-        <button class="btn-reject">Отклонить</button>
+
+      <div class="card-edit" style="display:none">
+        <div class="edit-field">
+          <label>Год события</label>
+          <input type="number" class="in-ev-year" value="${e.event_year}">
+        </div>
+        <div class="edit-field">
+          <label>Название события</label>
+          <input type="text" class="in-ev-title" value="${escapeHtml(e.title)}">
+        </div>
+        <div class="edit-field">
+          <label>Описание</label>
+          <textarea class="in-ev-desc">${escapeHtml(e.description || "")}</textarea>
+        </div>
+        <div class="edit-field">
+          <label>Источник / ссылка</label>
+          <input type="text" class="in-ev-source" value="${escapeHtml(e.source || "")}">
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button type="button" class="btn-save-confirm">Сохранить и подтвердить</button>
+          <button type="button" class="btn-save-only">Сохранить правки</button>
+          <button type="button" class="btn-edit-cancel">Отмена</button>
+        </div>
       </div>
       <div class="err"></div>
     </div>
@@ -112,35 +220,358 @@ async function loadEvents(){
 
   content.querySelectorAll(".mod-card").forEach(card => {
     const id = card.dataset.id;
-    const note = card.querySelector("textarea");
+    const viewEl = card.querySelector(".card-view");
+    const editEl = card.querySelector(".card-edit");
+    const noteEl = card.querySelector(".mod-note");
     const errEl = card.querySelector(".err");
 
-    async function moderate(status){
-      const { error } = await sb.from("events").update({
+    // Переключение режимов
+    card.querySelector(".btn-edit-toggle").addEventListener("click", () => {
+      viewEl.style.display = "none";
+      editEl.style.display = "block";
+    });
+    card.querySelector(".btn-edit-cancel").addEventListener("click", () => {
+      editEl.style.display = "none";
+      viewEl.style.display = "block";
+    });
+
+    async function save(status, keepCard){
+      errEl.style.display = "none";
+      const event_year = parseInt(card.querySelector(".in-ev-year").value, 10);
+      const title = card.querySelector(".in-ev-title").value.trim();
+      const description = card.querySelector(".in-ev-desc").value.trim();
+      const source = card.querySelector(".in-ev-source").value.trim();
+
+      if(!event_year || !title){
+        errEl.textContent = "Укажите год и название";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const updateData = {
+        event_year, title,
+        description: description || null,
+        source: source || null,
         status,
         moderated_by: currentUser.id,
         moderated_by_name: myProfile.full_name,
         moderated_at: new Date().toISOString(),
-        moderator_note: note.value.trim() || null
-      }).eq("id", id);
+        moderator_note: noteEl.value.trim() || null
+      };
+
+      const { error } = await sb.from("events").update(updateData).eq("id", id);
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
-      card.remove();
-      if(window.updateModBadge) window.updateModBadge();
-      if(!content.querySelectorAll(".mod-card").length){
-        content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку нет.</div>`;
+
+      if(keepCard){
+        card.querySelector(".yr").textContent = `${event_year} г.`;
+        card.querySelector(".ti").textContent = title;
+        let deEl = card.querySelector(".de");
+        if(description){
+          if(!deEl){
+            deEl = document.createElement("div");
+            deEl.className = "de";
+            card.querySelector(".ti").insertAdjacentElement("afterend", deEl);
+          }
+          deEl.textContent = description;
+        } else if(deEl) deEl.remove();
+
+        editEl.style.display = "none";
+        viewEl.style.display = "block";
+      } else {
+        card.remove();
+        const rem = content.querySelectorAll(".mod-card").length;
+        countEl.textContent = rem;
+        if(window.updateModBadge) window.updateModBadge();
+        if(!rem){
+          content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку событий нет.</div>`;
+        }
       }
     }
 
-    card.querySelector(".btn-confirm").addEventListener("click", () => moderate("confirmed"));
-    card.querySelector(".btn-reject").addEventListener("click", () => moderate("rejected"));
+    card.querySelector(".btn-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-only").addEventListener("click", () => save("unconfirmed", true));
+    card.querySelector(".btn-reject").addEventListener("click", async () => {
+      const { error } = await sb.from("events").update({
+        status: "rejected",
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: noteEl.value.trim() || null
+      }).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+      card.remove();
+      const rem = content.querySelectorAll(".mod-card").length;
+      countEl.textContent = rem;
+      if(window.updateModBadge) window.updateModBadge();
+      if(!rem){
+        content.innerHTML = `<div class="mod-state">Пока пусто — заявок на проверку событий нет.</div>`;
+      }
+    });
   });
 }
 
+// -------------------- 2. ЛЮДИ --------------------
+async function loadPeople(){
+  const content = document.getElementById("modPeople");
+  const countEl = document.getElementById("countPeople");
+  const { data, error } = await sb.from("people").select("*").eq("status", "unconfirmed").order("created_at");
+  if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+
+  countEl.textContent = data ? data.length : 0;
+  if(!data || !data.length){
+    content.innerHTML = `<div class="mod-state">Пока пусто — новых анкет людей на проверке нет.</div>`;
+    return;
+  }
+
+  content.innerHTML = data.map(p => {
+    const eduItems = [];
+    if(p.studied_choir_school){
+      eduItems.push(`Хоровое училище им. М.И. Глинки${p.choir_school_end ? ` (выпуск ${p.choir_school_end} г.)` : ""}`);
+    }
+    if(p.studied_conservatory){
+      eduItems.push(`СПбГК им. Римского-Корсакова${p.conservatory_end ? ` (выпуск ${p.conservatory_end} г.)` : ""}`);
+    }
+    if(p.studied_assistantship){
+      eduItems.push(`Ассистентура в СПбГК${p.assistantship_end ? ` (окончание ${p.assistantship_end} г.)` : ""}`);
+    }
+    if(p.study_start || p.study_end){
+      eduItems.push(`Годы учёбы: ${p.study_start || "..."} — ${p.study_end || "..."}`);
+    }
+
+    const relLabel = window.personRelationLabel ? window.personRelationLabel(p) : (p.relation_type || "Ученик");
+
+    return `
+      <div class="mod-card" data-id="${p.id}">
+        <div class="card-view">
+          <div class="yr">${escapeHtml(relLabel)}</div>
+          <div class="ti">${escapeHtml(p.full_name)}</div>
+          ${eduItems.length ? `<div class="de" style="font-size:12.5px; margin-bottom:6px"><b>Образование:</b> ${eduItems.map(escapeHtml).join("; ")}</div>` : ""}
+          ${p.institution ? `<div class="de"><b>Место работы:</b> ${escapeHtml(p.institution)}</div>` : ""}
+          ${p.notes ? `<div class="de">${escapeHtml(p.notes)}</div>` : ""}
+          <div class="meta">
+            Добавил(а): <b>${escapeHtml(p.created_by_name || "неизвестно")}</b> · ${formatDate(p.created_at)}
+            ${p.source ? `<br>Источник: ${formatSourceLink(p.source)}` : ""}
+          </div>
+          <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
+          <div class="row">
+            <button type="button" class="btn-confirm">Подтвердить</button>
+            <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+            <button type="button" class="btn-reject">Отклонить</button>
+          </div>
+        </div>
+
+        <div class="card-edit" style="display:none">
+          <div class="edit-field">
+            <label>Имя и фамилия</label>
+            <input type="text" class="in-p-name" value="${escapeHtml(p.full_name)}">
+          </div>
+          <div class="edit-grid">
+            <div class="edit-field">
+              <label>Пол</label>
+              <select class="in-p-gender">
+                <option value="" ${!p.gender ? "selected" : ""}>Не указан</option>
+                <option value="m" ${p.gender === "m" ? "selected" : ""}>Мужской (ученик)</option>
+                <option value="f" ${p.gender === "f" ? "selected" : ""}>Женский (ученица)</option>
+              </select>
+            </div>
+            <div class="edit-field">
+              <label>Отношение к Т.И.</label>
+              <select class="in-p-relation">
+                <option value="ученик" ${p.relation_type === "ученик" ? "selected" : ""}>Ученик / Ученица</option>
+                <option value="коллега" ${p.relation_type === "коллега" ? "selected" : ""}>Коллега</option>
+                <option value="другое" ${p.relation_type === "другое" ? "selected" : ""}>Другое</option>
+              </select>
+            </div>
+          </div>
+          <div class="edit-study-wrap">
+            <div class="legend">Учебные заведения у Т.И. Хитровой</div>
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; margin:4px 0">
+              <input type="checkbox" class="in-p-choir" ${p.studied_choir_school ? "checked" : ""} style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
+            </label>
+            <div class="box-choir" style="display:${p.studied_choir_school ? "block" : "none"}; margin:4px 0 8px 24px">
+              <input type="number" class="in-p-choir-end" placeholder="Год выпуска (напр. 1980)" value="${p.choir_school_end || ""}">
+            </div>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; margin:4px 0">
+              <input type="checkbox" class="in-p-cons" ${p.studied_conservatory ? "checked" : ""} style="width:auto; margin:0"> СПбГК им. Римского-Корсакова
+            </label>
+            <div class="box-cons" style="display:${p.studied_conservatory ? "block" : "none"}; margin:4px 0 8px 24px">
+              <input type="number" class="in-p-cons-end" placeholder="Год выпуска (напр. 1985)" value="${p.conservatory_end || ""}">
+            </div>
+
+            <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer; margin:4px 0">
+              <input type="checkbox" class="in-p-asst" ${p.studied_assistantship ? "checked" : ""} style="width:auto; margin:0"> Ассистентура в СПбГК
+            </label>
+            <div class="box-asst" style="display:${p.studied_assistantship ? "block" : "none"}; margin:4px 0 8px 24px">
+              <input type="number" class="in-p-asst-end" placeholder="Год окончания (напр. 2005)" value="${p.assistantship_end || ""}">
+            </div>
+
+            <div style="font-size:12px; color:var(--muted); margin:8px 0 4px">Или другие годы учёбы:</div>
+            <div style="display:flex; gap:8px">
+              <input type="number" class="in-p-start" placeholder="начало" value="${p.study_start || ""}">
+              <input type="number" class="in-p-end" placeholder="окончание" value="${p.study_end || ""}">
+            </div>
+          </div>
+          <div class="edit-field">
+            <label>Место работы / должность</label>
+            <input type="text" class="in-p-inst" value="${escapeHtml(p.institution || "")}">
+          </div>
+          <div class="edit-field">
+            <label>Заметки / достижения</label>
+            <textarea class="in-p-notes">${escapeHtml(p.notes || "")}</textarea>
+          </div>
+          <div class="edit-field">
+            <label>Источник / ссылка</label>
+            <input type="text" class="in-p-source" value="${escapeHtml(p.source || "")}">
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button type="button" class="btn-save-confirm">Сохранить и подтвердить</button>
+            <button type="button" class="btn-save-only">Сохранить правки</button>
+            <button type="button" class="btn-edit-cancel">Отмена</button>
+          </div>
+        </div>
+        <div class="err"></div>
+      </div>
+    `;
+  }).join("");
+
+  content.querySelectorAll(".mod-card").forEach(card => {
+    const id = card.dataset.id;
+    const viewEl = card.querySelector(".card-view");
+    const editEl = card.querySelector(".card-edit");
+    const noteEl = card.querySelector(".mod-note");
+    const errEl = card.querySelector(".err");
+
+    // Интерактивные чекбоксы в форме
+    const choirCheck = card.querySelector(".in-p-choir");
+    const choirBox = card.querySelector(".box-choir");
+    choirCheck.addEventListener("change", () => choirBox.style.display = choirCheck.checked ? "block" : "none");
+
+    const consCheck = card.querySelector(".in-p-cons");
+    const consBox = card.querySelector(".box-cons");
+    consCheck.addEventListener("change", () => consBox.style.display = consCheck.checked ? "block" : "none");
+
+    const asstCheck = card.querySelector(".in-p-asst");
+    const asstBox = card.querySelector(".box-asst");
+    asstCheck.addEventListener("change", () => asstBox.style.display = asstCheck.checked ? "block" : "none");
+
+    // Переключение режимов
+    card.querySelector(".btn-edit-toggle").addEventListener("click", () => {
+      viewEl.style.display = "none";
+      editEl.style.display = "block";
+    });
+    card.querySelector(".btn-edit-cancel").addEventListener("click", () => {
+      editEl.style.display = "none";
+      viewEl.style.display = "block";
+    });
+
+    async function save(status, keepCard){
+      errEl.style.display = "none";
+      const full_name = card.querySelector(".in-p-name").value.trim();
+      const gender = card.querySelector(".in-p-gender").value || null;
+      const relation_type = card.querySelector(".in-p-relation").value;
+
+      const studied_choir_school = choirCheck.checked;
+      const choir_school_end = (studied_choir_school && card.querySelector(".in-p-choir-end").value)
+        ? parseInt(card.querySelector(".in-p-choir-end").value, 10) : null;
+
+      const studied_conservatory = consCheck.checked;
+      const conservatory_end = (studied_conservatory && card.querySelector(".in-p-cons-end").value)
+        ? parseInt(card.querySelector(".in-p-cons-end").value, 10) : null;
+
+      const studied_assistantship = asstCheck.checked;
+      const assistantship_end = (studied_assistantship && card.querySelector(".in-p-asst-end").value)
+        ? parseInt(card.querySelector(".in-p-asst-end").value, 10) : null;
+
+      const startRaw = card.querySelector(".in-p-start").value;
+      const endRaw = card.querySelector(".in-p-end").value;
+      let study_start = (relation_type === "ученик" && startRaw) ? parseInt(startRaw, 10) : null;
+      let study_end = (relation_type === "ученик" && endRaw) ? parseInt(endRaw, 10) : null;
+      if(!study_end && relation_type === "ученик"){
+        study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
+      }
+
+      const institution = card.querySelector(".in-p-inst").value.trim();
+      const notes = card.querySelector(".in-p-notes").value.trim();
+      const source = card.querySelector(".in-p-source").value.trim();
+
+      if(!full_name){
+        errEl.textContent = "Укажите имя и фамилию";
+        errEl.style.display = "block";
+        return;
+      }
+
+      const updateData = {
+        full_name, gender, relation_type,
+        studied_choir_school, choir_school_end,
+        studied_conservatory, conservatory_end,
+        studied_assistantship, assistantship_end,
+        study_start, study_end,
+        institution: institution || null,
+        notes: notes || null,
+        source: source || null,
+        status,
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: noteEl.value.trim() || null,
+        updated_by: currentUser.id,
+        updated_by_name: myProfile.full_name,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await sb.from("people").update(updateData).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+
+      if(keepCard){
+        card.querySelector(".ti").textContent = full_name;
+        const newRel = window.personRelationLabel ? window.personRelationLabel({ relation_type, gender }) : relation_type;
+        card.querySelector(".yr").textContent = newRel;
+        editEl.style.display = "none";
+        viewEl.style.display = "block";
+      } else {
+        card.remove();
+        const rem = content.querySelectorAll(".mod-card").length;
+        countEl.textContent = rem;
+        if(window.updateModBadge) window.updateModBadge();
+        if(!rem){
+          content.innerHTML = `<div class="mod-state">Пока пусто — новых анкет людей на проверке нет.</div>`;
+        }
+      }
+    }
+
+    card.querySelector(".btn-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-only").addEventListener("click", () => save("unconfirmed", true));
+    card.querySelector(".btn-reject").addEventListener("click", async () => {
+      const { error } = await sb.from("people").update({
+        status: "rejected",
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: noteEl.value.trim() || null
+      }).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+      card.remove();
+      const rem = content.querySelectorAll(".mod-card").length;
+      countEl.textContent = rem;
+      if(window.updateModBadge) window.updateModBadge();
+      if(!rem){
+        content.innerHTML = `<div class="mod-state">Пока пусто — новых анкет людей на проверке нет.</div>`;
+      }
+    });
+  });
+}
+
+// -------------------- 3. МАТЕРИАЛЫ НАСЛЕДИЯ --------------------
 async function loadArticles(){
   const content = document.getElementById("modArticles");
+  const countEl = document.getElementById("countArticles");
   const { data, error } = await sb.from("articles").select("*").eq("status", "unconfirmed").order("created_at");
   if(error){ content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
 
+  countEl.textContent = data ? data.length : 0;
   if(!data || !data.length){
     content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
     return;
@@ -148,15 +579,44 @@ async function loadArticles(){
 
   content.innerHTML = data.map(a => `
     <div class="mod-card" data-id="${a.id}">
-      <div class="yr">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}</div>
-      <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
-      <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
-      <div class="art-preview" style="display:none"></div>
-      <div class="meta">Автор: <b>${escapeHtml(a.created_by_name || "неизвестно")}</b> · ${formatDate(a.created_at)}</div>
-      <textarea placeholder="Заметка (необязательно) — увидит автор, особенно полезно при отклонении"></textarea>
-      <div class="row">
-        <button class="btn-confirm">Подтвердить</button>
-        <button class="btn-reject">Отклонить</button>
+      <div class="card-view">
+        <div class="yr">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}</div>
+        <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
+        <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
+        <div class="art-preview" style="display:none"></div>
+        <div>
+          <a href="nasledie.html#edit/${a.id}" target="_blank" class="art-editor-link">Открыть в полном редакторе Наследия ↗</a>
+        </div>
+        <div class="meta">Автор: <b>${escapeHtml(a.created_by_name || "неизвестно")}</b> · ${formatDate(a.created_at)}</div>
+        <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
+        <div class="row">
+          <button type="button" class="btn-confirm">Подтвердить</button>
+          <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+          <button type="button" class="btn-reject">Отклонить</button>
+        </div>
+      </div>
+
+      <div class="card-edit" style="display:none">
+        <div class="edit-field">
+          <label>Тип материала</label>
+          <select class="in-art-type">
+            <option value="воспоминание" ${a.type === "воспоминание" ? "selected" : ""}>Воспоминание</option>
+            <option value="статья" ${a.type === "статья" ? "selected" : ""}>Статья</option>
+            <option value="другое" ${a.type === "другое" ? "selected" : ""}>Другой материал</option>
+          </select>
+        </div>
+        <div class="edit-field">
+          <label>Заголовок статьи</label>
+          <input type="text" class="in-art-title" value="${escapeHtml(a.title || "")}">
+        </div>
+        <div style="margin:8px 0 12px; font-size:12px; color:var(--muted)">
+          Для изменения текста статьи откройте её в <a href="nasledie.html#edit/${a.id}" target="_blank" style="color:var(--accent)">полном редакторе ↗</a>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <button type="button" class="btn-save-confirm">Сохранить и подтвердить</button>
+          <button type="button" class="btn-save-only">Сохранить правки</button>
+          <button type="button" class="btn-edit-cancel">Отмена</button>
+        </div>
       </div>
       <div class="err"></div>
     </div>
@@ -165,7 +625,9 @@ async function loadArticles(){
   content.querySelectorAll(".mod-card").forEach(card => {
     const id = card.dataset.id;
     const article = data.find(a => a.id === id);
-    const note = card.querySelector("textarea");
+    const viewEl = card.querySelector(".card-view");
+    const editEl = card.querySelector(".card-edit");
+    const noteEl = card.querySelector(".mod-note");
     const errEl = card.querySelector(".err");
     const preview = card.querySelector(".art-preview");
     const toggleBtn = card.querySelector("[data-toggle]");
@@ -177,24 +639,69 @@ async function loadArticles(){
       toggleBtn.textContent = show ? "Скрыть текст" : "Показать текст";
     });
 
-    async function moderate(status){
-      const { error } = await sb.from("articles").update({
+    // Переключение режимов
+    card.querySelector(".btn-edit-toggle").addEventListener("click", () => {
+      viewEl.style.display = "none";
+      editEl.style.display = "block";
+    });
+    card.querySelector(".btn-edit-cancel").addEventListener("click", () => {
+      editEl.style.display = "none";
+      viewEl.style.display = "block";
+    });
+
+    async function save(status, keepCard){
+      errEl.style.display = "none";
+      const type = card.querySelector(".in-art-type").value;
+      const title = card.querySelector(".in-art-title").value.trim();
+
+      const updateData = {
+        type, title,
         status,
         moderated_by: currentUser.id,
         moderated_by_name: myProfile.full_name,
         moderated_at: new Date().toISOString(),
-        moderator_note: note.value.trim() || null
-      }).eq("id", id);
+        moderator_note: noteEl.value.trim() || null
+      };
+
+      const { error } = await sb.from("articles").update(updateData).eq("id", id);
       if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
-      card.remove();
-      if(window.updateModBadge) window.updateModBadge();
-      if(!content.querySelectorAll(".mod-card").length){
-        content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
+
+      if(keepCard){
+        card.querySelector(".yr").textContent = ART_TYPE_LABEL[type] || type;
+        card.querySelector(".ti").textContent = title || "Без названия";
+        editEl.style.display = "none";
+        viewEl.style.display = "block";
+      } else {
+        card.remove();
+        const rem = content.querySelectorAll(".mod-card").length;
+        countEl.textContent = rem;
+        if(window.updateModBadge) window.updateModBadge();
+        if(!rem){
+          content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
+        }
       }
     }
 
-    card.querySelector(".btn-confirm").addEventListener("click", () => moderate("confirmed"));
-    card.querySelector(".btn-reject").addEventListener("click", () => moderate("rejected"));
+    card.querySelector(".btn-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-confirm").addEventListener("click", () => save("confirmed", false));
+    card.querySelector(".btn-save-only").addEventListener("click", () => save("unconfirmed", true));
+    card.querySelector(".btn-reject").addEventListener("click", async () => {
+      const { error } = await sb.from("articles").update({
+        status: "rejected",
+        moderated_by: currentUser.id,
+        moderated_by_name: myProfile.full_name,
+        moderated_at: new Date().toISOString(),
+        moderator_note: noteEl.value.trim() || null
+      }).eq("id", id);
+      if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
+      card.remove();
+      const rem = content.querySelectorAll(".mod-card").length;
+      countEl.textContent = rem;
+      if(window.updateModBadge) window.updateModBadge();
+      if(!rem){
+        content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
+      }
+    });
   });
 }
 

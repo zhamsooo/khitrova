@@ -16,6 +16,11 @@ const HEADER_HTML = `
   </nav>
   <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
   <div class="nav-right">
+    <div class="nav-search-wrap" id="navSearchWrap">
+      <svg class="nav-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="search" id="navSearchInput" placeholder="Поиск человека..." autocomplete="off" spellcheck="false">
+      <div class="nav-search-dropdown" id="navSearchDropdown"></div>
+    </div>
     <div class="add-wrap">
       <button class="add-link" id="addBtn">+ Добавить материал</button>
       <div class="dropdown" id="addDropdown">
@@ -232,12 +237,15 @@ async function updateModBadge(){
   const badge = document.getElementById("navModBadge");
   if(!badge) return;
   try{
-    const { count: evCount, error: evErr } = await sb.from("events").select("*", { count: "exact", head: true }).eq("status", "unconfirmed");
-    let total = (!evErr && evCount) ? evCount : 0;
-    try{
-      const { count: artCount, error: artErr } = await sb.from("articles").select("*", { count: "exact", head: true }).eq("status", "unconfirmed");
-      if(!artErr && artCount) total += artCount;
-    }catch(e){}
+    const [evRes, pRes, artRes] = await Promise.all([
+      sb.from("events").select("*", { count: "exact", head: true }).eq("status", "unconfirmed"),
+      sb.from("people").select("*", { count: "exact", head: true }).eq("status", "unconfirmed"),
+      sb.from("articles").select("*", { count: "exact", head: true }).eq("status", "unconfirmed")
+    ]);
+    let total = 0;
+    if(!evRes.error && evRes.count) total += evRes.count;
+    if(!pRes.error && pRes.count) total += pRes.count;
+    if(!artRes.error && artRes.count) total += artRes.count;
     if(total > 0){
       badge.textContent = total;
       badge.style.display = "inline-flex";
@@ -319,15 +327,156 @@ function initHeader(){
   whoChip.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
   document.getElementById("btnLogout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
+  // Живой поиск людей в шапке
+  const searchWrap = document.getElementById("navSearchWrap");
+  const searchInput = document.getElementById("navSearchInput");
+  const searchDropdown = document.getElementById("navSearchDropdown");
+  let cachedConfirmedPeople = null;
+  let fetchingConfirmedPeople = null;
+
+  async function loadConfirmedPeople(){
+    if(cachedConfirmedPeople) return cachedConfirmedPeople;
+    if(!fetchingConfirmedPeople){
+      fetchingConfirmedPeople = sb.from("people")
+        .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_start, choir_school_end, studied_conservatory, conservatory_start, conservatory_end, studied_assistantship, assistantship_start, assistantship_end, institution, notes, avatar_url")
+        .eq("status", "confirmed")
+        .order("full_name")
+        .then(res => {
+          cachedConfirmedPeople = res.data || [];
+          return cachedConfirmedPeople;
+        }).catch(err => {
+          console.error("Failed to load people for search:", err);
+          return [];
+        });
+    }
+    return fetchingConfirmedPeople;
+  }
+
+  function normalizeSearchStr(s){
+    return (s || "").toLowerCase().replace(/ё/g, "е").trim();
+  }
+
+  function getSearchSubtitle(p){
+    const parts = [];
+    if(p.studied_choir_school){
+      parts.push(p.choir_school_end ? `ХУ вып. ${p.choir_school_end}` : "ХУ");
+    }
+    if(p.studied_conservatory){
+      parts.push(p.conservatory_end ? `СПбГК вып. ${p.conservatory_end}` : "СПбГК");
+    }
+    if(p.studied_assistantship){
+      parts.push(p.assistantship_end ? `ассист. ${p.assistantship_end}` : "СПбГК ассист.");
+    }
+    if(!parts.length && p.study_end){
+      parts.push(`выпуск ${p.study_end} г.`);
+    }
+    if(!parts.length){
+      parts.push(personRelationLabel(p));
+    }
+    if(p.institution){
+      parts.push(p.institution);
+    }
+    return parts.join(" · ");
+  }
+
+  function getSearchHaystack(p){
+    const years = [
+      p.study_start, p.study_end,
+      p.choir_school_start, p.choir_school_end,
+      p.conservatory_start, p.conservatory_end,
+      p.assistantship_start, p.assistantship_end
+    ].filter(Boolean).join(" ");
+    return normalizeSearchStr(`${p.full_name} ${personRelationLabel(p)} ${years} ${p.institution || ""} ${p.notes || ""}`);
+  }
+
+  let selectedSearchIndex = -1;
+
+  async function renderSearchResults(){
+    const query = normalizeSearchStr(searchInput.value);
+    const words = query.split(/\s+/).filter(Boolean);
+    if(!words.length){
+      searchDropdown.classList.remove("open");
+      searchDropdown.innerHTML = "";
+      selectedSearchIndex = -1;
+      return;
+    }
+
+    const people = await loadConfirmedPeople();
+    const matches = people.filter(p => {
+      const h = getSearchHaystack(p);
+      return words.every(w => h.includes(w));
+    });
+
+    if(!matches.length){
+      searchDropdown.innerHTML = `<div class="nav-search-empty">Ничего не найдено</div>`;
+      searchDropdown.classList.add("open");
+      selectedSearchIndex = -1;
+      return;
+    }
+
+    selectedSearchIndex = 0;
+    searchDropdown.innerHTML = matches.slice(0, 8).map((p, i) => {
+      const avatarHtml = p.avatar_url
+        ? `<img src="${escapeHtml(p.avatar_url)}" alt="">`
+        : escapeHtml(p.full_name.trim().charAt(0).toUpperCase());
+      const sub = getSearchSubtitle(p);
+      return `
+        <a href="person.html?id=${p.id}" class="nav-search-item ${i === 0 ? 'selected' : ''}" data-index="${i}">
+          <div class="nav-search-avatar">${avatarHtml}</div>
+          <div class="nav-search-info">
+            <div class="nav-search-name">${escapeHtml(p.full_name)}</div>
+            <div class="nav-search-sub">${escapeHtml(sub)}</div>
+          </div>
+        </a>
+      `;
+    }).join("");
+    searchDropdown.classList.add("open");
+  }
+
+  if(searchInput && searchDropdown){
+    searchInput.addEventListener("focus", () => {
+      loadConfirmedPeople();
+      if(searchInput.value.trim()) renderSearchResults();
+    });
+    searchInput.addEventListener("input", renderSearchResults);
+
+    searchInput.addEventListener("keydown", e => {
+      const items = searchDropdown.querySelectorAll(".nav-search-item");
+      if(!items.length || !searchDropdown.classList.contains("open")) return;
+
+      if(e.key === "ArrowDown"){
+        e.preventDefault();
+        selectedSearchIndex = (selectedSearchIndex + 1) % items.length;
+        items.forEach((it, idx) => it.classList.toggle("selected", idx === selectedSearchIndex));
+        items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
+      } else if(e.key === "ArrowUp"){
+        e.preventDefault();
+        selectedSearchIndex = (selectedSearchIndex - 1 + items.length) % items.length;
+        items.forEach((it, idx) => it.classList.toggle("selected", idx === selectedSearchIndex));
+        items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
+      } else if(e.key === "Enter"){
+        e.preventDefault();
+        const active = searchDropdown.querySelector(".nav-search-item.selected") || items[0];
+        if(active) window.location.href = active.getAttribute("href");
+      } else if(e.key === "Escape"){
+        searchDropdown.classList.remove("open");
+        searchInput.blur();
+      }
+    });
+  }
+
   // бургер — на мобильном открывает панель с "добавить материал" / "войти"
   const burgerBtn = document.getElementById("burgerBtn");
   const navRight = document.querySelector(".nav-right");
   burgerBtn.addEventListener("click", e => { e.stopPropagation(); navRight.classList.toggle("open"); });
 
-  document.addEventListener("click", () => {
+  document.addEventListener("click", e => {
     dropdown.classList.remove("open"); addBtn.classList.remove("open");
     whoDropdown.classList.remove("open");
     navRight.classList.remove("open");
+    if(searchWrap && !searchWrap.contains(e.target)){
+      searchDropdown.classList.remove("open");
+    }
   });
 
   document.getElementById("inRelation").addEventListener("change", e => {
@@ -477,6 +626,7 @@ function initHeader(){
     document.getElementById("pNotes").value = "";
     document.getElementById("pSource").value = "";
     if(typeof window.onPersonAdded === "function") window.onPersonAdded();
+    if(typeof updateModBadge === "function") updateModBadge();
   });
 
   sb.auth.onAuthStateChange(async (event, session) => {
