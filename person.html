@@ -116,7 +116,7 @@
   /* Виджет «Учились вместе» (правая колонка) */
   .peers-widget{
     background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 16px;
-    box-shadow:0 2px 14px rgba(0,0,0,.02); position:sticky; top:20px;
+    box-shadow:0 2px 14px rgba(0,0,0,.02); position:sticky; top:60px;
   }
   .peers-header{margin-bottom:12px}
   .peers-title{
@@ -239,15 +239,67 @@
     .edu-item-card{flex-direction:column; align-items:flex-start; gap:8px}
   }
 
+  /* Фиксированная панель навигации карточки с поиском */
+  .person-sticky-bar{
+    position:sticky; top:0; z-index:35; background:rgba(255,255,255,.96);
+    backdrop-filter:blur(6px); border-bottom:1px solid #edebe8;
+    padding:10px 0; margin-bottom:24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .person-sticky-bar.is-stuck{
+    border-bottom-color:var(--line); box-shadow:0 2px 10px rgba(0,0,0,.03);
+  }
+  .person-sticky-bar .breadcrumbs{margin-bottom:0; flex:1; min-width:180px}
+
   /* Хлебные крошки */
   .breadcrumbs{
     display:flex; align-items:center; flex-wrap:wrap; gap:8px;
-    font-size:13px; color:var(--muted); margin-bottom:24px; line-height:1.4;
+    font-size:13px; color:var(--muted); line-height:1.4;
   }
   .breadcrumbs a{color:var(--muted); text-decoration:none; transition:color .15s}
   .breadcrumbs a:hover{color:var(--ink)}
   .breadcrumbs .sep{color:var(--line); font-size:11px}
   .breadcrumbs .current{color:var(--ink); font-weight:500}
+
+  .person-search-wrap{position:relative; display:flex; align-items:center; flex:none}
+  .person-search-icon{position:absolute; left:10px; color:var(--muted); pointer-events:none; display:flex; align-items:center}
+  #personSearchInput{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:6px 12px 6px 30px; font:inherit; font-size:12.5px; width:220px;
+    outline:none; transition:width .2s ease, border-color .15s, background .15s;
+  }
+  #personSearchInput:focus{width:280px; background:#fff; border-color:var(--ink)}
+  #personSearchInput::placeholder{color:var(--muted); font-size:12px}
+
+  .person-search-dropdown{
+    display:none; position:absolute; top:calc(100% + 6px); right:0; width:320px; max-width:90vw;
+    background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.08);
+    max-height:360px; overflow-y:auto; z-index:50; padding:5px;
+  }
+  .person-search-dropdown.open{display:block}
+  .person-search-item{
+    display:flex; align-items:center; gap:10px; padding:7px 9px; border-radius:7px;
+    text-decoration:none; color:var(--ink); transition:background .1s; cursor:pointer;
+  }
+  .person-search-item:hover, .person-search-item.selected{background:#f7f6f3}
+  .person-search-avatar{
+    width:28px; height:28px; border-radius:50%; background:var(--paper); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-family:var(--font-head);
+    font-size:12px; font-weight:700; color:var(--ink); flex:none; overflow:hidden;
+  }
+  .person-search-avatar img{width:100%; height:100%; object-fit:cover}
+  .person-search-info{flex:1; min-width:0}
+  .person-search-name{font-weight:600; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--ink)}
+  .person-search-sub{font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px}
+  .person-search-empty{padding:14px 10px; font-size:12px; color:var(--muted); text-align:center}
+
+  @media (max-width:640px){
+    .person-sticky-bar{flex-direction:column; align-items:stretch; gap:10px}
+    .person-search-wrap{width:100%}
+    #personSearchInput{width:100%}
+    #personSearchInput:focus{width:100%}
+  }
 
   /* Просторная модалка редактирования (ПК: 780px, 2 колонки) */
   .modal-person-edit{
@@ -293,13 +345,20 @@
 <body data-page="people" class="page-person">
 
 <div class="person-wrap">
-  <nav class="breadcrumbs" aria-label="Навигация">
-    <a href="people.html">Люди</a>
-    <span class="sep">/</span>
-    <a href="people.html?filter=ученик" id="bcCategory">Ученики</a>
-    <span class="sep">/</span>
-    <span class="current" id="bcName">Загрузка…</span>
-  </nav>
+  <div class="person-sticky-bar" id="personStickyBar">
+    <nav class="breadcrumbs" aria-label="Навигация">
+      <a href="people.html">Люди</a>
+      <span class="sep">/</span>
+      <a href="people.html?filter=ученик" id="bcCategory">Ученики</a>
+      <span class="sep">/</span>
+      <span class="current" id="bcName">Загрузка…</span>
+    </nav>
+    <div class="person-search-wrap" id="personSearchWrap">
+      <svg class="person-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="search" id="personSearchInput" placeholder="Найти другого человека…" autocomplete="off" spellcheck="false">
+      <div class="person-search-dropdown" id="personSearchDropdown"></div>
+    </div>
+  </div>
   <div class="person-layout">
     <div id="personContent">
       <div class="person-state">Загрузка информации…</div>
@@ -986,6 +1045,21 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     saveBtn.textContent = "Сохранить";
   }
 });
+
+// Инициализация поиска других людей в фиксированной панели
+if(window.initPeopleSearch){
+  window.initPeopleSearch(
+    document.getElementById("personSearchInput"),
+    document.getElementById("personSearchDropdown")
+  );
+}
+
+const personStickyBar = document.getElementById("personStickyBar");
+if(personStickyBar){
+  window.addEventListener("scroll", () => {
+    personStickyBar.classList.toggle("is-stuck", window.scrollY > 40);
+  }, { passive: true });
+}
 
 window.addEventListener("authReady", loadPerson, { once: true });
 </script>

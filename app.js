@@ -16,11 +16,6 @@ const HEADER_HTML = `
   </nav>
   <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
   <div class="nav-right">
-    <div class="nav-search-wrap" id="navSearchWrap">
-      <svg class="nav-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="search" id="navSearchInput" placeholder="Поиск человека..." autocomplete="off" spellcheck="false">
-      <div class="nav-search-dropdown" id="navSearchDropdown"></div>
-    </div>
     <div class="add-wrap">
       <button class="add-link" id="addBtn">+ Добавить материал</button>
       <div class="dropdown" id="addDropdown">
@@ -327,10 +322,7 @@ function initHeader(){
   whoChip.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
   document.getElementById("btnLogout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
-  // Живой поиск людей в шапке
-  const searchWrap = document.getElementById("navSearchWrap");
-  const searchInput = document.getElementById("navSearchInput");
-  const searchDropdown = document.getElementById("navSearchDropdown");
+  // Функция инициализации живого поиска людей с подсказками (используется на person.html и др.)
   let cachedConfirmedPeople = null;
   let fetchingConfirmedPeople = null;
 
@@ -351,10 +343,12 @@ function initHeader(){
     }
     return fetchingConfirmedPeople;
   }
+  window.loadConfirmedPeople = loadConfirmedPeople;
 
   function normalizeSearchStr(s){
     return (s || "").toLowerCase().replace(/ё/g, "е").trim();
   }
+  window.normalizeSearchStr = normalizeSearchStr;
 
   function getSearchSubtitle(p){
     const parts = [];
@@ -378,6 +372,7 @@ function initHeader(){
     }
     return parts.join(" · ");
   }
+  window.getSearchSubtitle = getSearchSubtitle;
 
   function getSearchHaystack(p){
     const years = [
@@ -388,52 +383,54 @@ function initHeader(){
     ].filter(Boolean).join(" ");
     return normalizeSearchStr(`${p.full_name} ${personRelationLabel(p)} ${years} ${p.institution || ""} ${p.notes || ""}`);
   }
+  window.getSearchHaystack = getSearchHaystack;
 
-  let selectedSearchIndex = -1;
+  function initPeopleSearch(searchInput, searchDropdown, options = {}){
+    if(!searchInput || !searchDropdown) return;
+    let selectedSearchIndex = -1;
 
-  async function renderSearchResults(){
-    const query = normalizeSearchStr(searchInput.value);
-    const words = query.split(/\s+/).filter(Boolean);
-    if(!words.length){
-      searchDropdown.classList.remove("open");
-      searchDropdown.innerHTML = "";
-      selectedSearchIndex = -1;
-      return;
-    }
+    async function renderSearchResults(){
+      const query = normalizeSearchStr(searchInput.value);
+      const words = query.split(/\s+/).filter(Boolean);
+      if(!words.length){
+        searchDropdown.classList.remove("open");
+        searchDropdown.innerHTML = "";
+        selectedSearchIndex = -1;
+        return;
+      }
 
-    const people = await loadConfirmedPeople();
-    const matches = people.filter(p => {
-      const h = getSearchHaystack(p);
-      return words.every(w => h.includes(w));
-    });
+      const people = await loadConfirmedPeople();
+      const matches = people.filter(p => {
+        const h = getSearchHaystack(p);
+        return words.every(w => h.includes(w));
+      });
 
-    if(!matches.length){
-      searchDropdown.innerHTML = `<div class="nav-search-empty">Ничего не найдено</div>`;
+      if(!matches.length){
+        searchDropdown.innerHTML = `<div class="person-search-empty">Ничего не найдено</div>`;
+        searchDropdown.classList.add("open");
+        selectedSearchIndex = -1;
+        return;
+      }
+
+      selectedSearchIndex = 0;
+      searchDropdown.innerHTML = matches.slice(0, 8).map((p, i) => {
+        const avatarHtml = p.avatar_url
+          ? `<img src="${escapeHtml(p.avatar_url)}" alt="">`
+          : escapeHtml(p.full_name.trim().charAt(0).toUpperCase());
+        const sub = getSearchSubtitle(p);
+        return `
+          <a href="person.html?id=${p.id}" class="person-search-item ${i === 0 ? 'selected' : ''}" data-index="${i}">
+            <div class="person-search-avatar">${avatarHtml}</div>
+            <div class="person-search-info">
+              <div class="person-search-name">${escapeHtml(p.full_name)}</div>
+              <div class="person-search-sub">${escapeHtml(sub)}</div>
+            </div>
+          </a>
+        `;
+      }).join("");
       searchDropdown.classList.add("open");
-      selectedSearchIndex = -1;
-      return;
     }
 
-    selectedSearchIndex = 0;
-    searchDropdown.innerHTML = matches.slice(0, 8).map((p, i) => {
-      const avatarHtml = p.avatar_url
-        ? `<img src="${escapeHtml(p.avatar_url)}" alt="">`
-        : escapeHtml(p.full_name.trim().charAt(0).toUpperCase());
-      const sub = getSearchSubtitle(p);
-      return `
-        <a href="person.html?id=${p.id}" class="nav-search-item ${i === 0 ? 'selected' : ''}" data-index="${i}">
-          <div class="nav-search-avatar">${avatarHtml}</div>
-          <div class="nav-search-info">
-            <div class="nav-search-name">${escapeHtml(p.full_name)}</div>
-            <div class="nav-search-sub">${escapeHtml(sub)}</div>
-          </div>
-        </a>
-      `;
-    }).join("");
-    searchDropdown.classList.add("open");
-  }
-
-  if(searchInput && searchDropdown){
     searchInput.addEventListener("focus", () => {
       loadConfirmedPeople();
       if(searchInput.value.trim()) renderSearchResults();
@@ -441,29 +438,39 @@ function initHeader(){
     searchInput.addEventListener("input", renderSearchResults);
 
     searchInput.addEventListener("keydown", e => {
-      const items = searchDropdown.querySelectorAll(".nav-search-item");
+      const items = searchDropdown.querySelectorAll(".person-search-item");
       if(!items.length || !searchDropdown.classList.contains("open")) return;
 
       if(e.key === "ArrowDown"){
         e.preventDefault();
         selectedSearchIndex = (selectedSearchIndex + 1) % items.length;
         items.forEach((it, idx) => it.classList.toggle("selected", idx === selectedSearchIndex));
-        items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
+        if(items[selectedSearchIndex]) items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
       } else if(e.key === "ArrowUp"){
         e.preventDefault();
         selectedSearchIndex = (selectedSearchIndex - 1 + items.length) % items.length;
         items.forEach((it, idx) => it.classList.toggle("selected", idx === selectedSearchIndex));
-        items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
+        if(items[selectedSearchIndex]) items[selectedSearchIndex].scrollIntoView({ block: "nearest" });
       } else if(e.key === "Enter"){
         e.preventDefault();
-        const active = searchDropdown.querySelector(".nav-search-item.selected") || items[0];
-        if(active) window.location.href = active.getAttribute("href");
+        const active = searchDropdown.querySelector(".person-search-item.selected") || items[0];
+        if(active){
+          if(options.onSelect) options.onSelect(active);
+          else window.location.href = active.getAttribute("href");
+        }
       } else if(e.key === "Escape"){
         searchDropdown.classList.remove("open");
         searchInput.blur();
       }
     });
+
+    document.addEventListener("click", e => {
+      if(!searchInput.contains(e.target) && !searchDropdown.contains(e.target)){
+        searchDropdown.classList.remove("open");
+      }
+    });
   }
+  window.initPeopleSearch = initPeopleSearch;
 
   // бургер — на мобильном открывает панель с "добавить материал" / "войти"
   const burgerBtn = document.getElementById("burgerBtn");

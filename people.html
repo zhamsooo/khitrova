@@ -10,16 +10,35 @@
   .ppl-head h1{font-family:var(--font-head); font-weight:700; font-size:38px; margin:0 0 10px}
   .ppl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 20px; max-width:560px}
 
-  .ppl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:26px}
+  .ppl-controls-bar{
+    position:sticky; top:0; z-index:25; background:rgba(255,255,255,.96);
+    backdrop-filter:blur(6px); padding:10px 0 12px; margin-bottom:20px;
+    border-bottom:1px solid transparent; transition:border-color .15s, box-shadow .15s;
+  }
+  .ppl-controls-bar.is-stuck{
+    border-bottom-color:var(--line); box-shadow:0 2px 10px rgba(0,0,0,.03);
+  }
+  .ppl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px}
   .ppl-chip{
     background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
     font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
+    transition:background .15s, color .15s, border-color .15s;
   }
+  .ppl-chip:hover{border-color:var(--ink); color:var(--ink)}
   .ppl-chip.active{background:var(--ink); color:#fff; border-color:var(--ink)}
-  .ppl-search{
-    margin-left:auto; background:var(--paper); border:1px solid var(--line); border-radius:14px;
-    padding:6px 13px; font:inherit; font-size:12.5px; min-width:180px;
+  .ppl-search-wrap{
+    margin-left:auto; position:relative; display:flex; align-items:center;
   }
+  .ppl-search-icon{
+    position:absolute; left:10px; color:var(--muted); pointer-events:none; display:flex; align-items:center;
+  }
+  .ppl-search{
+    background:var(--paper); border:1px solid var(--line); border-radius:14px;
+    padding:6px 12px 6px 30px; font:inherit; font-size:12.5px; width:220px;
+    outline:none; transition:width .2s ease, border-color .15s, background .15s;
+  }
+  .ppl-search:focus{width:270px; background:#fff; border-color:var(--ink)}
+  .ppl-search::placeholder{color:var(--muted); font-size:12px}
 
   .ppl-section-title{font-family:var(--font-head); font-weight:700; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:26px 0 12px}
   .ppl-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:12px}
@@ -49,7 +68,9 @@
 
   @media (max-width:640px){
     .ppl-head h1{font-size:30px}
-    .ppl-search{margin-left:0; width:100%}
+    .ppl-search-wrap{margin-left:0; width:100%}
+    .ppl-search{width:100%}
+    .ppl-search:focus{width:100%}
     .ppl-grid{grid-template-columns:1fr 1fr}
   }
 </style>
@@ -62,12 +83,17 @@
     <p class="sub">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный и таким и останется — дополняйте его.</p>
   </div>
 
-  <div class="ppl-controls">
-    <button class="ppl-chip active" data-filter="все">Все</button>
-    <button class="ppl-chip" data-filter="ученик">Ученики</button>
-    <button class="ppl-chip" data-filter="коллега">Коллеги</button>
-    <button class="ppl-chip" data-filter="другое">Другое</button>
-    <input type="text" class="ppl-search" id="pplSearch" placeholder="Поиск по имени…">
+  <div class="ppl-controls-bar" id="pplControlsBar">
+    <div class="ppl-controls">
+      <button class="ppl-chip active" data-filter="все">Все</button>
+      <button class="ppl-chip" data-filter="ученик">Ученики</button>
+      <button class="ppl-chip" data-filter="коллега">Коллеги</button>
+      <button class="ppl-chip" data-filter="другое">Другое</button>
+      <div class="ppl-search-wrap">
+        <svg class="ppl-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="search" class="ppl-search" id="pplSearch" placeholder="Поиск по имени, году выпуска…" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
   </div>
 
   <div id="pplList"><div class="ppl-state">Загрузка…</div></div>
@@ -139,9 +165,8 @@ function personCard(p){
 }
 
 function render(){
-  const navInput = document.getElementById("navSearchInput");
   const pplInput = document.getElementById("pplSearch");
-  const rawQ = (navInput && navInput.value.trim()) || (pplInput && pplInput.value.trim()) || "";
+  const rawQ = pplInput ? pplInput.value.trim() : "";
   let list = allPeople;
   if(activeFilter !== "все") list = list.filter(p => p.relation_type === activeFilter);
   if(rawQ){
@@ -210,19 +235,14 @@ document.querySelectorAll(".ppl-chip").forEach(chip => {
 
 const pplSearch = document.getElementById("pplSearch");
 if(pplSearch){
-  pplSearch.addEventListener("input", () => {
-    const navSearch = document.getElementById("navSearchInput");
-    if(navSearch && navSearch.value !== pplSearch.value) navSearch.value = pplSearch.value;
-    render();
-  });
+  pplSearch.addEventListener("input", render);
 }
 
-const navSearch = document.getElementById("navSearchInput");
-if(navSearch){
-  navSearch.addEventListener("input", () => {
-    if(pplSearch && pplSearch.value !== navSearch.value) pplSearch.value = navSearch.value;
-    render();
-  });
+const pplBar = document.getElementById("pplControlsBar");
+if(pplBar){
+  window.addEventListener("scroll", () => {
+    pplBar.classList.toggle("is-stuck", window.scrollY > 80);
+  }, { passive: true });
 }
 
 window.onPersonAdded = loadPeople;
