@@ -238,12 +238,68 @@
     .person-actions{display:flex; justify-content:center}
     .edu-item-card{flex-direction:column; align-items:flex-start; gap:8px}
   }
+
+  /* Хлебные крошки */
+  .breadcrumbs{
+    display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+    font-size:13px; color:var(--muted); margin-bottom:24px; line-height:1.4;
+  }
+  .breadcrumbs a{color:var(--muted); text-decoration:none; transition:color .15s}
+  .breadcrumbs a:hover{color:var(--ink)}
+  .breadcrumbs .sep{color:var(--line); font-size:11px}
+  .breadcrumbs .current{color:var(--ink); font-weight:500}
+
+  /* Просторная модалка редактирования (ПК: 780px, 2 колонки) */
+  .modal-person-edit{
+    width:780px !important; max-width:94vw !important; max-height:88vh !important;
+    display:flex; flex-direction:column; padding:0 !important; overflow:hidden;
+  }
+  .modal-head{
+    padding:18px 24px 14px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; flex:none;
+  }
+  .modal-head h2{margin:0; font-family:var(--font-head); font-weight:700; font-size:18px}
+  .modal-head .close{position:static; margin-left:auto}
+  .modal-body{padding:20px 24px; overflow-y:auto; flex:1}
+  .modal-grid-2col{display:grid; grid-template-columns:1fr 1fr; gap:24px}
+  .modal-col{display:flex; flex-direction:column}
+  .modal-col label{display:block; font-size:12px; color:var(--muted); margin:10px 0 4px}
+  .modal-col label:first-child{margin-top:0}
+  .study-box-wrap{
+    background:var(--paper); border:1px solid var(--line); border-radius:8px;
+    padding:10px 12px; margin-bottom:6px;
+  }
+  .study-check-row{
+    display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; margin:4px 0;
+  }
+  .study-check-row input[type="checkbox"]{width:auto; margin:0}
+  .modal-footer{
+    padding:14px 24px; border-top:1px solid var(--line); background:#faf8f5;
+    display:flex; align-items:center; justify-content:space-between; flex:none;
+  }
+  .btn-cancel{
+    background:none; border:1px solid var(--line); color:var(--muted);
+    font-size:13px; font-family:inherit; padding:7px 16px; border-radius:8px;
+    cursor:pointer; transition:all .15s;
+  }
+  .btn-cancel:hover{border-color:var(--ink); color:var(--ink)}
+
+  @media (max-width:760px){
+    .modal-person-edit{max-height:92vh !important}
+    .modal-grid-2col{grid-template-columns:1fr; gap:16px}
+  }
 </style>
 </head>
 <body data-page="people">
 
 <div class="person-wrap">
-  <a href="people.html" class="btn-back">← Все люди</a>
+  <nav class="breadcrumbs" aria-label="Навигация">
+    <a href="people.html">Люди</a>
+    <span class="sep">/</span>
+    <a href="people.html?filter=ученик" id="bcCategory">Ученики</a>
+    <span class="sep">/</span>
+    <span class="current" id="bcName">Загрузка…</span>
+  </nav>
   <div class="person-layout">
     <div id="personContent">
       <div class="person-state">Загрузка информации…</div>
@@ -254,78 +310,102 @@
 
 <!-- Модалка редактирования карточки человека -->
 <div class="overlay" id="editPersonOverlay">
-  <div class="modal" style="width:440px">
-    <button class="close" data-close>×</button>
-    <h2>Редактировать данные</h2>
+  <div class="modal modal-person-edit">
+    <div class="modal-head">
+      <h2>Редактировать данные человека</h2>
+      <button class="close" data-close>×</button>
+    </div>
 
-    <label>Фотография (аватарка)</label>
-    <div class="avatar-edit-box">
-      <div id="avatarPreviewHolder"></div>
-      <div class="avatar-edit-actions">
-        <input type="file" id="editAvatarInput" accept="image/*" style="display:none">
-        <button type="button" class="btn-upload" id="btnTriggerUpload">Загрузить фото</button>
-        <button type="button" class="btn-remove-avatar" id="btnRemoveAvatar" style="display:none">Удалить фото</button>
+    <div class="modal-body">
+      <div class="modal-grid-2col">
+        <!-- Левая колонка: фото, ФИО, статус, учёба -->
+        <div class="modal-col">
+          <label>Фотография (аватарка)</label>
+          <div class="avatar-edit-box">
+            <div id="avatarPreviewHolder"></div>
+            <div class="avatar-edit-actions">
+              <input type="file" id="editAvatarInput" accept="image/*" style="display:none">
+              <button type="button" class="btn-upload" id="btnTriggerUpload">Загрузить фото</button>
+              <button type="button" class="btn-remove-avatar" id="btnRemoveAvatar" style="display:none">Удалить фото</button>
+            </div>
+          </div>
+
+          <label>Имя и фамилия</label>
+          <input type="text" id="editFullName" placeholder="Имя Фамилия">
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+            <div>
+              <label>Пол</label>
+              <select id="editGender">
+                <option value="">Не указан</option>
+                <option value="m">Мужской (ученик)</option>
+                <option value="f">Женский (ученица)</option>
+              </select>
+            </div>
+            <div>
+              <label>Кем приходится Т.И.?</label>
+              <select id="editRelation">
+                <option value="ученик">Ученик / Ученица</option>
+                <option value="коллега">Коллега</option>
+                <option value="другое">Другое</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="editStudyBlock">
+            <label style="margin-top:14px">Обучение у Т.И. Хитровой</label>
+            <div class="study-box-wrap">
+              <label class="study-check-row">
+                <input type="checkbox" id="editChoirSchool"> Хоровое училище им. М.И. Глинки
+              </label>
+              <div id="editChoirBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="editChoirEnd" placeholder="год выпуска (напр. 1998)" min="1955" max="2026">
+              </div>
+
+              <label class="study-check-row">
+                <input type="checkbox" id="editConservatory"> СПбГК им. Н.А. Римского-Корсакова
+              </label>
+              <div id="editConservatoryBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="editConservatoryEnd" placeholder="год выпуска (напр. 2003)" min="1955" max="2026">
+              </div>
+
+              <label class="study-check-row">
+                <input type="checkbox" id="editAssistantship"> Ассистентура-стажировка в СПбГК
+              </label>
+              <div id="editAssistantBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="editAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+              </div>
+            </div>
+
+            <label style="font-size:11.5px; color:var(--muted); margin-top:8px">Или другие годы учёбы (необязательно)</label>
+            <div style="display:flex; gap:8px">
+              <input type="number" id="editStudyStart" placeholder="начало" min="1955" max="2026">
+              <input type="number" id="editStudyEnd" placeholder="окончание" min="1955" max="2026">
+            </div>
+          </div>
+        </div>
+
+        <!-- Правая колонка: работа, биография, источник -->
+        <div class="modal-col" style="display:flex; flex-direction:column">
+          <label>Место работы / должность</label>
+          <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
+
+          <label>Заметки, достижения, биография</label>
+          <textarea id="editNotes" placeholder="Звания, достижения, вехи карьеры, воспоминания" style="flex:1; min-height:160px"></textarea>
+
+          <label>Источник информации / ссылка</label>
+          <input type="text" id="editSource" placeholder="Откуда данные (например, kapellanin.ru/id692)">
+        </div>
       </div>
     </div>
 
-    <label>Имя и фамилия</label>
-    <input type="text" id="editFullName">
-
-    <label>Пол</label>
-    <select id="editGender">
-      <option value="">Не указан</option>
-      <option value="m">Мужской (ученик)</option>
-      <option value="f">Женский (ученица)</option>
-    </select>
-
-    <label>Кем приходится Т.И.?</label>
-    <select id="editRelation">
-      <option value="ученик">Ученик / Ученица</option>
-      <option value="коллега">Коллега</option>
-      <option value="другое">Другое</option>
-    </select>
-
-    <div id="editStudyBlock">
-      <label>Где учился(лась) у Т.И.?</label>
-      <div style="margin-bottom:8px">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="editChoirSchool" style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
-        </label>
-        <div id="editChoirBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="editChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
-        </div>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="editConservatory" style="width:auto; margin:0"> СПбГК им. Н.А. Римского-Корсакова
-        </label>
-        <div id="editConservatoryBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="editConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
-        </div>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="editAssistantship" style="width:auto; margin:0"> Ассистентура-стажировка в СПбГК
-        </label>
-        <div id="editAssistantBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="editAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
-        </div>
+    <!-- Зафиксированный подвал с кнопкой "Сохранить" -->
+    <div class="modal-footer">
+      <div class="err" id="errEditPerson" style="margin:0"></div>
+      <div style="display:flex; gap:10px; margin-left:auto">
+        <button type="button" class="btn-cancel" data-close>Отмена</button>
+        <button type="button" class="primary" id="btnSavePersonEdit">Сохранить</button>
       </div>
-      <label>Или другие годы учёбы (необязательно)</label>
-      <div style="display:flex; gap:8px">
-        <input type="number" id="editStudyStart" placeholder="начало" min="1955" max="2026">
-        <input type="number" id="editStudyEnd" placeholder="окончание" min="1955" max="2026">
-      </div>
-    </div>
-
-    <label>Место работы / должность (необязательно)</label>
-    <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
-
-    <label>Заметки, достижения, биография (необязательно)</label>
-    <textarea id="editNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
-
-    <label>Источник / ссылка (необязательно)</label>
-    <input type="text" id="editSource" placeholder="Откуда эта информация">
-
-    <div class="err" id="errEditPerson"></div>
-    <div class="row-actions">
-      <button class="primary" id="btnSavePersonEdit">Сохранить</button>
     </div>
   </div>
 </div>
@@ -436,6 +516,23 @@ function renderMeta(p){
 function renderPerson(p){
   document.title = `${p.full_name} — Татьяна Ивановна Хитрова`;
   const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
+
+  const bcCat = document.getElementById("bcCategory");
+  const bcName = document.getElementById("bcName");
+  if(bcCat && bcName){
+    bcName.textContent = p.full_name;
+    const rel = p.relation_type || "ученик";
+    if(rel === "ученик"){
+      bcCat.textContent = "Ученики";
+      bcCat.href = "people.html?filter=ученик";
+    } else if(rel === "коллега"){
+      bcCat.textContent = "Коллеги";
+      bcCat.href = "people.html?filter=коллега";
+    } else {
+      bcCat.textContent = "Другое";
+      bcCat.href = "people.html?filter=другое";
+    }
+  }
 
   const avatarHtml = p.avatar_url
     ? `<img src="${escapeHtml(p.avatar_url)}" alt="${escapeHtml(p.full_name)}" class="person-avatar">`
