@@ -61,6 +61,22 @@
     .nsl-read h1{font-size:32px; line-height:40px}
     .editor-meta-row{flex-direction:column; align-items:stretch}
   }
+
+  /* ---------- M3 secondary tabs (F5) ---------- */
+  .sec-tabs{
+    display:flex; gap:24px; border-bottom:1px solid var(--outline-variant);
+    margin-bottom:24px; overflow-x:auto; white-space:nowrap;
+  }
+  .sec-tab{
+    position:relative; flex:none; background:none; border:0; cursor:pointer;
+    padding:0 2px 14px; font:var(--t-label-large); font-size:14px; font-weight:500;
+    color:var(--on-surface-variant); transition:color .15s;
+  }
+  .sec-tab:hover{ color:var(--on-surface); }
+  .sec-tab.on{ color:var(--on-surface); }
+  .sec-tab.on::after{
+    content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary);
+  }
 </style>
 </head>
 <body data-page="nasledie">
@@ -68,13 +84,12 @@
 <main class="page" id="nslWrap">
   <div class="nsl-head">
     <h1>Наследие</h1>
-    <p class="lead">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
+    <p class="lead">Труды, статьи и интервью Татьяны Ивановны — и воспоминания и очерки о ней её учеников и коллег.</p>
   </div>
 
-  <div class="chips" id="nslFilterChips" style="margin-bottom: 24px;">
-    <button type="button" class="chip on" data-tab="все"><span class="sym">check</span>Все</button>
-    <button type="button" class="chip" data-tab="ti">От Татьяны Ивановны</button>
-    <button type="button" class="chip" data-tab="community">Воспоминания и статьи коллег</button>
+  <div class="sec-tabs" id="nslTabs" role="tablist">
+    <button type="button" class="sec-tab on" data-tab="ti" role="tab">Труды Татьяны Ивановны</button>
+    <button type="button" class="sec-tab" data-tab="community" role="tab">Воспоминания и статьи о ней</button>
   </div>
 
   <div id="nslList"><div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant)">Загрузка…</div></div>
@@ -192,7 +207,7 @@ let dirty = false;
 let saveTimer = null;
 let periodicTimer = null;
 let allArticles = [];
-let activeTab = "все";
+let activeTab = new URLSearchParams(location.search).get("tab") === "community" ? "community" : "ti";
 
 const elWrap = document.getElementById("nslWrap");
 const elList = document.getElementById("nslList");
@@ -285,7 +300,7 @@ function renderList(){
   const mine = currentUser ? allArticles.filter(a => a.created_by === currentUser.id && a.status !== "confirmed") : [];
   const confirmed = allArticles.filter(a => a.status === "confirmed");
 
-  const chipsEl = document.getElementById("nslFilterChips");
+  const tabsEl = document.getElementById("nslTabs");
 
   let html = "";
   if(mine.length){
@@ -295,9 +310,12 @@ function renderList(){
     `;
   }
 
-  // Если нет подтверждённых материалов — показываем один блок-приглашение и прячем чипы
+  const tiArticles = confirmed.filter(a => getArticleCategory(a) === "ti");
+  const communityArticles = confirmed.filter(a => getArticleCategory(a) !== "ti");
+
+  // Если нет подтверждённых материалов вообще — один блок-приглашение, табов нет
   if(confirmed.length === 0){
-    if(chipsEl) chipsEl.style.display = "none";
+    if(tabsEl) tabsEl.style.display = "none";
 
     html += `
       <div class="card" style="height:auto; padding:32px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; margin:32px auto; max-width:480px;">
@@ -331,41 +349,37 @@ function renderList(){
     return;
   }
 
-  if(chipsEl) chipsEl.style.display = "flex";
+  if(tabsEl){
+    tabsEl.style.display = "flex";
+    tabsEl.querySelectorAll(".sec-tab").forEach(t => {
+      const isOn = t.dataset.tab === activeTab;
+      t.classList.toggle("on", isOn);
+      const count = t.dataset.tab === "ti" ? tiArticles.length : communityArticles.length;
+      const label = t.dataset.tab === "ti" ? "Труды Татьяны Ивановны" : "Воспоминания и статьи о ней";
+      t.textContent = `${label} · ${count}`;
+    });
+  }
 
-  const tiArticles = confirmed.filter(a => getArticleCategory(a) === "ti");
-  const communityArticles = confirmed.filter(a => getArticleCategory(a) !== "ti");
-
-  if(activeTab === "все"){
-    if(tiArticles.length){
-      html += `
-        <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Материалы и публикации Татьяны Ивановны</h2>
-        <div class="grid">${tiArticles.map(cardHtml).join("")}</div>
-      `;
-    }
-    if(communityArticles.length){
-      html += `
-        <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Воспоминания учеников и статьи коллег</h2>
-        <div class="grid">${communityArticles.map(cardHtml).join("")}</div>
-      `;
-    }
-  } else if(activeTab === "ti"){
+  const activeList = activeTab === "ti" ? tiArticles : communityArticles;
+  if(activeList.length){
+    html += `<div class="grid">${activeList.map(cardHtml).join("")}</div>`;
+  } else {
     html += `
-      <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Материалы и публикации Татьяны Ивановны</h2>
+      <div class="card" style="height:auto; padding:32px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; margin:24px auto; max-width:440px;">
+        <p style="font:var(--t-body-medium); color:var(--on-surface-variant); margin:0">В этом разделе пока нет материалов.</p>
+        <button type="button" class="btn tonal" id="emptyTabAddBtn">
+          <span class="sym">add</span>Добавить материал
+        </button>
+      </div>
     `;
-    html += tiArticles.length
-      ? `<div class="grid">${tiArticles.map(cardHtml).join("")}</div>`
-      : `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">В этом разделе пока нет материалов.</div>`;
-  } else if(activeTab === "community"){
-    html += `
-      <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Воспоминания учеников и статьи коллег</h2>
-    `;
-    html += communityArticles.length
-      ? `<div class="grid">${communityArticles.map(cardHtml).join("")}</div>`
-      : `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">В этом разделе пока нет материалов.</div>`;
   }
 
   elList.innerHTML = html;
+
+  const emptyTabAddBtn = document.getElementById("emptyTabAddBtn");
+  if(emptyTabAddBtn){
+    emptyTabAddBtn.addEventListener("click", () => openArticleAddModal(activeTab));
+  }
 
   elList.querySelectorAll(".art-card").forEach(card => {
     card.addEventListener("click", e => {
@@ -374,6 +388,15 @@ function renderList(){
       location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
     });
   });
+}
+
+function openArticleAddModal(presetCat){
+  if(window.openAddModal) window.openAddModal("article");
+  const catEl = document.getElementById("uArtCategory");
+  if(catEl){
+    catEl.value = presetCat === "ti" ? "ti" : "community";
+    if(typeof window.updateArticleTypeOptions === "function") window.updateArticleTypeOptions();
+  }
 }
 
 
@@ -388,24 +411,18 @@ async function loadList(){
   renderList();
 }
 
-// Табы фильтрации
+// Табы «Труды Т.И. / Воспоминания и статьи о ней» — состояние в ?tab=, не в hash
 function setNslFilter(tab){
-  activeTab = tab;
-  document.querySelectorAll("#nslFilterChips .chip").forEach(c => {
-    const isOn = c.dataset.tab === tab;
-    c.classList.toggle("on", isOn);
-    const existingSym = c.querySelector(".sym");
-    if(existingSym) existingSym.remove();
-    if(isOn){
-      c.insertAdjacentHTML("afterbegin", '<span class="sym">check</span>');
-    }
-  });
+  activeTab = tab === "community" ? "community" : "ti";
+  const params = new URLSearchParams(location.search);
+  params.set("tab", activeTab);
+  history.replaceState(null, "", `${location.pathname}?${params.toString()}${location.hash}`);
   renderList();
 }
 
-document.querySelectorAll("#nslFilterChips .chip").forEach(chip => {
-  chip.addEventListener("click", () => {
-    setNslFilter(chip.dataset.tab);
+document.querySelectorAll("#nslTabs .sec-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    setNslFilter(tab.dataset.tab);
   });
 });
 
