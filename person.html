@@ -314,7 +314,11 @@
     display:flex; align-items:center; justify-content:space-between; flex:none;
   }
   .modal-head h2{margin:0; font-family:var(--font-head); font-weight:600; font-size:var(--fs-h2); line-height:1.2}
-  .modal-head .close{position:static; margin-left:auto}
+  .modal-head .close{
+    position:static; margin-left:auto; width:44px; height:44px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:8px;
+  }
   .modal-body{padding:20px 24px; overflow-y:auto; flex:1}
   .modal-grid-2col{display:grid; grid-template-columns:1fr 1fr; gap:24px}
   .modal-col{display:flex; flex-direction:column}
@@ -335,13 +339,23 @@
   .btn-cancel{
     background:none; border:1px solid var(--line); color:var(--muted);
     font-size:var(--fs-ui); font-family:var(--font-ui); padding:7px 16px; border-radius:8px;
-    cursor:pointer; transition:all .15s;
+    cursor:pointer; transition:all .15s; min-height:44px;
   }
   .btn-cancel:hover{border-color:var(--ink); color:var(--ink)}
 
   @media (max-width:760px){
     .modal-person-edit{max-height:92vh !important}
     .modal-grid-2col{grid-template-columns:1fr; gap:16px}
+  }
+  @media (max-width:600px){
+    #editPersonOverlay{align-items:flex-end}
+    .modal-person-edit{
+      width:100% !important; max-width:100% !important; border-radius:14px 14px 0 0 !important;
+      max-height:94vh !important; margin:0 !important;
+    }
+    .modal-footer{
+      position:sticky; bottom:0; padding:10px 16px;
+    }
   }
 </style>
 </head>

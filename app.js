@@ -9,6 +9,7 @@ const CONTACT_EMAIL = "post@khitrova.org";
 
 const HEADER_HTML = `
 <header class="site-nav">
+  <a href="index.html" class="nav-brand">Т. И. Хитрова</a>
   <nav class="links">
     <a href="index.html" data-page="index">Линия жизни</a>
     <a href="people.html" data-page="people">Люди</a>
@@ -16,6 +17,12 @@ const HEADER_HTML = `
   </nav>
   <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
   <div class="nav-right">
+    <nav class="mobile-nav-links">
+      <a href="index.html" data-page="index">Линия жизни</a>
+      <a href="people.html" data-page="people">Люди</a>
+      <a href="nasledie.html" data-page="nasledie">Наследие</a>
+    </nav>
+    <div class="mobile-nav-divider"></div>
     <div class="add-wrap">
       <button class="add-link" id="addBtn">+ Добавить</button>
     </div>
@@ -81,7 +88,7 @@ const MODALS_HTML = `
         <input type="number" id="inGradYear" placeholder="например, 1998" min="1955" max="2026">
       </div>
       <div class="err" id="errProfile"></div>
-      <div class="row-actions"><button class="primary" id="btnSaveProfile">Готово</button></div>
+      <div class="row-actions"><button class="primary" id="btnSaveProfile">Сохранить</button></div>
     </div>
   </div>
 </div>
@@ -370,6 +377,12 @@ function switchAddTab(tab){
 window.switchAddTab = switchAddTab;
 
 function openAddModal(tab){
+  const navRight = document.querySelector(".nav-right");
+  const burgerBtn = document.getElementById("burgerBtn");
+  if(navRight){
+    navRight.classList.remove("open");
+    if(burgerBtn) burgerBtn.textContent = "☰";
+  }
   if(!currentUser){
     resetAuthModal();
     open_("authOverlay");
@@ -402,11 +415,16 @@ async function submitEventForm(){
   const description = descInput.value.trim();
   const source = sourceInput.value.trim();
 
+  yearInput.classList.toggle("invalid", !event_year);
+  titleInput.classList.toggle("invalid", !title);
+
   if(!event_year || !title){
     errEl.textContent = "Заполните год и название события";
     errEl.style.display = "block";
     return;
   }
+  yearInput.classList.remove("invalid");
+  titleInput.classList.remove("invalid");
   errEl.style.display = "none";
   if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
 
@@ -484,11 +502,13 @@ async function submitPersonForm(){
   const notes = notesInput.value.trim();
   const source = sourceInput.value.trim();
 
+  nameInput.classList.toggle("invalid", !full_name);
   if(!full_name){
     errEl.textContent = "Укажите имя и фамилию";
     errEl.style.display = "block";
     return;
   }
+  nameInput.classList.remove("invalid");
   errEl.style.display = "none";
   if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
 
@@ -608,8 +628,7 @@ function initHeader(){
   document.body.insertAdjacentHTML("afterbegin", HEADER_HTML);
 
   const page = document.body.dataset.page;
-  const activeLink = document.querySelector(`.site-nav a[data-page="${page}"]`);
-  if(activeLink) activeLink.classList.add("active");
+  document.querySelectorAll(`.site-nav a[data-page="${page}"]`).forEach(l => l.classList.add("active"));
 
   // подхватываем позицию меню, посчитанную на "Линии жизни" в прошлый раз — чтобы не прыгало между страницами.
   // тот же отступ применяем к блоку страниц-заглушек (Люди/Наследие), чтобы всё стояло в одну сетку
@@ -849,16 +868,25 @@ function initHeader(){
   }
   window.initPeopleSearch = initPeopleSearch;
 
-  // бургер — на мобильном открывает панель с "добавить материал" / "войти"
+  // бургер — на мобильном открывает панель с разделами, "добавить материал" и "войти"
   const burgerBtn = document.getElementById("burgerBtn");
   const navRight = document.querySelector(".nav-right");
-  burgerBtn.addEventListener("click", e => { e.stopPropagation(); navRight.classList.toggle("open"); });
+  if(burgerBtn && navRight){
+    burgerBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const isOpen = navRight.classList.toggle("open");
+      burgerBtn.textContent = isOpen ? "✕" : "☰";
+    });
+  }
 
   document.addEventListener("click", e => {
-    whoDropdown.classList.remove("open");
-    navRight.classList.remove("open");
+    if(whoDropdown) whoDropdown.classList.remove("open");
+    if(navRight && !navRight.contains(e.target) && (!burgerBtn || !burgerBtn.contains(e.target))){
+      navRight.classList.remove("open");
+      if(burgerBtn) burgerBtn.textContent = "☰";
+    }
     if(searchWrap && !searchWrap.contains(e.target)){
-      searchDropdown.classList.remove("open");
+      if(searchDropdown) searchDropdown.classList.remove("open");
     }
   });
 
@@ -1073,10 +1101,10 @@ function positionMetaPopover(pop, btn){
   const padding = 10;
 
   let left = r.left + (r.width / 2) - (pr.width / 2);
-  if(left < padding) left = padding;
   if(left + pr.width > window.innerWidth - padding){
     left = window.innerWidth - padding - pr.width;
   }
+  if(left < padding) left = padding;
 
   let top = r.bottom + 6;
   if(top + pr.height > window.innerHeight - padding){

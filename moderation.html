@@ -136,6 +136,12 @@
   .rev-diff-table tr:last-child td{border-bottom:none}
   .rev-diff-old{color:#b0413e; word-break:break-word}
   .rev-diff-new{color:#2a7a4c; font-weight:600; word-break:break-word}
+
+  @media (max-width:480px){
+    .mod-wrap{padding:20px 14px 60px}
+    .rev-diff-table{display:block; overflow-x:auto}
+    .rev-diff-table th, .rev-diff-table td{padding:5px 6px}
+  }
 </style>
 </head>
 <body data-page="moderation">
