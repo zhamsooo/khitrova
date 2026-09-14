@@ -647,6 +647,16 @@ async function loadPeople(){
 
     const relLabel = window.personRelationLabel ? window.personRelationLabel(p) : (p.relation_type || "Ученик");
 
+    let editLastName = p.last_name || "";
+    let editFirstName = p.first_name || "";
+    let editPatronymic = p.patronymic || "";
+    if(!editLastName && !editFirstName && p.full_name){
+      const nameParts = p.full_name.trim().split(/\s+/).filter(Boolean);
+      editLastName = nameParts[0] || "";
+      editFirstName = nameParts[1] || "";
+      editPatronymic = nameParts.slice(2).join(" ");
+    }
+
     return `
       <div class="mod-card" data-id="${p.id}">
         <div class="card-view">
@@ -673,9 +683,19 @@ async function loadPeople(){
         </div>
 
         <div class="card-edit" style="display:none">
-          <div class="edit-field">
-            <label>Имя и фамилия</label>
-            <input type="text" class="in-p-name" value="${escapeHtml(p.full_name)}">
+          <div class="name-fields-row">
+            <div class="edit-field">
+              <label>Фамилия</label>
+              <input type="text" class="in-p-last" value="${escapeHtml(editLastName)}">
+            </div>
+            <div class="edit-field">
+              <label>Имя</label>
+              <input type="text" class="in-p-first" value="${escapeHtml(editFirstName)}">
+            </div>
+            <div class="edit-field">
+              <label>Отчество (если известно)</label>
+              <input type="text" class="in-p-patronymic" value="${escapeHtml(editPatronymic)}">
+            </div>
           </div>
           <div class="edit-grid">
             <div class="edit-field">
@@ -701,21 +721,30 @@ async function loadPeople(){
               <input type="checkbox" class="in-p-choir" ${p.studied_choir_school ? "checked" : ""} style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
             </label>
             <div class="box-choir" style="display:${p.studied_choir_school ? "block" : "none"}; margin:4px 0 8px 24px">
-              <input type="number" class="in-p-choir-end" placeholder="Год выпуска (напр. 1980)" value="${p.choir_school_end || ""}">
+              <div style="display:flex; gap:8px">
+                <input type="number" class="in-p-choir-start" placeholder="Год начала" value="${p.choir_school_start || ""}">
+                <input type="number" class="in-p-choir-end" placeholder="Год выпуска (напр. 1980)" value="${p.choir_school_end || ""}">
+              </div>
             </div>
 
             <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
               <input type="checkbox" class="in-p-cons" ${p.studied_conservatory ? "checked" : ""} style="width:auto; margin:0"> СПбГК им. Римского-Корсакова
             </label>
             <div class="box-cons" style="display:${p.studied_conservatory ? "block" : "none"}; margin:4px 0 8px 24px">
-              <input type="number" class="in-p-cons-end" placeholder="Год выпуска (напр. 1985)" value="${p.conservatory_end || ""}">
+              <div style="display:flex; gap:8px">
+                <input type="number" class="in-p-cons-start" placeholder="Год начала" value="${p.conservatory_start || ""}">
+                <input type="number" class="in-p-cons-end" placeholder="Год выпуска (напр. 1985)" value="${p.conservatory_end || ""}">
+              </div>
             </div>
 
             <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
               <input type="checkbox" class="in-p-asst" ${p.studied_assistantship ? "checked" : ""} style="width:auto; margin:0"> Ассистентура в СПбГК
             </label>
             <div class="box-asst" style="display:${p.studied_assistantship ? "block" : "none"}; margin:4px 0 8px 24px">
-              <input type="number" class="in-p-asst-end" placeholder="Год окончания (напр. 2005)" value="${p.assistantship_end || ""}">
+              <div style="display:flex; gap:8px">
+                <input type="number" class="in-p-asst-start" placeholder="Год начала" value="${p.assistantship_start || ""}">
+                <input type="number" class="in-p-asst-end" placeholder="Год окончания (напр. 2005)" value="${p.assistantship_end || ""}">
+              </div>
             </div>
 
             <div style="font-size:var(--fs-label-medium); color:var(--on-surface-variant); margin:8px 0 4px">Или другие годы учёбы:</div>
@@ -782,19 +811,28 @@ async function loadPeople(){
 
     async function save(status, keepCard){
       errEl.style.display = "none";
-      const full_name = card.querySelector(".in-p-name").value.trim();
+      const last_name = card.querySelector(".in-p-last").value.trim();
+      const first_name = card.querySelector(".in-p-first").value.trim();
+      const patronymic = card.querySelector(".in-p-patronymic").value.trim();
+      const full_name = [last_name, first_name, patronymic].filter(Boolean).join(" ");
       const gender = card.querySelector(".in-p-gender").value || null;
       const relation_type = card.querySelector(".in-p-relation").value;
 
       const studied_choir_school = choirCheck.checked;
+      const choir_school_start = (studied_choir_school && card.querySelector(".in-p-choir-start").value)
+        ? parseInt(card.querySelector(".in-p-choir-start").value, 10) : null;
       const choir_school_end = (studied_choir_school && card.querySelector(".in-p-choir-end").value)
         ? parseInt(card.querySelector(".in-p-choir-end").value, 10) : null;
 
       const studied_conservatory = consCheck.checked;
+      const conservatory_start = (studied_conservatory && card.querySelector(".in-p-cons-start").value)
+        ? parseInt(card.querySelector(".in-p-cons-start").value, 10) : null;
       const conservatory_end = (studied_conservatory && card.querySelector(".in-p-cons-end").value)
         ? parseInt(card.querySelector(".in-p-cons-end").value, 10) : null;
 
       const studied_assistantship = asstCheck.checked;
+      const assistantship_start = (studied_assistantship && card.querySelector(".in-p-asst-start").value)
+        ? parseInt(card.querySelector(".in-p-asst-start").value, 10) : null;
       const assistantship_end = (studied_assistantship && card.querySelector(".in-p-asst-end").value)
         ? parseInt(card.querySelector(".in-p-asst-end").value, 10) : null;
 
@@ -805,23 +843,31 @@ async function loadPeople(){
       if(!study_end && relation_type === "ученик"){
         study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
       }
+      if(!study_start && relation_type === "ученик"){
+        const startCandidates = [choir_school_start, conservatory_start, assistantship_start].filter(Boolean);
+        if(startCandidates.length) study_start = Math.min(...startCandidates);
+      }
 
       const institution = card.querySelector(".in-p-inst").value.trim();
       const notes = card.querySelector(".in-p-notes").value.trim();
       const source = card.querySelector(".in-p-source").value.trim();
       const notable = card.querySelector(".in-p-notable").checked;
 
-      if(!full_name){
-        errEl.textContent = "Укажите имя и фамилию";
+      if(!last_name || !first_name){
+        errEl.textContent = "Укажите фамилию и имя";
         errEl.style.display = "block";
         return;
       }
 
       const updateData = {
-        full_name, gender, relation_type,
-        studied_choir_school, choir_school_end,
-        studied_conservatory, conservatory_end,
-        studied_assistantship, assistantship_end,
+        full_name,
+        last_name,
+        first_name,
+        patronymic: patronymic || null,
+        gender, relation_type,
+        studied_choir_school, choir_school_start, choir_school_end,
+        studied_conservatory, conservatory_start, conservatory_end,
+        studied_assistantship, assistantship_start, assistantship_end,
         study_start, study_end,
         institution: institution || null,
         notes: notes || null,

@@ -56,6 +56,12 @@ function pluralPeople(n){
   return "человек";
 }
 
+// «1975–1980», если известно начало, иначе «выпуск 1980» (W2)
+function studyYearsLabel(start, end){
+  if(!end) return "";
+  return start ? `${start}–${end}` : `выпуск ${end}`;
+}
+
 // Подпись на карточке: роль · выпуск · заведение, полными словами (F4)
 function personSubLine(p){
   if(p.relation_type === "коллега") return "Коллега";
@@ -73,7 +79,7 @@ function personSubLine(p){
 
   const bits = [];
   if(role) bits.push(role);
-  if(p.study_end) bits.push(`выпуск ${p.study_end}`);
+  if(p.study_end) bits.push(studyYearsLabel(p.study_start, p.study_end));
   if(eduStr) bits.push(eduStr);
 
   if(!bits.length) return "Ученик";

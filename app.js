@@ -174,9 +174,20 @@ const MODALS_HTML = `
       <!-- Таб 2: Человек -->
       <div class="tab-pane" id="tabPanePerson">
         <form id="formAddPerson" onsubmit="return false;">
-          <div class="field">
-            <input type="text" id="uPFullName" placeholder="Имя Фамилия" required>
-            <label class="lbl" for="uPFullName">Имя и фамилия</label>
+          <div class="name-fields-row">
+            <div class="field">
+              <input type="text" id="uPLastName" placeholder="Фамилия" required>
+              <label class="lbl" for="uPLastName">Фамилия</label>
+            </div>
+            <div class="field">
+              <input type="text" id="uPFirstName" placeholder="Имя" required>
+              <label class="lbl" for="uPFirstName">Имя</label>
+            </div>
+            <div class="field">
+              <input type="text" id="uPPatronymic" placeholder="Отчество">
+              <label class="lbl" for="uPPatronymic">Отчество</label>
+              <div class="sup">Если известно</div>
+            </div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -206,21 +217,30 @@ const MODALS_HTML = `
                 <input type="checkbox" id="uPChoirSchool"> Хоровое училище им. М.И. Глинки
               </label>
               <div id="uPChoirBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="uPChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="uPChoirStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="uPChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
+                </div>
               </div>
 
               <label class="study-check-row">
                 <input type="checkbox" id="uPConservatory"> СПбГК им. Н.А. Римского-Корсакова
               </label>
               <div id="uPConservatoryBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="uPConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="uPConservatoryStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="uPConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
+                </div>
               </div>
 
               <label class="study-check-row">
                 <input type="checkbox" id="uPAssistantship"> Ассистентура-стажировка в СПбГК
               </label>
               <div id="uPAssistantBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="uPAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="uPAssistantStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="uPAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+                </div>
               </div>
             </div>
 
@@ -236,7 +256,7 @@ const MODALS_HTML = `
 
           <div class="field">
             <input type="text" id="uPInstitution" placeholder="например, преподаватель Хорового училища">
-            <label class="lbl" for="uPInstitution">Место работы / должность</label>
+            <label class="lbl" for="uPInstitution" id="uPInstLabel">Где работает сейчас / кем стал</label>
             <div class="sup">Необязательно</div>
           </div>
 
@@ -423,11 +443,16 @@ function openOwnCardModal(){
   ownCardFlow = true;
   switchAddTab("person");
   open_("unifiedAddOverlay");
-  const nameInput = document.getElementById("uPFullName");
+  const lastNameInput = document.getElementById("uPLastName");
+  const firstNameInput = document.getElementById("uPFirstName");
+  const patronymicInput = document.getElementById("uPPatronymic");
   const relationInput = document.getElementById("uPRelation");
   const studyEndInput = document.getElementById("uPStudyEnd");
   const studyWrap = document.getElementById("uPStudyWrap");
-  if(nameInput) nameInput.value = myProfile.full_name || "";
+  const parts = (myProfile.full_name || "").trim().split(/\s+/).filter(Boolean);
+  if(lastNameInput) lastNameInput.value = parts[0] || "";
+  if(firstNameInput) firstNameInput.value = parts[1] || "";
+  if(patronymicInput) patronymicInput.value = parts.slice(2).join(" ");
   if(relationInput) relationInput.value = myProfile.relation_type || "ученик";
   if(studyEndInput) studyEndInput.value = myProfile.study_end || "";
   if(studyWrap) studyWrap.style.display = (relationInput && relationInput.value === "ученик") ? "block" : "none";
@@ -613,14 +638,19 @@ window.submitEventForm = submitEventForm;
 // Функция отправки человека из таба «Человек»
 async function submitPersonForm(){
   if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
-  const nameInput = document.getElementById("uPFullName");
+  const lastNameInput = document.getElementById("uPLastName");
+  const firstNameInput = document.getElementById("uPFirstName");
+  const patronymicInput = document.getElementById("uPPatronymic");
   const genderInput = document.getElementById("uPGender");
   const relationInput = document.getElementById("uPRelation");
   const choirChk = document.getElementById("uPChoirSchool");
+  const choirStartInput = document.getElementById("uPChoirStart");
   const choirEndInput = document.getElementById("uPChoirEnd");
   const consChk = document.getElementById("uPConservatory");
+  const consStartInput = document.getElementById("uPConservatoryStart");
   const consEndInput = document.getElementById("uPConservatoryEnd");
   const assistChk = document.getElementById("uPAssistantship");
+  const assistStartInput = document.getElementById("uPAssistantStart");
   const assistEndInput = document.getElementById("uPAssistantEnd");
   const studyStartInput = document.getElementById("uPStudyStart");
   const studyEndInput = document.getElementById("uPStudyEnd");
@@ -631,14 +661,20 @@ async function submitPersonForm(){
   const errEl = document.getElementById("errUPerson");
   const btn = document.getElementById("btnSubmitUPerson");
 
-  const full_name = nameInput.value.trim();
+  const last_name = lastNameInput.value.trim();
+  const first_name = firstNameInput.value.trim();
+  const patronymic = patronymicInput.value.trim();
+  const full_name = [last_name, first_name, patronymic].filter(Boolean).join(" ");
   const gender = genderInput.value || null;
   const relation_type = relationInput.value;
   const studied_choir_school = choirChk ? choirChk.checked : false;
+  const choir_school_start = (studied_choir_school && choirStartInput.value) ? parseInt(choirStartInput.value, 10) : null;
   const choir_school_end = (studied_choir_school && choirEndInput.value) ? parseInt(choirEndInput.value, 10) : null;
   const studied_conservatory = consChk ? consChk.checked : false;
+  const conservatory_start = (studied_conservatory && consStartInput.value) ? parseInt(consStartInput.value, 10) : null;
   const conservatory_end = (studied_conservatory && consEndInput.value) ? parseInt(consEndInput.value, 10) : null;
   const studied_assistantship = assistChk ? assistChk.checked : false;
+  const assistantship_start = (studied_assistantship && assistStartInput.value) ? parseInt(assistStartInput.value, 10) : null;
   const assistantship_end = (studied_assistantship && assistEndInput.value) ? parseInt(assistEndInput.value, 10) : null;
 
   let study_start = relation_type === "ученик" && studyStartInput.value ? parseInt(studyStartInput.value, 10) : null;
@@ -646,31 +682,43 @@ async function submitPersonForm(){
   if(!study_end && relation_type === "ученик"){
     study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
   }
+  if(!study_start && relation_type === "ученик"){
+    const startCandidates = [choir_school_start, conservatory_start, assistantship_start].filter(Boolean);
+    if(startCandidates.length) study_start = Math.min(...startCandidates);
+  }
   const institution = instInput.value.trim();
   const notes = notesInput.value.trim();
   const source = sourceInput.value.trim();
   const notable = notableChk ? notableChk.checked : false;
 
-  nameInput.classList.toggle("invalid", !full_name);
-  if(!full_name){
-    errEl.textContent = "Укажите имя и фамилию";
+  lastNameInput.classList.toggle("invalid", !last_name);
+  firstNameInput.classList.toggle("invalid", !first_name);
+  if(!last_name || !first_name){
+    errEl.textContent = "Укажите фамилию и имя";
     errEl.style.display = "block";
     return;
   }
-  nameInput.classList.remove("invalid");
+  lastNameInput.classList.remove("invalid");
+  firstNameInput.classList.remove("invalid");
   errEl.style.display = "none";
   if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
 
   try {
     const { data, error } = await sb.from("people").insert({
       full_name,
+      last_name,
+      first_name,
+      patronymic: patronymic || null,
       gender,
       relation_type,
       studied_choir_school,
+      choir_school_start,
       choir_school_end,
       studied_conservatory,
+      conservatory_start,
       conservatory_end,
       studied_assistantship,
+      assistantship_start,
       assistantship_end,
       study_start,
       study_end,
@@ -695,16 +743,23 @@ async function submitPersonForm(){
     if(ownCardHint) ownCardHint.style.display = "none";
 
     close_("unifiedAddOverlay");
-    nameInput.value = "";
+    lastNameInput.value = "";
+    firstNameInput.value = "";
+    patronymicInput.value = "";
     genderInput.value = "";
     relationInput.value = "ученик";
+    const uPInstLabelReset = document.getElementById("uPInstLabel");
+    if(uPInstLabelReset){ uPInstLabelReset.textContent = "Где работает сейчас / кем стал"; instInput.placeholder = "например, преподаватель Хорового училища"; }
     const studyWrap = document.getElementById("uPStudyWrap");
     if(studyWrap) studyWrap.style.display = "block";
     if(choirChk){ choirChk.checked = false; document.getElementById("uPChoirBox").style.display = "none"; }
+    choirStartInput.value = "";
     choirEndInput.value = "";
     if(consChk){ consChk.checked = false; document.getElementById("uPConservatoryBox").style.display = "none"; }
+    consStartInput.value = "";
     consEndInput.value = "";
     if(assistChk){ assistChk.checked = false; document.getElementById("uPAssistantBox").style.display = "none"; }
+    assistStartInput.value = "";
     assistEndInput.value = "";
     studyStartInput.value = "";
     studyEndInput.value = "";
@@ -855,9 +910,20 @@ function initHeader(){
 
   const uPRelation = document.getElementById("uPRelation");
   const uPStudyWrap = document.getElementById("uPStudyWrap");
+  const uPInstLabel = document.getElementById("uPInstLabel");
+  const uPInstitutionInput = document.getElementById("uPInstitution");
   if(uPRelation && uPStudyWrap){
     uPRelation.addEventListener("change", e => {
       uPStudyWrap.style.display = e.target.value === "ученик" ? "block" : "none";
+      if(uPInstLabel && uPInstitutionInput){
+        if(e.target.value === "коллега"){
+          uPInstLabel.textContent = "Должность, место работы";
+          uPInstitutionInput.placeholder = "например, концертмейстер класса Т.И.";
+        } else {
+          uPInstLabel.textContent = "Где работает сейчас / кем стал";
+          uPInstitutionInput.placeholder = "например, преподаватель Хорового училища";
+        }
+      }
     });
   }
 

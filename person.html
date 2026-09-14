@@ -281,9 +281,20 @@
             </div>
           </div>
 
-          <div class="field" style="margin-top:16px">
-            <input type="text" id="editFullName" placeholder="Имя Фамилия" required>
-            <label class="lbl" for="editFullName">Имя и фамилия</label>
+          <div class="name-fields-row" style="margin-top:16px">
+            <div class="field">
+              <input type="text" id="editLastName" placeholder="Фамилия" required>
+              <label class="lbl" for="editLastName">Фамилия</label>
+            </div>
+            <div class="field">
+              <input type="text" id="editFirstName" placeholder="Имя" required>
+              <label class="lbl" for="editFirstName">Имя</label>
+            </div>
+            <div class="field">
+              <input type="text" id="editPatronymic" placeholder="Отчество">
+              <label class="lbl" for="editPatronymic">Отчество</label>
+              <div class="sup">Если известно</div>
+            </div>
           </div>
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
@@ -313,21 +324,30 @@
                 <input type="checkbox" id="editChoirSchool"> Хоровое училище им. М.И. Глинки
               </label>
               <div id="editChoirBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="editChoirEnd" placeholder="год выпуска (напр. 1998)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="editChoirStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="editChoirEnd" placeholder="год выпуска (напр. 1998)" min="1955" max="2026">
+                </div>
               </div>
 
               <label class="study-check-row">
                 <input type="checkbox" id="editConservatory"> СПбГК им. Н.А. Римского-Корсакова
               </label>
               <div id="editConservatoryBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="editConservatoryEnd" placeholder="год выпуска (напр. 2003)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="editConservatoryStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="editConservatoryEnd" placeholder="год выпуска (напр. 2003)" min="1955" max="2026">
+                </div>
               </div>
 
               <label class="study-check-row">
                 <input type="checkbox" id="editAssistantship"> Ассистентура-стажировка в СПбГК
               </label>
               <div id="editAssistantBox" style="display:none; margin:4px 0 8px 24px">
-                <input type="number" id="editAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+                <div style="display:flex; gap:8px">
+                  <input type="number" id="editAssistantStart" placeholder="год начала" min="1955" max="2026">
+                  <input type="number" id="editAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+                </div>
               </div>
             </div>
 
@@ -422,36 +442,40 @@ function formatNotes(text){
   return html;
 }
 
+// «1975–1980», если известно начало, иначе «выпуск 1980» (W2)
+function studyYearsLabel(start, end){
+  if(!end) return start ? `с ${start} г.` : "выпуск";
+  return start ? `${start}–${end} гг.` : `выпуск ${end} г.`;
+}
+
 function renderEducation(p){
   const items = [];
   if(p.studied_choir_school){
     items.push({
       institution: "Хоровое училище им. М.И. Глинки",
       detail: "",
-      year: p.choir_school_end ? `выпуск ${p.choir_school_end} г.` : "выпуск"
+      year: studyYearsLabel(p.choir_school_start, p.choir_school_end)
     });
   }
   if(p.studied_conservatory){
     items.push({
       institution: "СПбГК им. Н.А. Римского-Корсакова",
       detail: "Дирижёрско-хоровой факультет",
-      year: p.conservatory_end ? `выпуск ${p.conservatory_end} г.` : "выпуск"
+      year: studyYearsLabel(p.conservatory_start, p.conservatory_end)
     });
   }
   if(p.studied_assistantship){
     items.push({
       institution: "Ассистентура-стажировка в СПбГК",
       detail: "",
-      year: p.assistantship_end ? `выпуск ${p.assistantship_end} г.` : "выпуск"
+      year: studyYearsLabel(p.assistantship_start, p.assistantship_end)
     });
   }
   if(!items.length && (p.study_start || p.study_end)){
     items.push({
       institution: "Обучение у Т.И. Хитровой",
       detail: "",
-      year: p.study_start && p.study_end
-        ? `${p.study_start}–${p.study_end} гг.`
-        : (p.study_end ? `выпуск ${p.study_end} г.` : `с ${p.study_start} г.`)
+      year: studyYearsLabel(p.study_start, p.study_end)
     });
   }
   if(!items.length) return "";
@@ -594,13 +618,14 @@ function renderPeersWidget(p, students){
 
     students.forEach(s => {
       let yr = s.study_end;
-      if(tabId === "choir" && s.choir_school_end) yr = s.choir_school_end;
-      if(tabId === "cons" && s.conservatory_end) yr = s.conservatory_end;
-      if(tabId === "assist" && s.assistantship_end) yr = s.assistantship_end;
+      let yrStart = s.study_start;
+      if(tabId === "choir" && s.choir_school_end){ yr = s.choir_school_end; yrStart = s.choir_school_start; }
+      if(tabId === "cons" && s.conservatory_end){ yr = s.conservatory_end; yrStart = s.conservatory_start; }
+      if(tabId === "assist" && s.assistantship_end){ yr = s.assistantship_end; yrStart = s.assistantship_start; }
       if(s.id === p.id) yr = targetYear;
 
       const tag = s.studied_conservatory ? "СПбГК" : (s.studied_choir_school ? "Хор. уч." : "");
-      const obj = { student: s, year: yr, tag, isCurrent: s.id === p.id };
+      const obj = { student: s, year: yr, yearStart: yrStart, tag, isCurrent: s.id === p.id };
       if(yr) withYear.push(obj);
       else withoutYear.push(obj);
     });
@@ -628,7 +653,7 @@ function renderPeersWidget(p, students){
               ${it.isCurrent ? "Вы просматриваете" : (it.tag || "")}
             </div>
           </div>
-          <div class="yr">${it.year ? it.year + " г." : "—"}</div>
+          <div class="yr">${it.year ? (it.yearStart ? `${it.yearStart}–${it.year}` : it.year + " г.") : "—"}</div>
         </a>
       `;
     };
@@ -772,7 +797,18 @@ function openEditModal(p){
   editingAvatarUrl = p.avatar_url || null;
   pendingAvatarFile = null;
 
-  document.getElementById("editFullName").value = p.full_name || "";
+  let last_name = p.last_name || "";
+  let first_name = p.first_name || "";
+  let patronymic = p.patronymic || "";
+  if(!last_name && !first_name && p.full_name){
+    const parts = p.full_name.trim().split(/\s+/).filter(Boolean);
+    last_name = parts[0] || "";
+    first_name = parts[1] || "";
+    patronymic = parts.slice(2).join(" ");
+  }
+  document.getElementById("editLastName").value = last_name;
+  document.getElementById("editFirstName").value = first_name;
+  document.getElementById("editPatronymic").value = patronymic;
   document.getElementById("editGender").value = p.gender || "";
   document.getElementById("editRelation").value = p.relation_type || "ученик";
 
@@ -783,18 +819,21 @@ function openEditModal(p){
   const choirBox = document.getElementById("editChoirBox");
   choirCheck.checked = !!p.studied_choir_school;
   choirBox.style.display = choirCheck.checked ? "block" : "none";
+  document.getElementById("editChoirStart").value = p.choir_school_start || "";
   document.getElementById("editChoirEnd").value = p.choir_school_end || "";
 
   const consCheck = document.getElementById("editConservatory");
   const consBox = document.getElementById("editConservatoryBox");
   consCheck.checked = !!p.studied_conservatory;
   consBox.style.display = consCheck.checked ? "block" : "none";
+  document.getElementById("editConservatoryStart").value = p.conservatory_start || "";
   document.getElementById("editConservatoryEnd").value = p.conservatory_end || "";
 
   const assistCheck = document.getElementById("editAssistantship");
   const assistBox = document.getElementById("editAssistantBox");
   assistCheck.checked = !!p.studied_assistantship;
   assistBox.style.display = assistCheck.checked ? "block" : "none";
+  document.getElementById("editAssistantStart").value = p.assistantship_start || "";
   document.getElementById("editAssistantEnd").value = p.assistantship_end || "";
 
   document.getElementById("editStudyStart").value = p.study_start || "";
@@ -849,13 +888,19 @@ function getPersonDiff(original, current){
   const patch = {};
   const fields = [
     { key: "full_name", type: "string" },
+    { key: "last_name", type: "string" },
+    { key: "first_name", type: "string" },
+    { key: "patronymic", type: "string" },
     { key: "gender", type: "string" },
     { key: "relation_type", type: "string" },
     { key: "studied_choir_school", type: "boolean" },
+    { key: "choir_school_start", type: "number" },
     { key: "choir_school_end", type: "number" },
     { key: "studied_conservatory", type: "boolean" },
+    { key: "conservatory_start", type: "number" },
     { key: "conservatory_end", type: "number" },
     { key: "studied_assistantship", type: "boolean" },
+    { key: "assistantship_start", type: "number" },
     { key: "assistantship_end", type: "number" },
     { key: "study_start", type: "number" },
     { key: "study_end", type: "number" },
@@ -924,14 +969,14 @@ document.getElementById("editAvatarInput").addEventListener("change", e => {
   }
   pendingAvatarFile = file;
   const tempUrl = URL.createObjectURL(file);
-  updateAvatarPreview(tempUrl, document.getElementById("editFullName").value);
+  updateAvatarPreview(tempUrl, document.getElementById("editLastName").value);
 });
 
 document.getElementById("btnRemoveAvatar").addEventListener("click", () => {
   editingAvatarUrl = null;
   pendingAvatarFile = null;
   document.getElementById("editAvatarInput").value = "";
-  updateAvatarPreview(null, document.getElementById("editFullName").value);
+  updateAvatarPreview(null, document.getElementById("editLastName").value);
 });
 
 document.getElementById("btnSavePersonEdit").addEventListener("click", async () => {
@@ -939,9 +984,12 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
   const errEl = document.getElementById("errEditPerson");
   errEl.style.display = "none";
 
-  const full_name = document.getElementById("editFullName").value.trim();
-  if(!full_name){
-    errEl.textContent = "Укажите имя и фамилию";
+  const last_name = document.getElementById("editLastName").value.trim();
+  const first_name = document.getElementById("editFirstName").value.trim();
+  const patronymic = document.getElementById("editPatronymic").value.trim();
+  const full_name = [last_name, first_name, patronymic].filter(Boolean).join(" ");
+  if(!last_name || !first_name){
+    errEl.textContent = "Укажите фамилию и имя";
     errEl.style.display = "block";
     return;
   }
@@ -972,14 +1020,20 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     const relation_type = document.getElementById("editRelation").value;
 
     const studied_choir_school = document.getElementById("editChoirSchool").checked;
+    const choir_school_start = (studied_choir_school && document.getElementById("editChoirStart").value)
+      ? parseInt(document.getElementById("editChoirStart").value, 10) : null;
     const choir_school_end = (studied_choir_school && document.getElementById("editChoirEnd").value)
       ? parseInt(document.getElementById("editChoirEnd").value, 10) : null;
 
     const studied_conservatory = document.getElementById("editConservatory").checked;
+    const conservatory_start = (studied_conservatory && document.getElementById("editConservatoryStart").value)
+      ? parseInt(document.getElementById("editConservatoryStart").value, 10) : null;
     const conservatory_end = (studied_conservatory && document.getElementById("editConservatoryEnd").value)
       ? parseInt(document.getElementById("editConservatoryEnd").value, 10) : null;
 
     const studied_assistantship = document.getElementById("editAssistantship").checked;
+    const assistantship_start = (studied_assistantship && document.getElementById("editAssistantStart").value)
+      ? parseInt(document.getElementById("editAssistantStart").value, 10) : null;
     const assistantship_end = (studied_assistantship && document.getElementById("editAssistantEnd").value)
       ? parseInt(document.getElementById("editAssistantEnd").value, 10) : null;
 
@@ -990,6 +1044,10 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     if(!study_end && relation_type === "ученик"){
       study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
     }
+    if(!study_start && relation_type === "ученик"){
+      const startCandidates = [choir_school_start, conservatory_start, assistantship_start].filter(Boolean);
+      if(startCandidates.length) study_start = Math.min(...startCandidates);
+    }
 
     const institution = document.getElementById("editInstitution").value.trim() || null;
     const notes = document.getElementById("editNotes").value.trim() || null;
@@ -999,13 +1057,19 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
 
     const newValues = {
       full_name,
+      last_name,
+      first_name,
+      patronymic: patronymic || null,
       gender,
       relation_type,
       studied_choir_school,
+      choir_school_start,
       choir_school_end,
       studied_conservatory,
+      conservatory_start,
       conservatory_end,
       studied_assistantship,
+      assistantship_start,
       assistantship_end,
       study_start,
       study_end,

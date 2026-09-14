@@ -1030,6 +1030,19 @@ h1 {
   display: block;
 }
 
+/* ---------- Три поля имени (W2): в ряд на десктопе, столбиком на телефоне ---------- */
+.name-fields-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .name-fields-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .modal-unified-add .study-box-wrap, .study-box-wrap {
   background: var(--surface-mid);
   border: 1px solid var(--outline-variant);
