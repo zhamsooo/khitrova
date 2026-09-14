@@ -9,142 +9,73 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-  .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin:0 0 10px}
-  .nsl-head .sub{color:var(--muted); font-size:var(--fs-body); line-height:1.6; margin:0 0 22px; max-width:68ch; font-family:var(--font-body)}
-  .write-wrap{position:relative; display:inline-block; margin-bottom:8px}
-
-  .dropdown-write{width:320px !important}
-  .dd-group-title{
-    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-meta);
-    text-transform:uppercase; letter-spacing:.07em; color:var(--muted);
-    padding:8px 10px 4px;
-  }
-  .dd-divider{height:1px; background:var(--line); margin:6px 0}
-
-  .nsl-controls-bar{margin:22px 0 26px}
-  .nsl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
-  .nsl-chip{
-    background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
-    font-size:var(--fs-ui); font-family:var(--font-ui); padding:5px 13px; border-radius:14px;
-    transition:all .15s;
-  }
-  .nsl-chip:hover{border-color:var(--ink); color:var(--ink)}
-  .nsl-chip.active{background:var(--ink); color:#fff; border-color:var(--ink)}
-
-  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:var(--fs-body); font-family:var(--font-body)}
-  .nsl-empty-block{
-    padding:28px 20px; text-align:center; color:var(--muted); font-size:var(--fs-body); font-family:var(--font-body);
-    background:var(--paper); border:1px dashed var(--line); border-radius:10px; margin-bottom:14px;
-  }
-  .nsl-empty-invite{
-    padding:44px 28px; background:var(--paper); border:1px dashed var(--line); border-radius:12px;
-    text-align:center; max-width:560px; margin:24px 0 40px;
-  }
-  .nsl-empty-invite-text{
-    font-size:var(--fs-body); font-family:var(--font-body); line-height:1.6; color:var(--ink);
-    margin:0 0 20px;
-  }
-  .btn-invite-add{
-    display:inline-flex; align-items:center; justify-content:center;
-    background:var(--ink); color:#fff; border:none; border-radius:14px;
-    padding:8px 22px; font-family:var(--font-ui); font-size:var(--fs-ui); font-weight:600;
-    cursor:pointer; transition:opacity .15s; min-height:44px;
-  }
-  .btn-invite-add:hover{opacity:.88}
-  .btn-invite-add:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
-  .nsl-section-head{
-    display:flex; align-items:baseline; justify-content:space-between;
-    margin:32px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--line);
-  }
-  .nsl-section-title{
-    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-meta);
-    letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin:0;
-  }
-  .nsl-section-sub{font-size:var(--fs-meta); color:var(--muted); font-family:var(--font-ui)}
-
-  .art-card{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px; background:#fff; cursor:pointer; font:inherit; color:inherit; transition:border-color .15s, box-shadow .15s}
-  .art-card:hover{border-color:var(--ink); box-shadow:0 3px 12px rgba(0,0,0,.03)}
-  .art-card .badge{
-    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); letter-spacing:.06em;
-    text-transform:uppercase; color:var(--accent); display:inline-block; margin-bottom:6px;
-    padding:2px 7px; border-radius:6px; background:rgba(138,106,58,.08);
-  }
-  .art-card .badge.badge-ti{color:var(--confirmed); background:rgba(51,84,122,.08)}
-  .art-card .badge.st-draft{color:var(--muted); background:#eee}
-  .art-card .badge.st-unconfirmed{color:var(--warn); background:rgba(164,100,31,.08)}
-  .art-card .badge.st-rejected{color:#b0413e; background:rgba(176,65,62,.08)}
-  .art-card .ti{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); margin:0 0 6px; line-height:1.2}
-  .art-card .ex{font-size:var(--fs-body); color:var(--muted); line-height:1.6; margin-bottom:8px; font-family:var(--font-body)}
-  .art-card .meta{font-size:var(--fs-meta); color:var(--muted); font-family:var(--font-ui)}
-
   /* Панель метаданных статьи в редакторе */
   .editor-meta-box{
-    background:var(--paper); border:1px solid var(--line); border-radius:10px;
-    padding:14px 16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;
+    background:var(--surface-low); border:1px solid var(--outline-variant); border-radius:var(--r-m);
+    padding:16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;
   }
   .editor-meta-row{display:flex; flex-wrap:wrap; align-items:center; gap:14px}
   .editor-meta-col{flex:1; min-width:180px}
   .editor-meta-col label{
-    display:block; font-size:var(--fs-meta); color:var(--muted); text-transform:uppercase;
-    letter-spacing:.05em; margin-bottom:4px; font-family:var(--font-ui); font-weight:700;
+    display:block; font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant);
+    margin-bottom:4px;
   }
   .editor-meta-col input, .editor-meta-col select{
-    width:100%; background:#fff; border:1px solid var(--line); border-radius:8px;
-    padding:6px 10px; font-family:var(--font-ui); font-size:var(--fs-ui); outline:none;
+    width:100%; background:var(--surface); border:1px solid var(--outline); border-radius:var(--r-xs);
+    padding:8px 12px; font:var(--t-body-large); font-size:14px; outline:none; color:var(--on-surface);
   }
-  .editor-meta-col input:focus, .editor-meta-col select:focus{border-color:var(--ink)}
+  .editor-meta-col input:focus, .editor-meta-col select:focus{border-color:var(--primary)}
   .author-type-toggle{display:flex; gap:6px}
   .author-type-btn{
-    flex:1; padding:6px 10px; font-size:var(--fs-ui); font-family:var(--font-ui); border-radius:7px;
-    border:1px solid var(--line); background:#fff; cursor:pointer; text-align:center;
-    transition:all .12s; color:var(--muted);
+    flex:1; padding:8px 12px; font:var(--t-label-large); font-size:13px; border-radius:var(--r-s);
+    border:1px solid var(--outline); background:transparent; cursor:pointer; text-align:center;
+    transition:all .12s; color:var(--on-surface-variant);
   }
-  .author-type-btn:hover{color:var(--ink); border-color:var(--ink)}
+  .author-type-btn:hover{color:var(--on-surface); background:var(--surface-low)}
   .author-type-btn.active{
-    background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600;
+    background:var(--secondary-container); color:var(--on-secondary-container); border-color:transparent; font-weight:500;
   }
 
   .nsl-editor{max-width:var(--container); margin:0 auto; padding:32px var(--gutter) 120px}
-  .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--line)}
-  .btn-plain{background:none; border:none; color:var(--muted); font-size:var(--fs-ui); padding:0; cursor:pointer; font-family:var(--font-ui)}
-  .btn-plain:hover{color:var(--ink)}
-  .save-state{flex:1; font-size:var(--fs-meta); color:var(--muted); text-align:center; font-family:var(--font-ui)}
-  .btn-publish{background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:var(--fs-ui); font-family:var(--font-ui); cursor:pointer}
-  .art-title{width:100%; border:none; outline:none; font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin-bottom:18px; color:var(--ink); background:transparent}
-  .art-title::placeholder{color:var(--muted)}
-  #editorjs{font-family:var(--font-body); font-size:var(--fs-body-art); line-height:1.65; max-width:68ch}
+  .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--outline-variant)}
+  .btn-plain{background:none; border:none; color:var(--on-surface-variant); font:var(--t-label-large); font-size:14px; padding:0; cursor:pointer}
+  .btn-plain:hover{color:var(--on-surface)}
+  .save-state{flex:1; font:var(--t-body-medium); font-size:13px; color:var(--on-surface-variant); text-align:center}
+  .btn-publish{background:var(--primary); color:var(--on-primary); border:none; padding:8px 16px; border-radius:var(--r-full); font:var(--t-label-large); font-size:14px; cursor:pointer}
+  .art-title{width:100%; border:none; outline:none; font:var(--t-display-small); font-size:36px; line-height:44px; margin-bottom:18px; color:var(--on-surface); background:transparent}
+  .art-title::placeholder{color:var(--on-surface-variant)}
+  #editorjs{font:var(--t-body-large); font-size:16px; line-height:1.65; max-width:68ch}
 
   .nsl-read{max-width:var(--container); margin:0 auto; padding:32px var(--gutter) 120px}
   .read-badge-wrap{margin-top:16px; margin-bottom:10px}
   .read-category-badge{
-    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); letter-spacing:.06em;
-    text-transform:uppercase; color:var(--accent); display:inline-block;
-    padding:3px 9px; border-radius:6px; background:rgba(138,106,58,.08);
+    font:var(--t-label-medium); font-size:12px;
+    color:var(--primary); display:inline-block;
+    padding:3px 9px; border-radius:6px; background:var(--primary-container);
   }
-  .read-category-badge.badge-ti{color:var(--confirmed); background:rgba(51,84,122,.08)}
-  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); margin:0 0 10px; line-height:1.1; text-wrap:balance}
-  .read-byline{font-size:var(--fs-meta); color:var(--muted); margin-bottom:30px; line-height:1.55; font-family:var(--font-ui)}
-  .read-byline b{color:var(--ink)}
+  .read-category-badge.badge-ti{color:var(--on-primary-container); background:var(--primary-container)}
+  .nsl-read h1{font:var(--t-display-small); font-size:36px; margin:0 0 10px; line-height:44px; text-wrap:balance}
+  .read-byline{font:var(--t-body-medium); font-size:14px; color:var(--on-surface-variant); margin-bottom:30px; line-height:1.55}
+  .read-byline b{color:var(--on-surface)}
 
-  .read-body{font-family:var(--font-body); font-size:var(--fs-body-art); line-height:1.65; color:var(--ink); max-width:68ch}
-  .read-body h2{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h2); line-height:1.2; margin:32px 0 12px}
-  .read-body h3{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:26px 0 10px}
-  .read-body h4{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:22px 0 8px}
+  .read-body{font:var(--t-body-large); font-size:16px; line-height:1.65; color:var(--on-surface); max-width:68ch}
+  .read-body h2{font:var(--t-headline-small); font-size:24px; line-height:32px; margin:32px 0 12px}
+  .read-body h3{font:var(--t-title-large); font-size:20px; line-height:28px; margin:26px 0 10px}
+  .read-body h4{font:var(--t-title-medium); font-size:16px; line-height:24px; margin:22px 0 8px}
   .read-body p{margin:0 0 18px}
-  .read-body blockquote{margin:0 0 18px; padding:4px 0 4px 18px; border-left:3px solid var(--accent); color:var(--ink); font-style:italic}
-  .read-body blockquote cite{display:block; font-style:normal; font-size:var(--fs-meta); color:var(--muted); margin-top:6px; font-family:var(--font-body)}
+  .read-body blockquote{margin:0 0 18px; padding:4px 0 4px 18px; border-left:3px solid var(--primary); color:var(--on-surface); font-style:italic}
+  .read-body blockquote cite{display:block; font-style:normal; font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); margin-top:6px}
   .read-body ul, .read-body ol{margin:0 0 18px; padding-left:22px}
-  .read-body table{width:100%; border-collapse:collapse; margin:0 0 18px; font-size:var(--fs-body)}
-  .read-body td, .read-body th{border:1px solid var(--line); padding:8px 10px; text-align:left}
-  .read-body th{background:var(--paper)}
+  .read-body table{width:100%; border-collapse:collapse; margin:0 0 18px; font:var(--t-body-medium); font-size:14px}
+  .read-body td, .read-body th{border:1px solid var(--outline-variant); padding:8px 10px; text-align:left}
+  .read-body th{background:var(--surface-high)}
   .read-body figure{margin:0 0 22px}
-  .read-body img{width:100%; border-radius:6px; display:block}
-  .read-body figcaption{font-size:var(--fs-meta); color:var(--muted); margin-top:6px; text-align:center; font-family:var(--font-body)}
+  .read-body img{width:100%; border-radius:var(--r-s); display:block}
+  .read-body figcaption{font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); margin-top:6px; text-align:center}
 
   @media (max-width:640px){
-    .nsl-head h1{font-size:var(--fs-h1)}
-    .art-title{font-size:var(--fs-h1)}
-    .nsl-read h1{font-size:var(--fs-h1)}
+    .art-title{font-size:32px; line-height:40px}
+    .nsl-read h1{font-size:32px; line-height:40px}
     .editor-meta-row{flex-direction:column; align-items:stretch}
   }
 </style>
@@ -154,18 +85,16 @@
 <main class="page" id="nslWrap">
   <div class="nsl-head">
     <h1>Наследие</h1>
-    <p class="sub">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
+    <p class="lead">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
   </div>
 
-  <div class="nsl-controls-bar">
-    <div class="nsl-controls">
-      <button class="nsl-chip active" data-tab="все">Все</button>
-      <button class="nsl-chip" data-tab="ti">От Татьяны Ивановны</button>
-      <button class="nsl-chip" data-tab="community">Воспоминания и статьи коллег</button>
-    </div>
+  <div class="chips" id="nslFilterChips" style="margin-bottom: 24px;">
+    <button type="button" class="chip on" data-tab="все"><span class="sym">check</span>Все</button>
+    <button type="button" class="chip" data-tab="ti">От Татьяны Ивановны</button>
+    <button type="button" class="chip" data-tab="community">Воспоминания и статьи коллег</button>
   </div>
 
-  <div id="nslList"><div class="nsl-state">Загрузка…</div></div>
+  <div id="nslList"><div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant)">Загрузка…</div></div>
 </main>
 
 <div class="nsl-editor" id="nslEditor" style="display:none">
@@ -319,27 +248,39 @@ function cardHtml(a){
   const isMine = a.status !== "confirmed";
   const cat = getArticleCategory(a);
   const badgeText = getArticleBadge(a);
-  const fullBadge = isMine ? `${badgeText} · ${STATUS_LABEL[a.status] || a.status}` : badgeText;
-  const badgeClass = isMine ? `st-${a.status}` : (cat === "ti" ? "badge-ti" : "");
 
-  let metaParts = [];
+  let subParts = [];
   if(cat === "ti"){
-    if(a.source) metaParts.push(escapeHtml(a.source));
-    if(a.original_year) metaParts.push(`${a.original_year} г.`);
-    if(a.created_by_name) metaParts.push(`добавил(а) ${escapeHtml(a.created_by_name)}`);
+    if(a.source) subParts.push(escapeHtml(a.source));
+    if(a.original_year) subParts.push(`${a.original_year} г.`);
+    if(!subParts.length) subParts.push(badgeText);
   } else {
-    const author = a.author_name || a.created_by_name || "Автор неизвестен";
-    metaParts.push(escapeHtml(author));
-    metaParts.push(formatDate(a.created_at));
+    const author = a.author_name || a.created_by_name || "";
+    if(author) subParts.push(escapeHtml(author));
+    subParts.push(badgeText);
   }
+  const subLine = subParts.join(" · ");
+
+  const authorWho = a.created_by_name ? escapeHtml(a.created_by_name) : "Аноним";
+  const dateStr = a.created_at ? new Date(a.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
+  const metaAuthorDate = dateStr ? `${authorWho} · ${dateStr}` : authorWho;
+  const statusLabel = a.status === "draft" ? "Черновик" : (a.status === "unconfirmed" ? "На проверке" : (a.status === "rejected" ? "Отклонено" : "Подтверждено"));
 
   return `
-    <button class="art-card" data-id="${a.id}" data-status="${a.status}">
-      <span class="badge ${badgeClass}">${escapeHtml(fullBadge)}</span>
-      <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
-      ${excerpt ? `<div class="ex">${escapeHtml(excerpt)}</div>` : ""}
-      <div class="meta">${metaParts.join(" · ")}</div>
-    </button>
+    <div class="card art-card ${isMine ? 'pending' : ''}" data-id="${a.id}" data-status="${a.status}" tabindex="0">
+      <div class="top">
+        <div style="min-width:0; flex:1">
+          <div class="name">${escapeHtml(a.title || "Без названия")}</div>
+          <div class="sub">${subLine}</div>
+        </div>
+      </div>
+      ${excerpt ? `<p class="txt">${escapeHtml(excerpt)}</p>` : ""}
+      <div class="meta">
+        <span>${metaAuthorDate}</span>
+        ${isMine ? `<span class="st">${statusLabel}</span>` : ""}
+        ${typeof renderMetaIcon === "function" ? renderMetaIcon("articles", a.id, a) : ""}
+      </div>
+    </div>
   `;
 }
 
@@ -347,29 +288,30 @@ function renderList(){
   const mine = currentUser ? allArticles.filter(a => a.created_by === currentUser.id && a.status !== "confirmed") : [];
   const confirmed = allArticles.filter(a => a.status === "confirmed");
 
-  const controlsBar = document.querySelector(".nsl-controls-bar");
-  const writeWrap = document.querySelector(".write-wrap");
+  const chipsEl = document.getElementById("nslFilterChips");
 
   let html = "";
   if(mine.length){
     html += `
-      <div class="nsl-section-head">
-        <h2 class="nsl-section-title">Моё</h2>
-        <span class="nsl-section-sub">Черновики и отправленные на проверку (${mine.length})</span>
-      </div>
-      ${mine.map(cardHtml).join("")}
+      <div class="group">Моё · ${mine.length}</div>
+      <div class="grid">${mine.map(cardHtml).join("")}</div>
     `;
   }
 
-  // Если нет подтверждённых материалов — показываем один блок-приглашение и прячем чипы и секции
+  // Если нет подтверждённых материалов — показываем один блок-приглашение и прячем чипы
   if(confirmed.length === 0){
-    if(controlsBar) controlsBar.style.display = "none";
-    if(writeWrap) writeWrap.style.display = "none";
+    if(chipsEl) chipsEl.style.display = "none";
 
     html += `
-      <div class="nsl-empty-invite">
-        <p class="nsl-empty-invite-text">Здесь будут статьи и интервью Татьяны Ивановны, а также воспоминания учеников и коллег. Станьте первым.</p>
-        <button type="button" class="btn-invite-add" id="inviteAddBtn">+ Добавить</button>
+      <div class="card" style="height:auto; padding:32px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:16px; margin:32px auto; max-width:480px;">
+        <span class="sym" style="font-size:48px; color:var(--primary)">menu_book</span>
+        <div style="font:var(--t-headline-small); font-size:24px; color:var(--on-surface)">Наследие</div>
+        <p style="font:var(--t-body-medium); color:var(--on-surface-variant); margin:0; line-height:20px">
+          Здесь будут статьи и интервью Татьяны Ивановны, а также воспоминания учеников и коллег. Станьте первым.
+        </p>
+        <button type="button" class="btn tonal" id="inviteAddBtn">
+          <span class="sym">add</span>Добавить материал
+        </button>
       </div>
     `;
 
@@ -383,7 +325,8 @@ function renderList(){
     }
 
     elList.querySelectorAll(".art-card").forEach(card => {
-      card.addEventListener("click", () => {
+      card.addEventListener("click", e => {
+        if(e.target.closest(".meta-icon-btn")) return;
         const id = card.dataset.id;
         location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
       });
@@ -391,65 +334,51 @@ function renderList(){
     return;
   }
 
-  // Если подтверждённые материалы есть — показываем контролы
-  if(controlsBar) controlsBar.style.display = "block";
-  if(writeWrap) writeWrap.style.display = "block";
+  if(chipsEl) chipsEl.style.display = "flex";
 
   const tiArticles = confirmed.filter(a => getArticleCategory(a) === "ti");
   const communityArticles = confirmed.filter(a => getArticleCategory(a) !== "ti");
 
   if(activeTab === "все"){
-    // Показываем только те секции, в которых есть материалы (без пустой второй секции)
     if(tiArticles.length){
       html += `
-        <div class="nsl-section-head">
-          <h2 class="nsl-section-title">От Татьяны Ивановны</h2>
-          <span class="nsl-section-sub">Статьи, публикации, интервью Т.И. (${tiArticles.length})</span>
-        </div>
-        ${tiArticles.map(cardHtml).join("")}
+        <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Материалы и публикации Татьяны Ивановны</h2>
+        <div class="grid">${tiArticles.map(cardHtml).join("")}</div>
       `;
     }
-
     if(communityArticles.length){
       html += `
-        <div class="nsl-section-head" style="${tiArticles.length ? 'margin-top:40px' : ''}">
-          <h2 class="nsl-section-title">Воспоминания и статьи коллег</h2>
-          <span class="nsl-section-sub">Память об учителе от учеников и коллег (${communityArticles.length})</span>
-        </div>
-        ${communityArticles.map(cardHtml).join("")}
+        <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Воспоминания учеников и статьи коллег</h2>
+        <div class="grid">${communityArticles.map(cardHtml).join("")}</div>
       `;
     }
   } else if(activeTab === "ti"){
     html += `
-      <div class="nsl-section-head">
-        <h2 class="nsl-section-title">От Татьяны Ивановны</h2>
-        <span class="nsl-section-sub">Труды, статьи, публикации и интервью Т.И. (${tiArticles.length})</span>
-      </div>
+      <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Материалы и публикации Татьяны Ивановны</h2>
     `;
     html += tiArticles.length
-      ? tiArticles.map(cardHtml).join("")
-      : `<div class="nsl-state">В этом разделе пока нет материалов.</div>`;
+      ? `<div class="grid">${tiArticles.map(cardHtml).join("")}</div>`
+      : `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">В этом разделе пока нет материалов.</div>`;
   } else if(activeTab === "community"){
     html += `
-      <div class="nsl-section-head">
-        <h2 class="nsl-section-title">Воспоминания и статьи коллег</h2>
-        <span class="nsl-section-sub">Воспоминания, очерки и исследования от учеников и коллег (${communityArticles.length})</span>
-      </div>
+      <h2 style="font:var(--t-headline-small); font-size:24px; font-weight:400; color:var(--on-surface); margin:32px 0 16px;">Воспоминания учеников и статьи коллег</h2>
     `;
     html += communityArticles.length
-      ? communityArticles.map(cardHtml).join("")
-      : `<div class="nsl-state">В этом разделе пока нет материалов.</div>`;
+      ? `<div class="grid">${communityArticles.map(cardHtml).join("")}</div>`
+      : `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">В этом разделе пока нет материалов.</div>`;
   }
 
   elList.innerHTML = html;
 
   elList.querySelectorAll(".art-card").forEach(card => {
-    card.addEventListener("click", () => {
+    card.addEventListener("click", e => {
+      if(e.target.closest(".meta-icon-btn")) return;
       const id = card.dataset.id;
       location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
     });
   });
 }
+
 
 async function loadList(){
   elList.innerHTML = `<div class="nsl-state">Загрузка…</div>`;
@@ -463,12 +392,23 @@ async function loadList(){
 }
 
 // Табы фильтрации
-document.querySelectorAll(".nsl-chip").forEach(chip => {
+function setNslFilter(tab){
+  activeTab = tab;
+  document.querySelectorAll("#nslFilterChips .chip").forEach(c => {
+    const isOn = c.dataset.tab === tab;
+    c.classList.toggle("on", isOn);
+    const existingSym = c.querySelector(".sym");
+    if(existingSym) existingSym.remove();
+    if(isOn){
+      c.insertAdjacentHTML("afterbegin", '<span class="sym">check</span>');
+    }
+  });
+  renderList();
+}
+
+document.querySelectorAll("#nslFilterChips .chip").forEach(chip => {
   chip.addEventListener("click", () => {
-    document.querySelectorAll(".nsl-chip").forEach(c => c.classList.remove("active"));
-    chip.classList.add("active");
-    activeTab = chip.dataset.tab;
-    renderList();
+    setNslFilter(chip.dataset.tab);
   });
 });
 

@@ -364,14 +364,14 @@
   <div class="person-sticky-bar" id="personStickyBar">
     <nav class="breadcrumbs" aria-label="Навигация">
       <a href="people.html">Люди</a>
-      <span class="sep">/</span>
+      <span class="sep"><span class="sym" style="font-size:16px">chevron_right</span></span>
       <a href="people.html?filter=ученик" id="bcCategory">Ученики</a>
-      <span class="sep">/</span>
+      <span class="sep"><span class="sym" style="font-size:16px">chevron_right</span></span>
       <span class="current" id="bcName">Загрузка…</span>
     </nav>
-    <div class="person-search-wrap" id="personSearchWrap">
-      <svg class="person-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      <input type="search" id="personSearchInput" placeholder="Найти другого человека…" autocomplete="off" spellcheck="false">
+    <div class="search" style="max-width:280px; height:44px; margin-left:auto; border-radius:22px;" id="personSearchWrap">
+      <span class="sym" style="font-size:20px">search</span>
+      <input type="search" class="search-input" id="personSearchInput" placeholder="Найти человека…" autocomplete="off" spellcheck="false">
       <div class="person-search-dropdown" id="personSearchDropdown"></div>
     </div>
   </div>
@@ -559,16 +559,17 @@ function renderEducation(p){
   if(!items.length) return "";
 
   return `
-    <div class="person-section">
-      <div class="person-section-label">Обучение у Т.И. Хитровой</div>
-      <div class="edu-list">
+    <div class="person-section" style="margin-top:24px">
+      <div class="group">Обучение у Т.И. Хитровой</div>
+      <div class="m3-list">
         ${items.map(it => `
-          <div class="edu-item-card">
-            <div class="edu-item-info">
-              <div class="edu-item-title">${escapeHtml(it.institution)}</div>
-              <div class="edu-item-detail">${escapeHtml(it.detail)}</div>
+          <div class="m3-list-item">
+            <div class="list-icon"><span class="sym">school</span></div>
+            <div class="list-text">
+              <div class="list-title">${escapeHtml(it.institution)}</div>
+              <div class="list-sub">${escapeHtml(it.detail)}</div>
             </div>
-            <div class="edu-item-year-badge">${escapeHtml(it.year)}</div>
+            <div class="list-badge">${escapeHtml(it.year)}</div>
           </div>
         `).join("")}
       </div>
@@ -599,7 +600,7 @@ function renderPerson(p){
 
   const avatarHtml = p.avatar_url
     ? `<img src="${escapeHtml(p.avatar_url)}" alt="${escapeHtml(p.full_name)}" class="person-avatar">`
-    : `<div class="person-avatar-placeholder">${initial}</div>`;
+    : `<div class="person-avatar">${initial}</div>`;
 
   const roleText = typeof window.personRelationLabel === "function"
     ? window.personRelationLabel(p)
@@ -610,16 +611,16 @@ function renderPerson(p){
   const html = `
     <div class="person-card-view">
       <div class="person-head-row">
-        <div class="person-avatar-wrap">${avatarHtml}</div>
-        <div class="person-title-area">
+        ${avatarHtml}
+        <div class="person-title-area" style="min-width:0; flex:1">
           <h1 class="person-name">${escapeHtml(p.full_name)}</h1>
           <div class="person-role-line">
             <span class="person-role">${escapeHtml(roleText)}</span>
-            ${isUnconfirmed ? `<span class="person-badge st-${p.status}">${p.status === "rejected" ? "Отклонено" : "На проверке"}</span>` : ""}
+            ${isUnconfirmed ? `<span class="badge b-wait">${p.status === "rejected" ? "Отклонено" : "На проверке"}</span>` : ""}
           </div>
           <div class="person-actions">
-            <button class="btn-edit-card" id="btnOpenEdit">✎ Предложить правку</button>
-            ${typeof renderMetaIcon === "function" ? renderMetaIcon("person", p.id, p) : ""}
+            <button class="btn tonal" id="btnOpenEdit"><span class="sym">edit</span>Предложить правку</button>
+            ${typeof renderMetaIcon === "function" ? renderMetaIcon("people", p.id, p) : ""}
           </div>
           <div id="personPendingAlert"></div>
         </div>
@@ -628,16 +629,16 @@ function renderPerson(p){
       ${renderEducation(p)}
 
       ${p.institution ? `
-        <div class="person-section">
-          <div class="person-section-label">Место работы / должность</div>
-          <div class="inst-box">${escapeHtml(p.institution)}</div>
+        <div class="person-section" style="margin-top:24px">
+          <div class="group">Место работы / должность</div>
+          <div class="card" style="height:auto; padding:16px; background:var(--surface-low)">${escapeHtml(p.institution)}</div>
         </div>
       ` : ""}
 
       ${p.notes ? `
-        <div class="person-section">
-          <div class="person-section-label">Заметки и биография</div>
-          <div class="notes-wrap">${formatNotes(p.notes)}</div>
+        <div class="person-section" style="margin-top:24px">
+          <div class="group">Заметки и биография</div>
+          <div class="card" style="height:auto; padding:16px; background:var(--surface-low); line-height:1.6">${formatNotes(p.notes)}</div>
         </div>
       ` : ""}
     </div>
@@ -709,33 +710,33 @@ function renderPeersWidget(p, students){
       const s = it.student;
       const initial = (s.full_name || "?").trim().charAt(0).toUpperCase();
       const avHtml = s.avatar_url
-        ? `<img src="${escapeHtml(s.avatar_url)}" alt="" class="peer-avatar-mini">`
-        : `<div class="peer-avatar-initial">${initial}</div>`;
+        ? `<img src="${escapeHtml(s.avatar_url)}" alt="">`
+        : initial;
 
       return `
         <a href="person.html?id=${s.id}" class="peer-item ${it.isCurrent ? "current" : ""}" data-id="${s.id}">
-          <div class="peer-year-tag">${it.year ? it.year + " г." : "—"}</div>
-          ${avHtml}
-          <div class="peer-info">
-            <div class="peer-name">${escapeHtml(s.full_name)}</div>
-            <div class="peer-sub">
-              ${it.isCurrent ? `<span class="peer-here-badge">● Вы просматриваете</span>` : (it.tag ? `<span>${it.tag}</span>` : "")}
+          <div class="ava">${avHtml}</div>
+          <div style="min-width:0; flex:1">
+            <div class="name">${escapeHtml(s.full_name)}</div>
+            <div style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant)">
+              ${it.isCurrent ? "Вы просматриваете" : (it.tag || "")}
             </div>
           </div>
+          <div class="yr">${it.year ? it.year + " г." : "—"}</div>
         </a>
       `;
     };
 
-    let html = `<div class="peers-col-head"><span class="col-yr-title">Выпуск</span><span class="col-name-title">Ученик</span></div>`;
+    let html = `<div class="peers-col-head" style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); padding:4px 8px; display:flex; justify-content:space-between"><span class="col-yr-title">Ученик</span><span class="col-name-title">Выпуск</span></div>`;
 
     if(!withYear.length){
-      html += `<div style="font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); padding:16px 8px; text-align:center">В диапазоне ±6 лет других выпускников пока нет.</div>`;
+      html += `<div style="font:var(--t-body-medium); font-size:13px; color:var(--on-surface-variant); padding:16px 8px; text-align:center">В диапазоне ±6 лет других выпускников пока нет.</div>`;
     } else {
       html += withYear.map(renderItem).join("");
     }
 
     if(showAllYears && withoutYear.length){
-      html += `<div style="font-size:var(--fs-badge); font-family:var(--font-ui); font-weight:700; color:var(--muted); margin:8px 8px 4px; text-transform:uppercase; letter-spacing:.05em">Год выпуска не указан</div>`;
+      html += `<div style="font:var(--t-label-medium); font-size:11px; font-weight:700; color:var(--on-surface-variant); margin:12px 8px 4px; text-transform:uppercase; letter-spacing:.05em">Год выпуска не указан</div>`;
       html += withoutYear.map(renderItem).join("");
     }
     return { html, totalCount };
@@ -753,16 +754,16 @@ function renderPeersWidget(p, students){
           <div class="peers-title">Учились вместе</div>
           <div class="peers-sub">${subText}</div>
           ${tabs.length > 1 ? `
-            <div class="peers-tabs">
-              ${tabs.map(t => `<button class="peers-tab-btn ${t.id === activeTab.id ? "active" : ""}" data-tab="${t.id}">${t.label} (${t.year})</button>`).join("")}
+            <div class="chips" style="margin-top:8px; margin-bottom:12px">
+              ${tabs.map(t => `<button type="button" class="chip ${t.id === activeTab.id ? "on" : ""}" data-tab="${t.id}">${t.label} (${t.year})</button>`).join("")}
             </div>
           ` : ""}
         </div>
         <div class="peers-scroll-pane" id="peersPane">
           ${listHtml}
         </div>
-        <div style="text-align:center; padding:6px 0 2px">
-          <button class="peers-toggle-btn" id="btnToggleRange">
+        <div style="text-align:center; padding:12px 0 2px">
+          <button type="button" class="btn text" id="btnToggleRange" style="font-size:13px">
             ${showAllYears ? "Свернуть до диапазона ±6 лет" : `Показать все годы архива (${totalCount})`}
           </button>
         </div>

@@ -9,136 +9,141 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-  .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin:0 0 6px}
-  .mod-wrap .sub{color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); margin-bottom:28px; line-height:1.5}
+  .mod-wrap h1, h1{font-size:var(--fs-display-small); line-height:1.22; margin:24px 0 8px; font-weight:400; color:var(--on-surface)}
+  .mod-wrap .sub, .sub{color:var(--on-surface-variant); font-size:var(--fs-body-large); margin-bottom:32px; line-height:1.5}
   .mod-section-title{
-    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-meta); letter-spacing:.08em;
-    text-transform:uppercase; color:var(--muted); margin:32px 0 14px;
+    font-weight:500; font-size:var(--fs-title-medium); color:var(--on-surface); margin:32px 0 16px;
     display:flex; align-items:center; justify-content:space-between;
   }
   .mod-section-count{
-    font-size:var(--fs-badge); background:var(--paper); border:1px solid var(--line);
-    padding:1px 8px; border-radius:10px; color:var(--ink); font-family:var(--font-ui);
+    font-size:var(--fs-label-medium); background:var(--secondary-container);
+    padding:2px 10px; border-radius:var(--r-full); color:var(--on-secondary-container); font-weight:500;
   }
 
-  .mod-state{padding:30px 24px; text-align:center; color:var(--muted); font-size:var(--fs-body); font-family:var(--font-body); background:#fff; border:1px dashed var(--line); border-radius:10px}
+  .mod-state{padding:32px 24px; text-align:center; color:var(--on-surface-variant); font-size:var(--fs-body-large); background:var(--surface-low); border:1px dashed var(--outline-variant); border-radius:var(--r-m)}
 
-  .mod-card{border:1px solid var(--line); border-radius:10px; padding:18px 20px; margin-bottom:16px; background:#fff; transition:border-color .15s}
-  .mod-card:hover{border-color:#d4d1ca}
-  .mod-card .yr{font-family:var(--font-ui); font-weight:700; font-size:var(--fs-ui); color:var(--accent); letter-spacing:.03em; text-transform:uppercase}
-  .mod-card .ti{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:4px 0 8px; color:var(--ink)}
-  .mod-card .de{font-size:var(--fs-body); color:var(--ink); line-height:1.6; margin-bottom:10px; font-family:var(--font-body)}
-  .mod-card .meta{font-size:var(--fs-meta); color:var(--muted); margin-bottom:12px; line-height:1.6; font-family:var(--font-ui)}
-  .mod-card .meta a{color:var(--accent)}
-  .mod-card .meta b{color:var(--ink)}
+  .mod-card{border:1px solid var(--outline-variant); border-radius:var(--r-m); padding:20px; margin-bottom:16px; background:var(--surface-low); transition:box-shadow .2s}
+  .mod-card:hover{box-shadow:var(--elevation-1)}
+  .mod-card .yr{font-weight:500; font-size:var(--fs-label-large); color:var(--primary); letter-spacing:.01em}
+  .mod-card .ti{font-weight:500; font-size:var(--fs-title-large); line-height:1.3; margin:4px 0 8px; color:var(--on-surface)}
+  .mod-card .de{font-size:var(--fs-body-medium); color:var(--on-surface-variant); line-height:1.5; margin-bottom:12px}
+  .mod-card .meta{font-size:var(--fs-label-medium); color:var(--on-surface-variant); margin-bottom:16px; line-height:1.5}
+  .mod-card .meta a{color:var(--primary); text-decoration:none}
+  .mod-card .meta a:hover{text-decoration:underline}
+  .mod-card .meta b{color:var(--on-surface)}
 
   .mod-card textarea.mod-note{
-    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
-    padding:8px 10px; border-radius:8px; font-family:var(--font-ui); font-size:var(--fs-ui); min-height:48px; resize:vertical; margin-bottom:12px;
+    width:100%; box-sizing:border-box; background:transparent; border:1px solid var(--outline); color:var(--on-surface);
+    padding:12px 16px; border-radius:var(--r-xs); font-family:inherit; font-size:var(--fs-body-large); min-height:56px; resize:vertical; margin-bottom:16px;
+    outline:none; transition:border-color .15s, border-width .15s;
   }
+  .mod-card textarea.mod-note:focus{border-color:var(--primary); border-width:2px; padding:11px 15px}
 
-  .mod-card .row{display:flex; gap:8px; flex-wrap:wrap}
+  .mod-card .row{display:flex; gap:12px; flex-wrap:wrap}
   .mod-card button{
-    flex:1; min-width:120px; border:none; border-radius:8px; padding:9px 12px; font-size:var(--fs-ui); cursor:pointer;
-    font-family:var(--font-ui); font-weight:600; transition:background .15s, border-color .15s, opacity .15s;
+    min-height:40px; border-radius:var(--r-full); padding:0 24px; font-size:var(--fs-label-large); cursor:pointer;
+    font-family:inherit; font-weight:500; transition:background .15s, color .15s, border-color .15s, box-shadow .15s;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px; border:none; box-sizing:border-box;
   }
-  .mod-card .btn-confirm{background:var(--confirmed); color:#fff}
-  .mod-card .btn-confirm:hover{opacity:.9}
-  .mod-card .btn-edit-toggle{background:#fff; border:1px solid var(--line); color:var(--ink)}
-  .mod-card .btn-edit-toggle:hover{border-color:var(--ink)}
-  .mod-card .btn-reject{background:#fff; border:1px solid #b0413e; color:#b0413e}
-  .mod-card .btn-reject:hover{background:rgba(176,65,62,.06)}
-  .mod-card .btn-save-confirm{background:var(--confirmed); color:#fff}
-  .mod-card .btn-save-confirm:hover{opacity:.9}
-  .mod-card .btn-save-only{background:#fff; border:1px solid var(--ink); color:var(--ink)}
-  .mod-card .btn-edit-cancel{background:#fff; border:1px solid var(--line); color:var(--muted)}
-  .mod-card .btn-edit-cancel:hover{color:var(--ink); border-color:var(--ink)}
+  .mod-card .btn-confirm, .mod-card .btn-apply-rev{background:var(--primary); color:var(--on-primary)}
+  .mod-card .btn-confirm:hover, .mod-card .btn-apply-rev:hover{background:color-mix(in srgb, var(--primary) 92%, #000)}
+  .mod-card .btn-edit-toggle, .mod-card .btn-save-only{background:var(--secondary-container); color:var(--on-secondary-container)}
+  .mod-card .btn-edit-toggle:hover, .mod-card .btn-save-only:hover{background:color-mix(in srgb, var(--secondary-container) 88%, #000)}
+  .mod-card .btn-reject, .mod-card .btn-reject-rev{background:transparent; border:1px solid var(--error); color:var(--error)}
+  .mod-card .btn-reject:hover, .mod-card .btn-reject-rev:hover{background:var(--error-container); color:var(--on-error-container); border-color:transparent}
+  .mod-card .btn-save-confirm{background:var(--primary); color:var(--on-primary)}
+  .mod-card .btn-save-confirm:hover{background:color-mix(in srgb, var(--primary) 92%, #000)}
+  .mod-card .btn-edit-cancel{background:transparent; border:1px solid var(--outline); color:var(--on-surface-variant)}
+  .mod-card .btn-edit-cancel:hover{background:color-mix(in srgb, var(--on-surface) 8%, transparent); color:var(--on-surface)}
 
-  .mod-card .err{color:#b0413e; font-size:var(--fs-meta); font-family:var(--font-ui); margin-top:8px; display:none}
+  .mod-card .err{color:var(--error); font-size:var(--fs-label-medium); margin-top:8px; display:none}
 
   /* Inline edit mode inside mod-card */
-  .card-edit{margin-top:12px; padding-top:14px; border-top:1px solid var(--line)}
-  .edit-field{margin-bottom:10px}
-  .edit-field label{display:block; font-size:var(--fs-meta); color:var(--muted); margin-bottom:4px; font-weight:600; font-family:var(--font-ui)}
+  .card-edit{margin-top:16px; padding-top:16px; border-top:1px solid var(--outline-variant)}
+  .edit-field{margin-bottom:12px}
+  .edit-field label{display:block; font-size:var(--fs-label-medium); color:var(--on-surface-variant); margin-bottom:4px; font-weight:500}
   .edit-field input[type="text"], .edit-field input[type="number"], .edit-field select, .edit-field textarea{
-    width:100%; background:var(--paper); border:1px solid var(--line); color:var(--ink);
-    padding:8px 10px; border-radius:8px; font-family:var(--font-ui); font-size:var(--fs-ui); outline:none;
+    width:100%; box-sizing:border-box; background:transparent; border:1px solid var(--outline); color:var(--on-surface);
+    padding:10px 14px; border-radius:var(--r-xs); font-family:inherit; font-size:var(--fs-body-large); outline:none;
   }
   .edit-field input:focus, .edit-field select:focus, .edit-field textarea:focus{
-    border-color:var(--ink); background:#fff;
+    border-color:var(--primary); border-width:2px; padding:9px 13px;
   }
-  .edit-field textarea{resize:vertical; min-height:55px}
+  .edit-field textarea{resize:vertical; min-height:64px}
 
-  .edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .edit-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
   @media(max-width:540px){ .edit-grid{grid-template-columns:1fr} }
 
   .edit-study-wrap{
-    background:var(--paper); border:1px solid var(--line); border-radius:8px;
-    padding:10px 12px; margin:10px 0;
+    background:var(--surface); border:1px solid var(--outline-variant); border-radius:var(--r-s);
+    padding:12px 16px; margin:12px 0;
   }
   .edit-study-wrap .legend{
-    font-size:var(--fs-badge); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-    color:var(--muted); margin-bottom:6px; font-family:var(--font-ui);
+    font-size:var(--fs-label-medium); font-weight:500; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--on-surface-variant); margin-bottom:8px;
   }
 
-  .mod-card .btn-toggle{
-    flex:none; width:auto; background:none; border:none; color:var(--accent); font-family:var(--font-ui);
-    font-weight:400; text-decoration:underline; padding:0; margin-bottom:10px; font-size:var(--fs-meta); cursor:pointer;
+  .mod-card button.btn-toggle{
+    flex:none; width:auto; min-height:unset; background:none; border:none; color:var(--primary);
+    font-weight:500; text-decoration:underline; padding:0; margin-bottom:12px; font-size:var(--fs-body-medium); cursor:pointer;
   }
-  .art-preview{font-family:var(--font-body); font-size:var(--fs-body); line-height:1.65; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:10px}
-  .art-preview h2{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h2); line-height:1.2; margin:14px 0 8px}
-  .art-preview h3{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:12px 0 6px}
+  .art-preview{font-size:var(--fs-body-medium); line-height:1.6; color:var(--on-surface); background:var(--surface); border:1px solid var(--outline-variant); border-radius:var(--r-s); padding:16px; margin-bottom:12px}
+  .art-preview h2{font-size:var(--fs-title-large); line-height:1.3; margin:16px 0 8px}
+  .art-preview h3{font-size:var(--fs-title-medium); line-height:1.3; margin:14px 0 6px}
   .art-preview p{margin:0 0 10px}
-  .art-preview blockquote{margin:0 0 10px; padding:2px 0 2px 12px; border-left:3px solid var(--accent); font-style:italic}
-  .art-preview table{width:100%; border-collapse:collapse; margin:0 0 10px; font-size:var(--fs-meta); font-family:var(--font-body)}
-  .art-preview td, .art-preview th{border:1px solid var(--line); padding:5px 7px}
-  .art-preview img{max-width:100%; border-radius:6px}
+  .art-preview blockquote{margin:0 0 10px; padding:4px 0 4px 16px; border-left:3px solid var(--primary); font-style:italic}
+  .art-preview table{width:100%; border-collapse:collapse; margin:0 0 12px; font-size:var(--fs-body-medium)}
+  .art-preview td, .art-preview th{border:1px solid var(--outline-variant); padding:6px 10px}
+  .art-preview img{max-width:100%; border-radius:var(--r-xs)}
 
   .art-editor-link{
-    display:inline-block; font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--accent); text-decoration:none;
-    margin-bottom:10px; font-weight:600;
+    display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-label-large); color:var(--primary); text-decoration:none;
+    margin-bottom:12px; font-weight:500;
   }
   .art-editor-link:hover{text-decoration:underline}
 
   /* Revisions */
-  .rev-header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap}
+  .rev-header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap}
   .rev-badge{
-    display:inline-block; font-size:var(--fs-badge); font-family:var(--font-ui); font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-    padding:2px 8px; border-radius:12px;
+    display:inline-flex; align-items:center; font-size:var(--fs-label-medium); font-weight:500;
+    padding:4px 12px; border-radius:var(--r-full);
   }
-  .rev-badge-person{background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe}
-  .rev-badge-event{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
-  .rev-badge-article{background:#fef3c7; color:#92400e; border:1px solid #fde68a}
+  .rev-badge-person{background:var(--primary-container); color:var(--on-primary-container)}
+  .rev-badge-event{background:var(--secondary-container); color:var(--on-secondary-container)}
+  .rev-badge-article{background:var(--tertiary-container); color:var(--on-tertiary-container)}
 
   .rev-entity-link{
-    font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); color:var(--ink); text-decoration:none;
-    display:inline-block; margin-bottom:6px;
+    font-weight:500; font-size:var(--fs-title-large); color:var(--on-surface); text-decoration:none;
+    display:inline-flex; align-items:center; gap:4px; margin-bottom:6px;
   }
-  .rev-entity-link:hover{color:var(--accent); text-decoration:underline}
+  .rev-entity-link:hover{color:var(--primary); text-decoration:underline}
 
   .rev-comment{
-    background:var(--paper); border-left:3px solid var(--accent); padding:8px 12px;
-    font-size:var(--fs-meta); font-family:var(--font-body); margin:8px 0 12px; border-radius:0 6px 6px 0; color:var(--ink);
+    background:var(--surface); border-left:3px solid var(--primary); padding:10px 14px;
+    font-size:var(--fs-body-medium); margin:10px 0 14px; border-radius:0 var(--r-xs) var(--r-xs) 0; color:var(--on-surface);
     line-height:1.5;
   }
 
+  .rev-diff-table-wrap{
+    width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; margin:12px 0 16px;
+  }
   .rev-diff-table{
-    width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:var(--fs-meta); font-family:var(--font-ui);
-    background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;
+    width:100%; border-collapse:collapse; font-size:var(--fs-body-medium);
+    background:var(--surface); border:1px solid var(--outline-variant); border-radius:var(--r-s); overflow:hidden;
   }
   .rev-diff-table th, .rev-diff-table td{
-    padding:6px 10px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line);
+    height:52px; padding:8px 14px; text-align:left; vertical-align:middle; border-bottom:1px solid var(--outline-variant);
+    box-sizing:border-box;
   }
   .rev-diff-table th{
-    font-size:var(--fs-badge); font-family:var(--font-ui); font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:#faf8f5;
+    font-size:var(--fs-label-medium); font-weight:500; letter-spacing:.02em; color:var(--on-surface-variant); background:var(--surface-low);
   }
   .rev-diff-table tr:last-child td{border-bottom:none}
-  .rev-diff-old{color:#b0413e; word-break:break-word}
-  .rev-diff-new{color:#2a7a4c; font-weight:600; word-break:break-word}
+  .rev-diff-old{color:var(--error); word-break:break-word}
+  .rev-diff-new{color:var(--primary); font-weight:500; word-break:break-word}
 
   @media (max-width:480px){
-    .rev-diff-table{display:block; overflow-x:auto}
-    .rev-diff-table th, .rev-diff-table td{padding:5px 6px}
+    .rev-diff-table th, .rev-diff-table td{padding:6px 10px}
   }
 </style>
 </head>
@@ -246,7 +251,7 @@ const FIELD_LABELS = {
 };
 
 function formatDiffVal(field, val){
-  if(val === null || val === undefined || val === "") return '<i style="color:var(--muted)">—</i>';
+  if(val === null || val === undefined || val === "") return '<i style="color:var(--on-surface-variant)">—</i>';
   if(typeof val === "boolean") return val ? "Да" : "Нет";
   if(field === "gender"){
     if(val === "m") return "Мужской";
@@ -340,7 +345,7 @@ async function loadRevisions(){
     let hasArticleContent = false;
 
     if(!patchKeys.length){
-      diffRows = `<tr><td colspan="3" style="text-align:center; color:var(--muted)">Нет изменённых полей</td></tr>`;
+      diffRows = `<tr><td colspan="3" style="text-align:center; color:var(--on-surface-variant)">Нет изменённых полей</td></tr>`;
     } else {
       diffRows = patchKeys.map(k => {
         const oldVal = target ? target[k] : undefined;
@@ -361,30 +366,32 @@ async function loadRevisions(){
         <div class="rev-header">
           <span class="rev-badge ${entityBadgeClass}">${typeBadgeText}</span>
           <div style="display:flex; align-items:center; gap:6px">
-            <span style="font-size:var(--fs-meta); color:var(--muted)">${formatDate(r.created_at)}</span>
+            <span style="font-size:var(--fs-label-medium); color:var(--on-surface-variant)">${formatDate(r.created_at)}</span>
             ${typeof renderMetaIcon === "function" ? renderMetaIcon(r.entity_type, r.entity_id, target || r) : ""}
           </div>
         </div>
         <div>
-          <a href="${entityUrl}" target="_blank" class="rev-entity-link">${escapeHtml(entityLabel)} ↗</a>
+          <a href="${entityUrl}" target="_blank" class="rev-entity-link">${escapeHtml(entityLabel)} <span class="sym" style="font-size:18px">open_in_new</span></a>
         </div>
         <div class="meta">
           Предложил(а): <b>${escapeHtml(r.author_name || "неизвестно")}</b>
         </div>
         ${r.comment ? `<div class="rev-comment"><b>Комментарий к правке:</b> ${escapeHtml(r.comment)}</div>` : ""}
 
-        <table class="rev-diff-table">
-          <thead>
-            <tr>
-              <th style="width:28%">Поле</th>
-              <th style="width:36%">Текущее значение</th>
-              <th style="width:36%">Предлагаемое значение</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${diffRows}
-          </tbody>
-        </table>
+        <div class="rev-diff-table-wrap">
+          <table class="rev-diff-table">
+            <thead>
+              <tr>
+                <th style="width:28%">Поле</th>
+                <th style="width:36%">Текущее значение</th>
+                <th style="width:36%">Предлагаемое значение</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${diffRows}
+            </tbody>
+          </table>
+        </div>
 
         ${hasArticleContent ? `
           <button type="button" class="btn-toggle" data-toggle-rev-content>Показать текст статьи из правки</button>
@@ -484,7 +491,7 @@ async function loadEvents(){
         <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
         <div class="row">
           <button type="button" class="btn-confirm">Подтвердить</button>
-          <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+          <button type="button" class="btn-edit-toggle"><span class="sym" style="font-size:18px">edit</span> Редактировать</button>
           <button type="button" class="btn-reject">Отклонить</button>
         </div>
       </div>
@@ -649,7 +656,7 @@ async function loadPeople(){
             </div>
             ${typeof renderMetaIcon === "function" ? renderMetaIcon("person", p.id, p) : ""}
           </div>
-          ${eduItems.length ? `<div class="de" style="font-size:var(--fs-meta); margin-bottom:6px"><b>Образование:</b> ${eduItems.map(escapeHtml).join("; ")}</div>` : ""}
+          ${eduItems.length ? `<div class="de" style="font-size:var(--fs-body-medium); margin-bottom:6px"><b>Образование:</b> ${eduItems.map(escapeHtml).join("; ")}</div>` : ""}
           ${p.institution ? `<div class="de"><b>Место работы:</b> ${escapeHtml(p.institution)}</div>` : ""}
           ${p.notes ? `<div class="de">${escapeHtml(p.notes)}</div>` : ""}
           <div class="meta">
@@ -659,7 +666,7 @@ async function loadPeople(){
           <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
           <div class="row">
             <button type="button" class="btn-confirm">Подтвердить</button>
-            <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+            <button type="button" class="btn-edit-toggle"><span class="sym" style="font-size:18px">edit</span> Редактировать</button>
             <button type="button" class="btn-reject">Отклонить</button>
           </div>
         </div>
@@ -689,28 +696,28 @@ async function loadPeople(){
           </div>
           <div class="edit-study-wrap">
             <div class="legend">Учебные заведения у Т.И. Хитровой</div>
-            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-ui); font-family:var(--font-ui); cursor:pointer; margin:4px 0">
+            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
               <input type="checkbox" class="in-p-choir" ${p.studied_choir_school ? "checked" : ""} style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
             </label>
             <div class="box-choir" style="display:${p.studied_choir_school ? "block" : "none"}; margin:4px 0 8px 24px">
               <input type="number" class="in-p-choir-end" placeholder="Год выпуска (напр. 1980)" value="${p.choir_school_end || ""}">
             </div>
 
-            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-ui); font-family:var(--font-ui); cursor:pointer; margin:4px 0">
+            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
               <input type="checkbox" class="in-p-cons" ${p.studied_conservatory ? "checked" : ""} style="width:auto; margin:0"> СПбГК им. Римского-Корсакова
             </label>
             <div class="box-cons" style="display:${p.studied_conservatory ? "block" : "none"}; margin:4px 0 8px 24px">
               <input type="number" class="in-p-cons-end" placeholder="Год выпуска (напр. 1985)" value="${p.conservatory_end || ""}">
             </div>
 
-            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-ui); font-family:var(--font-ui); cursor:pointer; margin:4px 0">
+            <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
               <input type="checkbox" class="in-p-asst" ${p.studied_assistantship ? "checked" : ""} style="width:auto; margin:0"> Ассистентура в СПбГК
             </label>
             <div class="box-asst" style="display:${p.studied_assistantship ? "block" : "none"}; margin:4px 0 8px 24px">
               <input type="number" class="in-p-asst-end" placeholder="Год окончания (напр. 2005)" value="${p.assistantship_end || ""}">
             </div>
 
-            <div style="font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); margin:8px 0 4px">Или другие годы учёбы:</div>
+            <div style="font-size:var(--fs-label-medium); color:var(--on-surface-variant); margin:8px 0 4px">Или другие годы учёбы:</div>
             <div style="display:flex; gap:8px">
               <input type="number" class="in-p-start" placeholder="начало" value="${p.study_start || ""}">
               <input type="number" class="in-p-end" placeholder="окончание" value="${p.study_end || ""}">
@@ -887,8 +894,8 @@ async function loadArticles(){
     const metaYear = a.original_year || (a.content && a.content.meta && a.content.meta.original_year) || "";
 
     const catBadge = cat === "ti"
-      ? '<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:var(--fs-badge); font-family:var(--font-ui); font-weight:600; background:#e8f0fe; color:#1a73e8; border:1px solid #c8dafc;">✦ От Т.И.</span>'
-      : '<span style="display:inline-block; padding:2px 8px; border-radius:12px; font-size:var(--fs-badge); font-family:var(--font-ui); font-weight:600; background:#f5efe6; color:#7d5228; border:1px solid #dec8b0;">От учеников и коллег</span>';
+      ? '<span class="rev-badge" style="background:var(--primary-container); color:var(--on-primary-container);">От Т.И.</span>'
+      : '<span class="rev-badge" style="background:var(--secondary-container); color:var(--on-secondary-container);">От учеников и коллег</span>';
 
     return `
     <div class="mod-card" data-id="${a.id}">
@@ -906,17 +913,17 @@ async function loadArticles(){
         <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
         <div class="art-preview" style="display:none"></div>
         <div>
-          <a href="nasledie.html#edit/${a.id}" target="_blank" class="art-editor-link">Открыть в полном редакторе Наследия ↗</a>
+          <a href="nasledie.html#edit/${a.id}" target="_blank" class="art-editor-link">Открыть в полном редакторе Наследия <span class="sym" style="font-size:18px">open_in_new</span></a>
         </div>
         <div class="meta" style="margin-top:8px">
           Автор материала: <b>${escapeHtml(metaAuthor || "не указан")}</b>
           ${metaSource ? ` · Источник: <i>${formatSourceLink(metaSource)}</i>` : ''}
-          <br><span style="color:var(--muted); font-size:var(--fs-meta)">Загрузил: ${escapeHtml(a.created_by_name || "неизвестно")} · ${formatDate(a.created_at)}</span>
+          <br><span style="color:var(--on-surface-variant); font-size:var(--fs-label-medium)">Загрузил: ${escapeHtml(a.created_by_name || "неизвестно")} · ${formatDate(a.created_at)}</span>
         </div>
         <textarea class="mod-note" placeholder="Заметка автору (необязательно) — особенно полезна при отклонении"></textarea>
         <div class="row">
           <button type="button" class="btn-confirm">Подтвердить</button>
-          <button type="button" class="btn-edit-toggle">✎ Редактировать</button>
+          <button type="button" class="btn-edit-toggle"><span class="sym" style="font-size:18px">edit</span> Редактировать</button>
           <button type="button" class="btn-reject">Отклонить</button>
         </div>
       </div>
@@ -957,8 +964,8 @@ async function loadArticles(){
             <input type="number" class="in-art-year" value="${escapeHtml(metaYear || "")}" placeholder="1984">
           </div>
         </div>
-        <div style="margin:8px 0 12px; font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted)">
-          Для изменения текста статьи откройте её в <a href="nasledie.html#edit/${a.id}" target="_blank" style="color:var(--accent)">полном редакторе ↗</a>
+        <div style="margin:8px 0 12px; font-size:var(--fs-label-medium); color:var(--on-surface-variant)">
+          Для изменения текста статьи откройте её в <a href="nasledie.html#edit/${a.id}" target="_blank" style="color:var(--primary)">полном редакторе <span class="sym" style="font-size:16px">open_in_new</span></a>
         </div>
         <div class="row" style="margin-top:12px">
           <button type="button" class="btn-save-confirm">Сохранить и подтвердить</button>
