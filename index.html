@@ -6,20 +6,23 @@
 <title>Татьяна Ивановна Хитрова — сайт памяти</title>
 <link title="timeline-styles" rel="stylesheet" href="https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
 <script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   html,body{height:100%; overflow-x:hidden}
   #timeline-embed{width:100%; height:calc(100dvh - 52px)}
   .nav-hint{
     position:fixed; right:20px; bottom:22%;
-    font-size:11.5px; color:var(--muted); background:#fff; padding:6px 14px; border:none;
+    font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); background:#fff; padding:6px 14px; border:none;
     border-radius:8px; z-index:15; opacity:1; transition:opacity .8s ease; pointer-events:none;
   }
   .nav-hint.hide{opacity:0}
   .nav-hint .hint-text{
     display:inline-block; animation:navHintPulse 2.6s ease-in-out infinite;
   }
-  .nav-hint .arrows{ font-weight:700; font-size:13px; color:var(--ink) }
+  .nav-hint .arrows{ font-weight:700; font-size:var(--fs-meta); color:var(--ink) }
   @keyframes navHintPulse{
     0%, 100% { opacity:.35; }
     50% { opacity:1; }
@@ -43,7 +46,7 @@
 
     .ms-yr{
       position:absolute; top:100%; left:50%; transform:translateX(-50%);
-      margin-top:4px; font-size:11px; color:var(--muted); white-space:nowrap; /* nowrap = не обрезается по ширине */
+      margin-top:4px; font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); white-space:nowrap; /* nowrap = не обрезается по ширине */
     }
   }
 
@@ -51,14 +54,14 @@
   .ev-badge{
     display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%;
     margin-left:7px; cursor:pointer; vertical-align:middle; border:1.5px solid var(--muted); color:var(--muted);
-    font-size:11px; line-height:1; background:#fff;
+    font-size:var(--fs-badge); line-height:1; background:#fff; font-family:var(--font-ui);
   }
   .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(51,84,122,.08)}
   .ev-badge.rejected{border-color:#b0413e; color:#b0413e; background:rgba(176,65,62,.08)}
 
   .ev-tip{
     display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:10px;
-    box-shadow:0 10px 30px rgba(0,0,0,.14); padding:13px 14px; width:230px; font-size:12.5px; color:var(--ink); line-height:1.4;
+    box-shadow:0 10px 30px rgba(0,0,0,.14); padding:13px 14px; width:230px; font-size:var(--fs-meta); color:var(--ink); line-height:1.4; font-family:var(--font-ui);
   }
   .ev-tip.open{display:block}
   .ev-tip .et-row{margin-bottom:6px}
@@ -67,11 +70,11 @@
   .ev-tip a{color:var(--accent)}
   .et-confirm{
     margin-top:10px; width:100%; background:var(--confirmed); color:#fff; border:none; border-radius:8px;
-    padding:7px 0; font-size:12.5px; cursor:pointer; font-family:var(--font-head); font-weight:700;
+    padding:7px 0; font-size:var(--fs-ui); cursor:pointer; font-family:var(--font-ui); font-weight:600;
   }
   .et-propose-btn{
     margin-top:8px; width:100%; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px;
-    padding:7px 0; font-size:12px; cursor:pointer; font-family:var(--font-head); font-weight:700;
+    padding:7px 0; font-size:var(--fs-ui); cursor:pointer; font-family:var(--font-ui); font-weight:600;
     transition:border-color .15s, background .15s;
   }
   .et-propose-btn:hover{border-color:var(--ink); background:#faf8f5}
@@ -84,7 +87,7 @@
 
 <div class="ev-tip" id="evTip">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px">
-    <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:.05em">Верификация</span>
+    <span style="font-size:var(--fs-meta); font-family:var(--font-ui); font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:.05em">Верификация</span>
     <span id="evMetaIconSlot"></span>
   </div>
   <div id="evTipBody"></div>

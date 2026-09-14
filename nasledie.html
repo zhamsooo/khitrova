@@ -4,16 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Наследие — сайт памяти Т.И. Хитровой</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
   .nsl-wrap{max-width:740px; margin:0 auto; padding:8vh 24px 10vh}
-  .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:38px; margin:0 0 10px}
-  .nsl-head .sub{color:var(--muted); font-size:14.5px; line-height:1.6; margin:0 0 22px; max-width:540px}
+  .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin:0 0 10px}
+  .nsl-head .sub{color:var(--muted); font-size:var(--fs-body); line-height:1.6; margin:0 0 22px; max-width:68ch; font-family:var(--font-body)}
   .write-wrap{position:relative; display:inline-block; margin-bottom:8px}
 
   .dropdown-write{width:320px !important}
   .dd-group-title{
-    font-family:var(--font-head); font-weight:700; font-size:10.5px;
+    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-meta);
     text-transform:uppercase; letter-spacing:.07em; color:var(--muted);
     padding:8px 10px 4px;
   }
@@ -23,15 +26,15 @@
   .nsl-controls{display:flex; flex-wrap:wrap; align-items:center; gap:8px}
   .nsl-chip{
     background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
-    font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
+    font-size:var(--fs-ui); font-family:var(--font-ui); padding:5px 13px; border-radius:14px;
     transition:all .15s;
   }
   .nsl-chip:hover{border-color:var(--ink); color:var(--ink)}
   .nsl-chip.active{background:var(--ink); color:#fff; border-color:var(--ink)}
 
-  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:14px}
+  .nsl-state{padding:50px 24px; text-align:center; color:var(--muted); font-size:var(--fs-body); font-family:var(--font-body)}
   .nsl-empty-block{
-    padding:28px 20px; text-align:center; color:var(--muted); font-size:13.5px;
+    padding:28px 20px; text-align:center; color:var(--muted); font-size:var(--fs-body); font-family:var(--font-body);
     background:var(--paper); border:1px dashed var(--line); border-radius:10px; margin-bottom:14px;
   }
   .nsl-section-head{
@@ -39,15 +42,15 @@
     margin:32px 0 14px; padding-bottom:8px; border-bottom:1px solid var(--line);
   }
   .nsl-section-title{
-    font-family:var(--font-head); font-weight:700; font-size:13px;
+    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-meta);
     letter-spacing:.08em; text-transform:uppercase; color:var(--ink); margin:0;
   }
-  .nsl-section-sub{font-size:11.5px; color:var(--muted)}
+  .nsl-section-sub{font-size:var(--fs-meta); color:var(--muted); font-family:var(--font-ui)}
 
   .art-card{display:block; width:100%; text-align:left; border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px; background:#fff; cursor:pointer; font:inherit; color:inherit; transition:border-color .15s, box-shadow .15s}
   .art-card:hover{border-color:var(--ink); box-shadow:0 3px 12px rgba(0,0,0,.03)}
   .art-card .badge{
-    font-family:var(--font-head); font-weight:700; font-size:10px; letter-spacing:.05em;
+    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); letter-spacing:.06em;
     text-transform:uppercase; color:var(--accent); display:inline-block; margin-bottom:6px;
     padding:2px 7px; border-radius:6px; background:rgba(138,106,58,.08);
   }
@@ -55,9 +58,9 @@
   .art-card .badge.st-draft{color:var(--muted); background:#eee}
   .art-card .badge.st-unconfirmed{color:var(--warn); background:rgba(164,100,31,.08)}
   .art-card .badge.st-rejected{color:#b0413e; background:rgba(176,65,62,.08)}
-  .art-card .ti{font-family:var(--font-head); font-weight:700; font-size:17px; margin:0 0 6px; line-height:1.25}
-  .art-card .ex{font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:8px}
-  .art-card .meta{font-size:11.5px; color:var(--muted)}
+  .art-card .ti{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); margin:0 0 6px; line-height:1.2}
+  .art-card .ex{font-size:var(--fs-body); color:var(--muted); line-height:1.6; margin-bottom:8px; font-family:var(--font-body)}
+  .art-card .meta{font-size:var(--fs-meta); color:var(--muted); font-family:var(--font-ui)}
 
   /* Панель метаданных статьи в редакторе */
   .editor-meta-box{
@@ -67,17 +70,17 @@
   .editor-meta-row{display:flex; flex-wrap:wrap; align-items:center; gap:14px}
   .editor-meta-col{flex:1; min-width:180px}
   .editor-meta-col label{
-    display:block; font-size:11px; color:var(--muted); text-transform:uppercase;
-    letter-spacing:.05em; margin-bottom:4px; font-family:var(--font-head); font-weight:700;
+    display:block; font-size:var(--fs-meta); color:var(--muted); text-transform:uppercase;
+    letter-spacing:.05em; margin-bottom:4px; font-family:var(--font-ui); font-weight:700;
   }
   .editor-meta-col input, .editor-meta-col select{
     width:100%; background:#fff; border:1px solid var(--line); border-radius:8px;
-    padding:6px 10px; font:inherit; font-size:13px; outline:none;
+    padding:6px 10px; font-family:var(--font-ui); font-size:var(--fs-ui); outline:none;
   }
   .editor-meta-col input:focus, .editor-meta-col select:focus{border-color:var(--ink)}
   .author-type-toggle{display:flex; gap:6px}
   .author-type-btn{
-    flex:1; padding:6px 10px; font-size:12px; font-family:inherit; border-radius:7px;
+    flex:1; padding:6px 10px; font-size:var(--fs-ui); font-family:var(--font-ui); border-radius:7px;
     border:1px solid var(--line); background:#fff; cursor:pointer; text-align:center;
     transition:all .12s; color:var(--muted);
   }
@@ -88,45 +91,45 @@
 
   .nsl-editor{max-width:740px; margin:0 auto; padding:24px 24px 80px}
   .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--line)}
-  .btn-plain{background:none; border:none; color:var(--muted); font-size:13px; padding:0; cursor:pointer; font-family:inherit}
+  .btn-plain{background:none; border:none; color:var(--muted); font-size:var(--fs-ui); padding:0; cursor:pointer; font-family:var(--font-ui)}
   .btn-plain:hover{color:var(--ink)}
-  .save-state{flex:1; font-size:12px; color:var(--muted); text-align:center}
-  .btn-publish{background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:12.5px; font-family:inherit; cursor:pointer}
-  .art-title{width:100%; border:none; outline:none; font-family:var(--font-head); font-weight:700; font-size:30px; margin-bottom:18px; color:var(--ink); background:transparent}
+  .save-state{flex:1; font-size:var(--fs-meta); color:var(--muted); text-align:center; font-family:var(--font-ui)}
+  .btn-publish{background:var(--ink); color:#fff; border:none; padding:8px 16px; border-radius:20px; font-size:var(--fs-ui); font-family:var(--font-ui); cursor:pointer}
+  .art-title{width:100%; border:none; outline:none; font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin-bottom:18px; color:var(--ink); background:transparent}
   .art-title::placeholder{color:var(--muted)}
-  #editorjs{font-family:var(--font-body); font-size:16px; line-height:1.7}
+  #editorjs{font-family:var(--font-body); font-size:var(--fs-body-art); line-height:1.65; max-width:68ch}
 
   .nsl-read{max-width:640px; margin:0 auto; padding:8vh 24px 10vh}
   .read-badge-wrap{margin-top:16px; margin-bottom:10px}
   .read-category-badge{
-    font-family:var(--font-head); font-weight:700; font-size:11px; letter-spacing:.06em;
+    font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); letter-spacing:.06em;
     text-transform:uppercase; color:var(--accent); display:inline-block;
     padding:3px 9px; border-radius:6px; background:rgba(138,106,58,.08);
   }
   .read-category-badge.badge-ti{color:var(--confirmed); background:rgba(51,84,122,.08)}
-  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:34px; margin:0 0 10px; line-height:1.2}
-  .read-byline{font-size:13.5px; color:var(--muted); margin-bottom:30px; line-height:1.55}
+  .nsl-read h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); margin:0 0 10px; line-height:1.1; text-wrap:balance}
+  .read-byline{font-size:var(--fs-meta); color:var(--muted); margin-bottom:30px; line-height:1.55; font-family:var(--font-ui)}
   .read-byline b{color:var(--ink)}
 
-  .read-body{font-family:var(--font-body); font-size:17px; line-height:1.75; color:var(--ink)}
-  .read-body h2{font-family:var(--font-head); font-weight:700; font-size:23px; margin:32px 0 12px}
-  .read-body h3{font-family:var(--font-head); font-weight:700; font-size:19px; margin:26px 0 10px}
-  .read-body h4{font-family:var(--font-head); font-weight:700; font-size:16px; margin:22px 0 8px}
+  .read-body{font-family:var(--font-body); font-size:var(--fs-body-art); line-height:1.65; color:var(--ink); max-width:68ch}
+  .read-body h2{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h2); line-height:1.2; margin:32px 0 12px}
+  .read-body h3{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:26px 0 10px}
+  .read-body h4{font-family:var(--font-head); font-weight:600; font-size:var(--fs-h3); line-height:1.2; margin:22px 0 8px}
   .read-body p{margin:0 0 18px}
   .read-body blockquote{margin:0 0 18px; padding:4px 0 4px 18px; border-left:3px solid var(--accent); color:var(--ink); font-style:italic}
-  .read-body blockquote cite{display:block; font-style:normal; font-size:13px; color:var(--muted); margin-top:6px}
+  .read-body blockquote cite{display:block; font-style:normal; font-size:var(--fs-meta); color:var(--muted); margin-top:6px; font-family:var(--font-body)}
   .read-body ul, .read-body ol{margin:0 0 18px; padding-left:22px}
-  .read-body table{width:100%; border-collapse:collapse; margin:0 0 18px; font-size:14.5px}
+  .read-body table{width:100%; border-collapse:collapse; margin:0 0 18px; font-size:var(--fs-body)}
   .read-body td, .read-body th{border:1px solid var(--line); padding:8px 10px; text-align:left}
   .read-body th{background:var(--paper)}
   .read-body figure{margin:0 0 22px}
   .read-body img{width:100%; border-radius:6px; display:block}
-  .read-body figcaption{font-size:12.5px; color:var(--muted); margin-top:6px; text-align:center}
+  .read-body figcaption{font-size:var(--fs-meta); color:var(--muted); margin-top:6px; text-align:center; font-family:var(--font-body)}
 
   @media (max-width:640px){
-    .nsl-head h1{font-size:30px}
-    .art-title{font-size:24px}
-    .nsl-read h1{font-size:26px}
+    .nsl-head h1{font-size:var(--fs-h1)}
+    .art-title{font-size:var(--fs-h1)}
+    .nsl-read h1{font-size:var(--fs-h1)}
     .editor-meta-row{flex-direction:column; align-items:stretch}
   }
 </style>
@@ -213,7 +216,7 @@
     <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
     <div style="display:flex; align-items:center; gap:8px">
       <span id="readMetaSlot"></span>
-      <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:12.5px; border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
+      <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:var(--fs-ui); font-family:var(--font-ui); border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
     </div>
   </div>
   <div class="read-badge-wrap">
@@ -627,7 +630,7 @@ async function openEditor(id, options = {}){
     clearInterval(periodicTimer);
     btnBackToList.textContent = "← К материалу";
     btnBackToList.onclick = () => location.hash = `#read/${id}`;
-    saveStateEl.innerHTML = `<span style="font-family:var(--font-head); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--warn); background:rgba(164,100,31,.08); padding:3px 8px; border-radius:6px">Предложение правки</span>`;
+    saveStateEl.innerHTML = `<span style="font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); text-transform:uppercase; letter-spacing:.05em; color:var(--warn); background:rgba(164,100,31,.08); padding:3px 8px; border-radius:6px">Предложение правки</span>`;
     btnPublish.textContent = "Отправить предложение правки";
     if(proposeCommentRow) proposeCommentRow.style.display = "flex";
     document.getElementById("editProposeComment").value = "";

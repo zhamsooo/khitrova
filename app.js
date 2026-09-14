@@ -1140,7 +1140,7 @@ async function showMetaPopover(btn){
     <div class="meta-popover-history-sec">
       <div class="meta-popover-history-title">История изменений</div>
       <div class="meta-popover-history-content">
-        <div style="color:var(--muted); font-size:12px; font-style:italic">Загрузка истории…</div>
+        <div style="color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); font-style:italic">Загрузка истории…</div>
       </div>
     </div>
   `;
@@ -1163,7 +1163,7 @@ async function showMetaPopover(btn){
 
       const historyContent = pop.querySelector(".meta-popover-history-content");
       if(error){
-        historyContent.innerHTML = `<div style="color:#b0413e; font-size:12px">Не удалось загрузить историю</div>`;
+        historyContent.innerHTML = `<div style="color:#b0413e; font-size:var(--fs-meta); font-family:var(--font-ui)">Не удалось загрузить историю</div>`;
         return;
       }
 
@@ -1182,7 +1182,7 @@ async function showMetaPopover(btn){
 
       const updates = (revs || []).filter(r => r.kind === "update" || r.kind === "moderate");
       if(!updates.length){
-        historyContent.innerHTML = `<div style="color:var(--muted); font-size:12px; font-style:italic">Правок пока не было</div>`;
+        historyContent.innerHTML = `<div style="color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); font-style:italic">Правок пока не было</div>`;
       } else {
         const listHtml = updates.map(r => {
           const d = formatDate(r.created_at);
@@ -1190,7 +1190,7 @@ async function showMetaPopover(btn){
           if(r.kind === "update"){
             const changed = Object.keys(r.patch || {}).map(k => META_FIELD_NAMES[k] || k).join(", ");
             const comment = r.comment ? ` · <i>«${escapeHtml(r.comment)}»</i>` : "";
-            const isRej = r.status === "rejected" ? ` <span style="color:#b0413e; font-size:11px">(отклонено)</span>` : "";
+            const isRej = r.status === "rejected" ? ` <span style="color:#b0413e; font-size:var(--fs-badge); font-family:var(--font-ui)">(отклонено)</span>` : "";
             return `<li class="meta-popover-history-item">${d} · <b>${escapeHtml(who)}</b> · изменил(а): ${escapeHtml(changed || "данные")}${comment}${isRej}</li>`;
           } else if(r.kind === "moderate"){
             const action = (r.patch && r.patch.status === "confirmed") ? "подтверждение" : "отклонение";
