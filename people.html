@@ -14,18 +14,20 @@
 
 <main class="page">
   <h1>Люди</h1>
-  <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный и таким и останется — дополняйте его.</p>
+  <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный — пожалуйста, дополняйте его.</p>
 
   <div class="toolbar">
     <div class="search">
       <span class="sym">search</span>
-      <input type="search" class="search-input" id="pplSearch" placeholder="Имя, год выпуска, училище" autocomplete="off" spellcheck="false">
+      <input type="search" class="search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
     </div>
     <div class="chips" id="pplFilterChips">
-      <button type="button" class="chip on" data-filter="все"><span class="sym">check</span>Все</button>
-      <button type="button" class="chip" data-filter="ученик">Ученики</button>
-      <button type="button" class="chip" data-filter="коллега">Коллеги</button>
-      <button type="button" class="chip" data-filter="другое">Другое</button>
+      <button type="button" class="chip on" data-filter="все"><span class="sym">check</span>Все<span class="chip-count"></span></button>
+      <button type="button" class="chip" data-filter="choir">Хоровое училище<span class="chip-count"></span></button>
+      <button type="button" class="chip" data-filter="conservatory">Консерватория<span class="chip-count"></span></button>
+      <button type="button" class="chip" data-filter="коллега">Коллеги<span class="chip-count"></span></button>
+      <button type="button" class="chip" data-filter="близкие">Близкие<span class="chip-count"></span></button>
+      <button type="button" class="chip" data-filter="notable">Выдающиеся<span class="chip-count"></span></button>
     </div>
   </div>
 
@@ -35,8 +37,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="app.js"></script>
 <script>
-const REL_LABEL_P = { "ученик":"Ученик(ца)", "коллега":"Коллега", "другое":"Другое" };
 const STATUS_LABEL_P = { unconfirmed:"На проверке", rejected:"Отклонено" };
+const FILTER_VALUES = ["все", "choir", "conservatory", "коллега", "близкие", "notable"];
 
 let allPeople = [];
 let activeFilter = "все";
@@ -54,30 +56,36 @@ function pluralPeople(n){
   return "человек";
 }
 
+// Подпись на карточке: роль · выпуск · заведение, полными словами (F4)
+function personSubLine(p){
+  if(p.relation_type === "коллега") return "Коллега";
+  if(p.relation_type === "другое") return "Близкий человек";
+
+  const eduParts = [];
+  if(p.studied_choir_school) eduParts.push("Хоровое училище");
+  if(p.studied_conservatory) eduParts.push("СПбГК");
+  if(p.studied_assistantship) eduParts.push("ассистентура");
+  const eduStr = eduParts.join(", ");
+
+  let role = null;
+  if(p.gender === "m") role = "Ученик";
+  else if(p.gender === "f") role = "Ученица";
+
+  const bits = [];
+  if(role) bits.push(role);
+  if(p.study_end) bits.push(`выпуск ${p.study_end}`);
+  if(eduStr) bits.push(eduStr);
+
+  if(!bits.length) return "Ученик";
+  let result = bits.join(" · ");
+  if(!role) result = result.charAt(0).toUpperCase() + result.slice(1);
+  return result;
+}
+
 function personCard(p){
   const isMine = p.status !== "confirmed";
   const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
-
-  const roleStr = typeof window.personRelationLabel === "function"
-    ? window.personRelationLabel(p)
-    : (REL_LABEL_P[p.relation_type] || p.relation_type);
-
-  const eduParts = [];
-  if(p.studied_choir_school) eduParts.push("Хор. уч.");
-  if(p.studied_conservatory) eduParts.push("СПбГК");
-  if(p.studied_assistantship) eduParts.push("Ассист.");
-  const eduTag = eduParts.length ? " · " + eduParts.join(" + ") : "";
-
-  let yearsLine = "";
-  if(p.relation_type === "ученик"){
-    if(p.study_start && p.study_end){
-      yearsLine = ` · ${p.study_start}–${p.study_end}`;
-    } else if(p.study_end){
-      yearsLine = ` · Выпуск ${p.study_end}`;
-    }
-  }
-
-  const subLine = `${roleStr}${yearsLine}${eduTag}`;
+  const subLine = personSubLine(p);
   const desc = p.institution || p.notes || "";
 
   const avatarEl = p.avatar_url
@@ -88,13 +96,14 @@ function personCard(p){
   const metaDate = p.created_at ? new Date(p.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
   const metaAuthorDate = metaDate ? `${metaAuthor} · ${metaDate}` : metaAuthor;
   const statusLabel = p.status === "unconfirmed" ? "На проверке" : (p.status === "rejected" ? "Отклонено" : "Подтверждено");
+  const notableStar = p.notable ? `<span class="sym person-notable-star" title="Выдающийся">star</span>` : "";
 
   return `
     <a class="card ${isMine ? 'pending' : ''}" href="person.html?id=${p.id}" tabindex="0">
       <div class="top">
         <div class="ava">${avatarEl}</div>
         <div style="min-width:0; flex:1">
-          <div class="name">${escapeHtml(p.full_name)}</div>
+          <div class="name">${escapeHtml(p.full_name)}${notableStar}</div>
           <div class="sub">${escapeHtml(subLine)}</div>
         </div>
       </div>
@@ -108,11 +117,30 @@ function personCard(p){
   `;
 }
 
+function matchesFilter(p, filter){
+  if(filter === "все") return true;
+  if(filter === "choir") return p.relation_type === "ученик" && !!p.studied_choir_school;
+  if(filter === "conservatory") return p.relation_type === "ученик" && (!!p.studied_conservatory || !!p.studied_assistantship);
+  if(filter === "коллега") return p.relation_type === "коллега";
+  if(filter === "близкие") return p.relation_type === "другое";
+  if(filter === "notable") return !!p.notable;
+  return true;
+}
+
+function updateChipCounts(){
+  document.querySelectorAll("#pplFilterChips .chip").forEach(chip => {
+    const filter = chip.dataset.filter;
+    const count = allPeople.filter(p => matchesFilter(p, filter)).length;
+    const countEl = chip.querySelector(".chip-count");
+    if(countEl) countEl.textContent = ` · ${count}`;
+    chip.dataset.count = count;
+  });
+}
+
 function render(){
   const pplInput = document.getElementById("pplSearch");
   const rawQ = pplInput ? pplInput.value.trim() : "";
-  let list = allPeople;
-  if(activeFilter !== "все") list = list.filter(p => p.relation_type === activeFilter);
+  let list = allPeople.filter(p => matchesFilter(p, activeFilter));
   if(rawQ){
     const normQ = rawQ.toLowerCase().replace(/ё/g, "е").trim();
     const words = normQ.split(/\s+/).filter(Boolean);
@@ -123,7 +151,7 @@ function render(){
         p.conservatory_start, p.conservatory_end,
         p.assistantship_start, p.assistantship_end
       ].filter(Boolean).join(" ");
-      const text = `${p.full_name || ""} ${p.relation_type || ""} ${years} ${p.institution || ""} ${p.notes || ""}`.toLowerCase().replace(/ё/g, "е");
+      const text = `${p.full_name || ""} ${years}`.toLowerCase().replace(/ё/g, "е");
       return words.every(w => text.includes(w));
     });
   }
@@ -164,6 +192,7 @@ async function loadPeople(){
     return;
   }
   allPeople = data || [];
+  updateChipCounts();
   render();
 }
 
@@ -181,7 +210,7 @@ function setChipFilter(f){
 }
 
 const urlFilter = new URLSearchParams(location.search).get("filter");
-if(urlFilter && ["все", "ученик", "коллега", "другое"].includes(urlFilter)){
+if(urlFilter && FILTER_VALUES.includes(urlFilter)){
   setChipFilter(urlFilter);
 }
 

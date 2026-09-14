@@ -261,7 +261,7 @@ function formatDiffVal(field, val){
   if(field === "relation_type"){
     if(val === "ученик") return "Ученик / Ученица";
     if(val === "коллега") return "Коллега";
-    if(val === "другое") return "Другое";
+    if(val === "другое") return "Близкий человек";
   }
   if(field === "author_type"){
     if(val === "ti") return "От Т.И. Хитровой";
@@ -691,7 +691,7 @@ async function loadPeople(){
               <select class="in-p-relation">
                 <option value="ученик" ${p.relation_type === "ученик" ? "selected" : ""}>Ученик / Ученица</option>
                 <option value="коллега" ${p.relation_type === "коллега" ? "selected" : ""}>Коллега</option>
-                <option value="другое" ${p.relation_type === "другое" ? "selected" : ""}>Другое</option>
+                <option value="другое" ${p.relation_type === "другое" ? "selected" : ""}>Близкий человек (родные, друзья)</option>
               </select>
             </div>
           </div>
@@ -736,6 +736,9 @@ async function loadPeople(){
             <label>Источник / ссылка</label>
             <input type="text" class="in-p-source" value="${escapeHtml(p.source || "")}">
           </div>
+          <label style="display:flex; align-items:center; gap:8px; font-size:var(--fs-body-medium); cursor:pointer; margin:4px 0">
+            <input type="checkbox" class="in-p-notable" ${p.notable ? "checked" : ""} style="width:auto; margin:0"> Выдающийся ученик (известный дирижёр, звания, лауреат)
+          </label>
           <div class="row" style="margin-top:12px">
             <button type="button" class="btn-save-confirm">Сохранить и подтвердить</button>
             <button type="button" class="btn-save-only">Сохранить правки</button>
@@ -806,6 +809,7 @@ async function loadPeople(){
       const institution = card.querySelector(".in-p-inst").value.trim();
       const notes = card.querySelector(".in-p-notes").value.trim();
       const source = card.querySelector(".in-p-source").value.trim();
+      const notable = card.querySelector(".in-p-notable").checked;
 
       if(!full_name){
         errEl.textContent = "Укажите имя и фамилию";
@@ -822,6 +826,7 @@ async function loadPeople(){
         institution: institution || null,
         notes: notes || null,
         source: source || null,
+        notable,
         status,
         moderated_by: currentUser.id,
         moderated_by_name: myProfile.full_name,

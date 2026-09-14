@@ -101,7 +101,7 @@ const MODALS_HTML = `
           <select id="inRelation">
             <option value="ученик">Ученик / Ученица</option>
             <option value="коллега">Коллега</option>
-            <option value="другое">Другое</option>
+            <option value="другое">Близкий человек (родные, друзья)</option>
           </select>
           <label class="lbl" for="inRelation">Кем вы приходитесь Т.И.?</label>
         </div>
@@ -193,7 +193,7 @@ const MODALS_HTML = `
               <select id="uPRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
-                <option value="другое">Другое</option>
+                <option value="другое">Близкий человек (родные, друзья)</option>
               </select>
               <label class="lbl" for="uPRelation">Кем приходится Т.И.?</label>
             </div>
@@ -251,6 +251,10 @@ const MODALS_HTML = `
             <label class="lbl" for="uPSource">Источник / ссылка</label>
             <div class="sup">Необязательно</div>
           </div>
+
+          <label class="study-check-row">
+            <input type="checkbox" id="uPNotable"> Выдающийся ученик (известный дирижёр, звания, лауреат)
+          </label>
 
           <div class="err" id="errUPerson"></div>
           <div class="hint" id="uPOwnCardHint" style="display:none">Это будет ваша карточка на сайте.</div>
@@ -341,11 +345,12 @@ function personRelationLabel(p){
     return "Ученик(ца)";
   }
   if(rel === "коллега") return "Коллега";
+  if(rel === "другое") return "Близкий человек";
   return rel;
 }
 window.personRelationLabel = personRelationLabel;
 
-const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Другое" };
+const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Близкий человек" };
 
 function onLoggedIn(profile){
   myProfile = profile;
@@ -622,6 +627,7 @@ async function submitPersonForm(){
   const instInput = document.getElementById("uPInstitution");
   const notesInput = document.getElementById("uPNotes");
   const sourceInput = document.getElementById("uPSource");
+  const notableChk = document.getElementById("uPNotable");
   const errEl = document.getElementById("errUPerson");
   const btn = document.getElementById("btnSubmitUPerson");
 
@@ -643,6 +649,7 @@ async function submitPersonForm(){
   const institution = instInput.value.trim();
   const notes = notesInput.value.trim();
   const source = sourceInput.value.trim();
+  const notable = notableChk ? notableChk.checked : false;
 
   nameInput.classList.toggle("invalid", !full_name);
   if(!full_name){
@@ -670,6 +677,7 @@ async function submitPersonForm(){
       institution: institution || null,
       notes: notes || null,
       source: source || null,
+      notable,
       created_by: currentUser.id,
       created_by_name: myProfile ? myProfile.full_name : ""
     }).select().single();
@@ -703,6 +711,7 @@ async function submitPersonForm(){
     instInput.value = "";
     notesInput.value = "";
     sourceInput.value = "";
+    if(notableChk) notableChk.checked = false;
     if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
 
     showToast("Отправлено на проверку");
@@ -917,7 +926,7 @@ function initHeader(){
     if(cachedConfirmedPeople) return cachedConfirmedPeople;
     if(!fetchingConfirmedPeople){
       fetchingConfirmedPeople = sb.from("people")
-        .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_start, choir_school_end, studied_conservatory, conservatory_start, conservatory_end, studied_assistantship, assistantship_start, assistantship_end, institution, notes, avatar_url")
+        .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_start, choir_school_end, studied_conservatory, conservatory_start, conservatory_end, studied_assistantship, assistantship_start, assistantship_end, institution, notes, avatar_url, notable")
         .eq("status", "confirmed")
         .order("full_name")
         .then(res => {

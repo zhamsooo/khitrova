@@ -287,7 +287,7 @@
               <select id="editRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
-                <option value="другое">Другое</option>
+                <option value="другое">Близкий человек (родные, друзья)</option>
               </select>
               <label class="lbl" for="editRelation">Кем приходится Т.И.?</label>
             </div>
@@ -342,6 +342,10 @@
             <label class="lbl" for="editNotes">Заметки, достижения, биография</label>
             <div class="sup">Необязательно</div>
           </div>
+
+          <label class="study-check-row">
+            <input type="checkbox" id="editNotable"> Выдающийся ученик (известный дирижёр, звания, лауреат)
+          </label>
 
           <div class="field">
             <input type="text" id="editSource" placeholder="Откуда данные (например, kapellanin.ru/id692)">
@@ -468,14 +472,22 @@ function renderPerson(p){
     bcName.textContent = p.full_name;
     const rel = p.relation_type || "ученик";
     if(rel === "ученик"){
-      bcCat.textContent = "Ученики";
-      bcCat.href = "people.html?filter=ученик";
+      if(p.studied_choir_school){
+        bcCat.textContent = "Хоровое училище";
+        bcCat.href = "people.html?filter=choir";
+      } else if(p.studied_conservatory || p.studied_assistantship){
+        bcCat.textContent = "Консерватория";
+        bcCat.href = "people.html?filter=conservatory";
+      } else {
+        bcCat.textContent = "Ученики";
+        bcCat.href = "people.html?filter=все";
+      }
     } else if(rel === "коллега"){
       bcCat.textContent = "Коллеги";
       bcCat.href = "people.html?filter=коллега";
     } else {
-      bcCat.textContent = "Другое";
-      bcCat.href = "people.html?filter=другое";
+      bcCat.textContent = "Близкие";
+      bcCat.href = "people.html?filter=близкие";
     }
   }
 
@@ -717,7 +729,7 @@ async function loadPerson(){
 
   try{
     const { data: students } = await sb.from("people")
-      .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_end, studied_conservatory, conservatory_end, studied_assistantship, assistantship_end, avatar_url")
+      .select("id, full_name, gender, relation_type, study_start, study_end, studied_choir_school, choir_school_end, studied_conservatory, conservatory_end, studied_assistantship, assistantship_end, avatar_url, notable")
       .eq("relation_type", "ученик")
       .eq("status", "confirmed");
     if(students){
@@ -777,6 +789,7 @@ function openEditModal(p){
   document.getElementById("editInstitution").value = p.institution || "";
   document.getElementById("editNotes").value = p.notes || "";
   document.getElementById("editSource").value = p.source || "";
+  document.getElementById("editNotable").checked = !!p.notable;
   document.getElementById("editRevisionComment").value = "";
   document.getElementById("errEditPerson").style.display = "none";
 
@@ -836,6 +849,7 @@ function getPersonDiff(original, current){
     { key: "institution", type: "string" },
     { key: "notes", type: "string" },
     { key: "source", type: "string" },
+    { key: "notable", type: "boolean" },
     { key: "avatar_url", type: "string" }
   ];
 
@@ -967,6 +981,7 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     const institution = document.getElementById("editInstitution").value.trim() || null;
     const notes = document.getElementById("editNotes").value.trim() || null;
     const source = document.getElementById("editSource").value.trim() || null;
+    const notable = document.getElementById("editNotable").checked;
     const comment = document.getElementById("editRevisionComment").value.trim() || null;
 
     const newValues = {
@@ -984,6 +999,7 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
       institution,
       notes,
       source,
+      notable,
       avatar_url: finalAvatarUrl
     };
 
