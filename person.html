@@ -371,7 +371,7 @@
 <div class="overlay" id="editPersonOverlay">
   <div class="modal modal-person-edit">
     <div class="modal-head">
-      <h2>Редактировать данные человека</h2>
+      <h2>Предложить правку данных</h2>
       <button class="close" data-close>×</button>
     </div>
 
@@ -389,7 +389,7 @@
             </div>
           </div>
 
-          <label>Имя и фамилия</label>
+          <label>Имя и фамилия *</label>
           <input type="text" id="editFullName" placeholder="Имя Фамилия">
 
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
@@ -444,26 +444,29 @@
           </div>
         </div>
 
-        <!-- Правая колонка: работа, биография, источник -->
+        <!-- Правая колонка: работа, биография, источник, комментарий -->
         <div class="modal-col" style="display:flex; flex-direction:column">
           <label>Место работы / должность</label>
           <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
 
           <label>Заметки, достижения, биография</label>
-          <textarea id="editNotes" placeholder="Звания, достижения, вехи карьеры, воспоминания" style="flex:1; min-height:160px"></textarea>
+          <textarea id="editNotes" placeholder="Звания, достижения, вехи карьеры, воспоминания" style="flex:1; min-height:140px"></textarea>
 
           <label>Источник информации / ссылка</label>
           <input type="text" id="editSource" placeholder="Откуда данные (например, kapellanin.ru/id692)">
+
+          <label>Комментарий к правке (необязательно)</label>
+          <input type="text" id="editRevisionComment" placeholder="Пояснение: что изменили и почему">
         </div>
       </div>
     </div>
 
-    <!-- Зафиксированный подвал с кнопкой "Сохранить" -->
+    <!-- Зафиксированный подвал с кнопкой "Отправить правку" -->
     <div class="modal-footer">
       <div class="err" id="errEditPerson" style="margin:0"></div>
       <div style="display:flex; gap:10px; margin-left:auto">
         <button type="button" class="btn-cancel" data-close>Отмена</button>
-        <button type="button" class="primary" id="btnSavePersonEdit">Сохранить</button>
+        <button type="button" class="primary" id="btnSavePersonEdit">Отправить правку</button>
       </div>
     </div>
   </div>
@@ -614,8 +617,9 @@ function renderPerson(p){
             ${isUnconfirmed ? `<span class="person-badge st-${p.status}">${p.status === "rejected" ? "Отклонено" : "На проверке"}</span>` : ""}
           </div>
           <div class="person-actions">
-            <button class="btn-edit-card" id="btnOpenEdit">✎ Редактировать карточку</button>
+            <button class="btn-edit-card" id="btnOpenEdit">✎ Предложить правку</button>
           </div>
+          <div id="personPendingAlert"></div>
         </div>
       </div>
 
@@ -640,6 +644,8 @@ function renderPerson(p){
   `;
 
   document.getElementById("personContent").innerHTML = html;
+
+  updatePendingBanner(p.id);
 
   document.getElementById("btnOpenEdit").addEventListener("click", () => {
     if(!currentUser){
@@ -889,10 +895,91 @@ function openEditModal(p){
   document.getElementById("editInstitution").value = p.institution || "";
   document.getElementById("editNotes").value = p.notes || "";
   document.getElementById("editSource").value = p.source || "";
+  document.getElementById("editRevisionComment").value = "";
   document.getElementById("errEditPerson").style.display = "none";
+
+  const saveBtn = document.getElementById("btnSavePersonEdit");
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Отправить правку";
 
   updateAvatarPreview(editingAvatarUrl, p.full_name);
   open_("editPersonOverlay");
+}
+
+async function updatePendingBanner(pId){
+  const el = document.getElementById("personPendingAlert");
+  if(!el) return;
+  if(!currentUser || !pId){ el.innerHTML = ""; return; }
+  try {
+    const { data: revs } = await sb.from("revisions")
+      .select("id, created_at, comment")
+      .eq("entity_type", "person")
+      .eq("entity_id", pId)
+      .eq("author_id", currentUser.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    if(revs && revs.length > 0){
+      const latest = revs[0];
+      el.innerHTML = `
+        <div class="pending-alert-box" style="margin-top:14px; padding:10px 14px; background:rgba(164,100,31,.08); border:1px solid rgba(164,100,31,.25); border-radius:8px; font-size:12.5px; color:var(--ink); line-height:1.45">
+          <div style="display:flex; align-items:center; gap:6px">
+            <span class="person-badge" style="background:rgba(164,100,31,.15); color:var(--warn)">Правка на проверке</span>
+            <span style="font-weight:700; color:var(--warn)">Ваша правка ожидает подтверждения модератором</span>
+          </div>
+          ${latest.comment ? `<div style="font-size:12px; color:var(--muted); margin-top:4px">Комментарий к правке: ${escapeHtml(latest.comment)}</div>` : ""}
+        </div>
+      `;
+    } else {
+      el.innerHTML = "";
+    }
+  } catch(e){
+    console.error("Failed to check pending revisions:", e);
+  }
+}
+
+function getPersonDiff(original, current){
+  const patch = {};
+  const fields = [
+    { key: "full_name", type: "string" },
+    { key: "gender", type: "string" },
+    { key: "relation_type", type: "string" },
+    { key: "studied_choir_school", type: "boolean" },
+    { key: "choir_school_end", type: "number" },
+    { key: "studied_conservatory", type: "boolean" },
+    { key: "conservatory_end", type: "number" },
+    { key: "studied_assistantship", type: "boolean" },
+    { key: "assistantship_end", type: "number" },
+    { key: "study_start", type: "number" },
+    { key: "study_end", type: "number" },
+    { key: "institution", type: "string" },
+    { key: "notes", type: "string" },
+    { key: "source", type: "string" },
+    { key: "avatar_url", type: "string" }
+  ];
+
+  for(const f of fields){
+    const k = f.key;
+    const oldVal = original[k] ?? null;
+    const newVal = current[k] ?? null;
+
+    if(f.type === "boolean"){
+      const bOld = !!oldVal;
+      const bNew = !!newVal;
+      if(bOld !== bNew) patch[k] = bNew;
+    } else if(f.type === "number"){
+      const nOld = (oldVal !== null && oldVal !== undefined && oldVal !== "") ? parseInt(oldVal, 10) : null;
+      const nNew = (newVal !== null && newVal !== undefined && newVal !== "") ? parseInt(newVal, 10) : null;
+      if(nOld !== nNew) patch[k] = nNew;
+    } else {
+      const sOld = (oldVal || "").trim();
+      const sNew = (newVal || "").trim();
+      if(sOld !== sNew){
+        patch[k] = sNew || null;
+      }
+    }
+  }
+
+  return patch;
 }
 
 document.getElementById("editRelation").addEventListener("change", e => {
@@ -952,7 +1039,7 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
 
   const saveBtn = document.getElementById("btnSavePersonEdit");
   saveBtn.disabled = true;
-  saveBtn.textContent = "Сохранение…";
+  saveBtn.textContent = "Отправка…";
 
   try{
     let finalAvatarUrl = editingAvatarUrl;
@@ -998,8 +1085,9 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     const institution = document.getElementById("editInstitution").value.trim() || null;
     const notes = document.getElementById("editNotes").value.trim() || null;
     const source = document.getElementById("editSource").value.trim() || null;
+    const comment = document.getElementById("editRevisionComment").value.trim() || null;
 
-    const updates = {
+    const newValues = {
       full_name,
       gender,
       relation_type,
@@ -1014,35 +1102,42 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
       institution,
       notes,
       source,
-      avatar_url: finalAvatarUrl,
-      updated_by: currentUser.id,
-      updated_by_name: (myProfile && myProfile.full_name) || currentUser.email,
-      updated_at: new Date().toISOString()
+      avatar_url: finalAvatarUrl
     };
 
-    const { data: updatedPerson, error: updateErr } = await sb
-      .from("people")
-      .update(updates)
-      .eq("id", currentPerson.id)
-      .select()
-      .single();
+    const patch = getPersonDiff(currentPerson, newValues);
 
-    if(updateErr) throw new Error(updateErr.message);
-
-    currentPerson = updatedPerson;
-    renderPerson(updatedPerson);
-    if(allStudentsList.length){
-      const idx = allStudentsList.findIndex(s => s.id === updatedPerson.id);
-      if(idx !== -1) allStudentsList[idx] = updatedPerson;
-      renderPeersWidget(updatedPerson, allStudentsList);
+    if(Object.keys(patch).length === 0){
+      errEl.textContent = "Вы не изменили ни одного поля";
+      errEl.style.display = "block";
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Отправить правку";
+      return;
     }
+
+    const { error: revErr } = await sb.from("revisions").insert({
+      entity_type: "person",
+      entity_id: currentPerson.id,
+      kind: "update",
+      patch,
+      status: "pending",
+      author_id: currentUser.id,
+      author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
+      comment
+    });
+
+    if(revErr) throw new Error(revErr.message);
+
     close_("editPersonOverlay");
+    if(typeof showToast === "function") showToast("Правка отправлена на проверку");
+    await updatePendingBanner(currentPerson.id);
+    if(typeof updateModBadge === "function") updateModBadge();
   }catch(err){
     errEl.textContent = err.message;
     errEl.style.display = "block";
   }finally{
     saveBtn.disabled = false;
-    saveBtn.textContent = "Сохранить";
+    saveBtn.textContent = "Отправить правку";
   }
 });
 

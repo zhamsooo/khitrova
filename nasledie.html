@@ -196,6 +196,12 @@
         <input type="text" id="editArtAuthor" placeholder="Имя и фамилия автора">
       </div>
     </div>
+    <div class="editor-meta-row" id="proposeCommentRow" style="display:none">
+      <div class="editor-meta-col">
+        <label>Комментарий к правке (необязательно)</label>
+        <input type="text" id="editProposeComment" placeholder="Пояснение для модератора: что изменили и почему">
+      </div>
+    </div>
   </div>
 
   <input type="text" id="artTitle" class="art-title" placeholder="Заголовок">
@@ -203,12 +209,16 @@
 </div>
 
 <div class="nsl-read" id="nslRead" style="display:none">
-  <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
+    <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
+    <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:12.5px; border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
+  </div>
   <div class="read-badge-wrap">
     <span class="read-category-badge" id="readCategoryBadge"></span>
   </div>
   <h1 id="readTitle"></h1>
   <div class="read-byline" id="readByline"></div>
+  <div id="readPendingAlert"></div>
   <div class="read-body" id="readBody"></div>
 </div>
 
@@ -457,6 +467,7 @@ function scheduleLocalSave(){
 }
 
 async function saveToServer(){
+  if(isProposalMode) return;
   if(!dirty || !editor || !currentArticleId) return;
   let data;
   try{ data = await editor.save(); } catch(e){ return; }
@@ -495,9 +506,10 @@ async function saveToServer(){
 async function leaveEditor(){
   clearTimeout(saveTimer);
   clearInterval(periodicTimer);
-  await saveToServer();
+  if(!isProposalMode) await saveToServer();
   if(editor){ try{ await editor.destroy(); }catch(e){} editor = null; }
   currentArticleId = null;
+  isProposalMode = false;
 }
 
 function setEditorAuthorType(cat){
@@ -542,9 +554,23 @@ editArtSource.addEventListener("input", scheduleLocalSave);
 editArtYear.addEventListener("input", scheduleLocalSave);
 editArtAuthor.addEventListener("input", scheduleLocalSave);
 
-async function openEditor(id){
+async function openEditor(id, options = {}){
+  const isProposal = !!options.isProposal;
+  isProposalMode = isProposal;
+
   const { data: art, error } = await sb.from("articles").select("*").eq("id", id).maybeSingle();
-  if(error || !art || art.created_by !== currentUser.id){ location.hash = "#list"; return; }
+  if(error || !art){ location.hash = "#list"; return; }
+
+  if(!isProposal){
+    if(art.status === "confirmed"){
+      location.hash = `#propose/${id}`;
+      return;
+    }
+    if(art.created_by !== currentUser.id && (!myProfile || !myProfile.is_moderator)){
+      location.hash = "#list";
+      return;
+    }
+  }
 
   currentArticleId = art.id;
   dirty = false;
@@ -561,25 +587,27 @@ async function openEditor(id){
 
   let initialData = (art.content && art.content.blocks) ? art.content : { blocks: [] };
 
-  try{
-    const raw = localStorage.getItem("nsl_draft_" + id);
-    if(raw){
-      const local = JSON.parse(raw);
-      if(local.ts > new Date(art.updated_at).getTime() + 2000){
-        if(confirm("Найден несохранённый черновик — возможно, после разрыва связи. Восстановить его вместо сохранённой версии?")){
-          initialData = local.content;
-          if(local.title) titleInput.value = local.title;
-          if(local.author_type) setEditorAuthorType(local.author_type);
-          if(local.type) editArtType.value = local.type;
-          if(local.source) editArtSource.value = local.source;
-          if(local.original_year) editArtYear.value = local.original_year;
-          if(local.author_name) editArtAuthor.value = local.author_name;
-        } else {
-          localStorage.removeItem("nsl_draft_" + id);
+  if(!isProposal){
+    try{
+      const raw = localStorage.getItem("nsl_draft_" + id);
+      if(raw){
+        const local = JSON.parse(raw);
+        if(local.ts > new Date(art.updated_at).getTime() + 2000){
+          if(confirm("Найден несохранённый черновик — возможно, после разрыва связи. Восстановить его вместо сохранённой версии?")){
+            initialData = local.content;
+            if(local.title) titleInput.value = local.title;
+            if(local.author_type) setEditorAuthorType(local.author_type);
+            if(local.type) editArtType.value = local.type;
+            if(local.source) editArtSource.value = local.source;
+            if(local.original_year) editArtYear.value = local.original_year;
+            if(local.author_name) editArtAuthor.value = local.author_name;
+          } else {
+            localStorage.removeItem("nsl_draft_" + id);
+          }
         }
       }
-    }
-  }catch(e){}
+    }catch(e){}
+  }
 
   document.getElementById("editorjs").innerHTML = "";
   editor = new EditorJS({
@@ -587,23 +615,105 @@ async function openEditor(id){
     placeholder: "Начните писать…",
     data: initialData,
     tools: EDITOR_TOOLS,
-    onChange: scheduleLocalSave
+    onChange: isProposal ? () => {} : scheduleLocalSave
   });
-  titleInput.oninput = scheduleLocalSave;
+  titleInput.oninput = isProposal ? () => {} : scheduleLocalSave;
 
-  btnPublish.textContent = art.status === "rejected" ? "Отправить повторно" : "Отправить на публикацию";
-  btnPublish.onclick = async () => {
-    clearTimeout(saveTimer); clearInterval(periodicTimer);
-    dirty = true;
-    await saveToServer();
-    const { error } = await sb.from("articles").update({ status: "unconfirmed" }).eq("id", currentArticleId);
-    if(error){ alert(error.message); return; }
-    alert("Отправлено на публикацию — модератор проверит, и материал появится на сайте.");
-    location.hash = "#list";
-  };
+  const proposeCommentRow = document.getElementById("proposeCommentRow");
+  if(isProposal){
+    clearInterval(periodicTimer);
+    btnBackToList.textContent = "← К материалу";
+    btnBackToList.onclick = () => location.hash = `#read/${id}`;
+    saveStateEl.innerHTML = `<span style="font-family:var(--font-head); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--warn); background:rgba(164,100,31,.08); padding:3px 8px; border-radius:6px">Предложение правки</span>`;
+    btnPublish.textContent = "Отправить предложение правки";
+    if(proposeCommentRow) proposeCommentRow.style.display = "flex";
+    document.getElementById("editProposeComment").value = "";
 
-  clearInterval(periodicTimer);
-  periodicTimer = setInterval(saveToServer, 10000);
+    btnPublish.onclick = async () => {
+      btnPublish.disabled = true;
+      btnPublish.textContent = "Отправка…";
+      try {
+        const savedBlocks = await editor.save();
+        const patch = {};
+
+        const newTitle = titleInput.value.trim();
+        if(newTitle !== (art.title || "").trim()) patch.title = newTitle;
+
+        const newAuthorType = currentAuthorType;
+        if(newAuthorType !== (art.author_type || "community")) patch.author_type = newAuthorType;
+
+        const newType = editArtType.value;
+        if(newType !== (art.type || "статья")) patch.type = newType;
+
+        const newSource = (newAuthorType === "ti" ? editArtSource.value.trim() : "") || null;
+        if(newSource !== (art.source || null)) patch.source = newSource;
+
+        const yrVal = newAuthorType === "ti" && editArtYear.value ? parseInt(editArtYear.value, 10) : null;
+        if(yrVal !== (art.original_year || null)) patch.original_year = yrVal;
+
+        const newAuthorName = (newAuthorType === "ti" ? "Татьяна Ивановна Хитрова" : editArtAuthor.value.trim()) || null;
+        if(newAuthorName !== (art.author_name || null)) patch.author_name = newAuthorName;
+
+        const oldBlocksJson = JSON.stringify((art.content && art.content.blocks) || []);
+        const newBlocksJson = JSON.stringify(savedBlocks.blocks || []);
+        if(oldBlocksJson !== newBlocksJson){
+          patch.content = {
+            blocks: savedBlocks.blocks,
+            meta: { author_type: newAuthorType, type: newType, author_name: newAuthorName, source: newSource, original_year: yrVal }
+          };
+        }
+
+        if(Object.keys(patch).length === 0){
+          alert("Вы не внесли никаких изменений");
+          btnPublish.disabled = false;
+          btnPublish.textContent = "Отправить предложение правки";
+          return;
+        }
+
+        const comment = (document.getElementById("editProposeComment").value || "").trim() || null;
+
+        const { error: revErr } = await sb.from("revisions").insert({
+          entity_type: "article",
+          entity_id: art.id,
+          kind: "update",
+          patch,
+          status: "pending",
+          author_id: currentUser.id,
+          author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
+          comment
+        });
+
+        if(revErr) throw new Error(revErr.message);
+
+        if(typeof showToast === "function") showToast("Правка отправлена на проверку");
+        if(typeof updateModBadge === "function") updateModBadge();
+        location.hash = `#read/${id}`;
+      } catch(err){
+        alert("Ошибка отправки: " + err.message);
+        btnPublish.disabled = false;
+        btnPublish.textContent = "Отправить предложение правки";
+      }
+    };
+  } else {
+    btnBackToList.textContent = "← К списку";
+    btnBackToList.onclick = () => location.hash = "#list";
+    if(proposeCommentRow) proposeCommentRow.style.display = "none";
+    btnPublish.textContent = art.status === "rejected" ? "Отправить повторно" : "Отправить на публикацию";
+    btnPublish.onclick = async () => {
+      clearTimeout(saveTimer); clearInterval(periodicTimer);
+      dirty = true;
+      await saveToServer();
+      const { error } = await sb.from("articles").update({ status: "unconfirmed" }).eq("id", currentArticleId);
+      if(error){ alert(error.message); return; }
+      if(typeof showToast === "function") showToast("Отправлено на публикацию");
+      else alert("Отправлено на публикацию — модератор проверит, и материал появится на сайте.");
+      if(typeof updateModBadge === "function") updateModBadge();
+      location.hash = "#list";
+    };
+
+    clearInterval(periodicTimer);
+    periodicTimer = setInterval(saveToServer, 10000);
+  }
 
   showView("editor");
 }

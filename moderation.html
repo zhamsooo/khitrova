@@ -97,6 +97,42 @@
     margin-bottom:10px; font-weight:600;
   }
   .art-editor-link:hover{text-decoration:underline}
+
+  /* Revisions */
+  .rev-header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap}
+  .rev-badge{
+    display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    padding:2px 8px; border-radius:12px;
+  }
+  .rev-badge-person{background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe}
+  .rev-badge-event{background:#ecfdf5; color:#065f46; border:1px solid #a7f3d0}
+  .rev-badge-article{background:#fef3c7; color:#92400e; border:1px solid #fde68a}
+
+  .rev-entity-link{
+    font-weight:600; font-size:16px; color:var(--ink); text-decoration:none;
+    display:inline-block; margin-bottom:6px;
+  }
+  .rev-entity-link:hover{color:var(--accent); text-decoration:underline}
+
+  .rev-comment{
+    background:var(--paper); border-left:3px solid var(--accent); padding:8px 12px;
+    font-size:12.5px; margin:8px 0 12px; border-radius:0 6px 6px 0; color:var(--ink);
+    line-height:1.5;
+  }
+
+  .rev-diff-table{
+    width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:12.5px;
+    background:var(--paper); border:1px solid var(--line); border-radius:8px; overflow:hidden;
+  }
+  .rev-diff-table th, .rev-diff-table td{
+    padding:6px 10px; text-align:left; vertical-align:top; border-bottom:1px solid var(--line);
+  }
+  .rev-diff-table th{
+    font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); background:#faf8f5;
+  }
+  .rev-diff-table tr:last-child td{border-bottom:none}
+  .rev-diff-old{color:#b0413e; word-break:break-word}
+  .rev-diff-new{color:#2a7a4c; font-weight:600; word-break:break-word}
 </style>
 </head>
 <body data-page="moderation">
@@ -106,6 +142,12 @@
   <div class="sub">События, люди и материалы «Наследия», предложенные читателями, — отредактируйте неточности при необходимости и подтвердите или отклоните.</div>
   <div id="modGate"><div class="mod-state">Проверяем доступ…</div></div>
   <div id="modBody" style="display:none">
+    <div class="mod-section-title">
+      <span>Правки к записям</span>
+      <span class="mod-section-count" id="countRevisions">0</span>
+    </div>
+    <div id="modRevisions"><div class="mod-state">Загрузка…</div></div>
+
     <div class="mod-section-title">
       <span>События на таймлайн</span>
       <span class="mod-section-count" id="countEvents">0</span>
@@ -155,9 +197,250 @@ async function initModeration(){
   gate.style.display = "none";
   body.style.display = "block";
 
+  loadRevisions();
   loadEvents();
   loadPeople();
   loadArticles();
+}
+
+// -------------------- 0. ПРАВКИ К ЗАПИСЯМ --------------------
+const FIELD_LABELS = {
+  // people
+  full_name: "Имя и фамилия",
+  gender: "Пол",
+  relation_type: "Отношение к Т.И.",
+  studied_choir_school: "Училище им. Глинки",
+  choir_school_start: "Училище (начало)",
+  choir_school_end: "Выпуск училища",
+  studied_conservatory: "Консерватория",
+  conservatory_start: "Консерватория (начало)",
+  conservatory_end: "Выпуск консерватории",
+  studied_assistantship: "Ассистентура",
+  assistantship_start: "Ассистентура (начало)",
+  assistantship_end: "Окончание ассистентуры",
+  study_start: "Годы учёбы (начало)",
+  study_end: "Годы учёбы (окончание)",
+  institution: "Место работы / должность",
+  notes: "Заметки / биография",
+  source: "Источник / ссылка",
+  avatar_url: "Фотография",
+  verification_hidden: "Скрыть верификацию",
+  // events
+  event_year: "Год события",
+  title: "Название",
+  description: "Описание события",
+  // articles
+  type: "Тип материала",
+  author_type: "Раздел авторства",
+  author_name: "Имя автора",
+  original_year: "Год первоисточника",
+  content: "Текст статьи",
+  cover_image_url: "Обложка"
+};
+
+function formatDiffVal(field, val){
+  if(val === null || val === undefined || val === "") return '<i style="color:var(--muted)">—</i>';
+  if(typeof val === "boolean") return val ? "Да" : "Нет";
+  if(field === "gender"){
+    if(val === "m") return "Мужской";
+    if(val === "f") return "Женский";
+  }
+  if(field === "relation_type"){
+    if(val === "ученик") return "Ученик / Ученица";
+    if(val === "коллега") return "Коллега";
+    if(val === "другое") return "Другое";
+  }
+  if(field === "author_type"){
+    if(val === "ti") return "От Т.И. Хитровой";
+    if(val === "community") return "От учеников и коллег";
+  }
+  if(field === "type" && ART_TYPE_LABEL[val]){
+    return ART_TYPE_LABEL[val];
+  }
+  if(field === "content"){
+    if(typeof val === "object"){
+      const bCount = (val.blocks && val.blocks.length) || 0;
+      return `[Статья: ${bCount} блоков]`;
+    }
+  }
+  return escapeHtml(String(val));
+}
+
+async function loadRevisions(){
+  const content = document.getElementById("modRevisions");
+  const countEl = document.getElementById("countRevisions");
+  const { data: revs, error } = await sb
+    .from("revisions")
+    .select("*")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if(error){
+    content.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`;
+    return;
+  }
+
+  countEl.textContent = revs ? revs.length : 0;
+  if(!revs || !revs.length){
+    content.innerHTML = `<div class="mod-state">Пока пусто — предложений правок на проверке нет.</div>`;
+    return;
+  }
+
+  // Загружаем исходные записи для отображения старых значений и заголовков
+  const evIds = [...new Set(revs.filter(r => r.entity_type === "event").map(r => r.entity_id))];
+  const peoIds = [...new Set(revs.filter(r => r.entity_type === "person").map(r => r.entity_id))];
+  const artIds = [...new Set(revs.filter(r => r.entity_type === "article").map(r => r.entity_id))];
+
+  const [evRes, peoRes, artRes] = await Promise.all([
+    evIds.length ? sb.from("events").select("*").in("id", evIds) : { data: [] },
+    peoIds.length ? sb.from("people").select("*").in("id", peoIds) : { data: [] },
+    artIds.length ? sb.from("articles").select("*").in("id", artIds) : { data: [] }
+  ]);
+
+  const evMap = new Map((evRes.data || []).map(e => [e.id, e]));
+  const peoMap = new Map((peoRes.data || []).map(p => [p.id, p]));
+  const artMap = new Map((artRes.data || []).map(a => [a.id, a]));
+
+  content.innerHTML = revs.map(r => {
+    let target = null;
+    let entityLabel = "";
+    let entityUrl = "#";
+    let entityBadgeClass = "";
+
+    if(r.entity_type === "person"){
+      target = peoMap.get(r.entity_id);
+      entityLabel = target ? target.full_name : "Карточка человека";
+      entityUrl = `person.html?id=${encodeURIComponent(r.entity_id)}`;
+      entityBadgeClass = "rev-badge-person";
+    } else if(r.entity_type === "event"){
+      target = evMap.get(r.entity_id);
+      entityLabel = target ? `${target.event_year} г. — ${target.title}` : "Событие на таймлайне";
+      entityUrl = "index.html";
+      entityBadgeClass = "rev-badge-event";
+    } else if(r.entity_type === "article"){
+      target = artMap.get(r.entity_id);
+      entityLabel = target ? target.title : "Материал «Наследия»";
+      entityUrl = `nasledie.html#read/${encodeURIComponent(r.entity_id)}`;
+      entityBadgeClass = "rev-badge-article";
+    }
+
+    const typeBadgeText = r.entity_type === "person" ? "Человек" : r.entity_type === "event" ? "Событие" : "Материал «Наследия»";
+
+    // Собираем список изменённых полей
+    const patch = r.patch || {};
+    const patchKeys = Object.keys(patch);
+    let diffRows = "";
+    let hasArticleContent = false;
+
+    if(!patchKeys.length){
+      diffRows = `<tr><td colspan="3" style="text-align:center; color:var(--muted)">Нет изменённых полей</td></tr>`;
+    } else {
+      diffRows = patchKeys.map(k => {
+        const oldVal = target ? target[k] : undefined;
+        const newVal = patch[k];
+        if(k === "content" && newVal && typeof newVal === "object") hasArticleContent = true;
+        return `
+          <tr>
+            <td><b>${escapeHtml(FIELD_LABELS[k] || k)}</b></td>
+            <td class="rev-diff-old">${formatDiffVal(k, oldVal)}</td>
+            <td class="rev-diff-new">${formatDiffVal(k, newVal)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    return `
+      <div class="mod-card" data-rev-id="${r.id}">
+        <div class="rev-header">
+          <span class="rev-badge ${entityBadgeClass}">${typeBadgeText}</span>
+          <span style="font-size:11.5px; color:var(--muted)">${formatDate(r.created_at)}</span>
+        </div>
+        <div>
+          <a href="${entityUrl}" target="_blank" class="rev-entity-link">${escapeHtml(entityLabel)} ↗</a>
+        </div>
+        <div class="meta">
+          Предложил(а): <b>${escapeHtml(r.author_name || "неизвестно")}</b>
+        </div>
+        ${r.comment ? `<div class="rev-comment"><b>Комментарий к правке:</b> ${escapeHtml(r.comment)}</div>` : ""}
+
+        <table class="rev-diff-table">
+          <thead>
+            <tr>
+              <th style="width:28%">Поле</th>
+              <th style="width:36%">Текущее значение</th>
+              <th style="width:36%">Предлагаемое значение</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${diffRows}
+          </tbody>
+        </table>
+
+        ${hasArticleContent ? `
+          <button type="button" class="btn-toggle" data-toggle-rev-content>Показать текст статьи из правки</button>
+          <div class="art-preview" style="display:none"></div>
+        ` : ""}
+
+        <textarea class="mod-note" placeholder="Заметка автору (необязательно) — сохранится в истории ревизии"></textarea>
+        <div class="row">
+          <button type="button" class="btn-confirm btn-apply-rev">Применить правку</button>
+          <button type="button" class="btn-reject btn-reject-rev">Отклонить</button>
+        </div>
+        <div class="err"></div>
+      </div>
+    `;
+  }).join("");
+
+  content.querySelectorAll(".mod-card").forEach(card => {
+    const revId = card.dataset.revId;
+    const rev = revs.find(r => r.id === revId);
+    const noteEl = card.querySelector(".mod-note");
+    const errEl = card.querySelector(".err");
+    const btnApply = card.querySelector(".btn-apply-rev");
+    const btnReject = card.querySelector(".btn-reject-rev");
+
+    // Collapsible preview for article content if present
+    const toggleBtn = card.querySelector("[data-toggle-rev-content]");
+    const previewEl = card.querySelector(".art-preview");
+    if(toggleBtn && previewEl && rev && rev.patch && rev.patch.content){
+      toggleBtn.addEventListener("click", () => {
+        const isHidden = previewEl.style.display === "none";
+        if(isHidden && !previewEl.innerHTML){
+          previewEl.innerHTML = (window.renderArticleContent ? window.renderArticleContent(rev.patch.content) : "") || "<p><i>Пусто</i></p>";
+        }
+        previewEl.style.display = isHidden ? "block" : "none";
+        toggleBtn.textContent = isHidden ? "Скрыть текст статьи из правки" : "Показать текст статьи из правки";
+      });
+    }
+
+    async function handleAction(action){
+      errEl.style.display = "none";
+      btnApply.disabled = true;
+      btnReject.disabled = true;
+      const note = noteEl.value.trim() || null;
+      const rpcName = action === "apply" ? "apply_revision" : "reject_revision";
+
+      const { error } = await sb.rpc(rpcName, { revision_id: revId, note });
+      if(error){
+        errEl.textContent = "Ошибка: " + error.message;
+        errEl.style.display = "block";
+        btnApply.disabled = false;
+        btnReject.disabled = false;
+        return;
+      }
+
+      card.remove();
+      const rem = content.querySelectorAll(".mod-card").length;
+      countEl.textContent = rem;
+      if(window.updateModBadge) window.updateModBadge();
+      if(!rem){
+        content.innerHTML = `<div class="mod-state">Пока пусто — предложений правок на проверке нет.</div>`;
+      }
+    }
+
+    btnApply.addEventListener("click", () => handleAction("apply"));
+    btnReject.addEventListener("click", () => handleAction("reject"));
+  });
 }
 
 // -------------------- 1. СОБЫТИЯ --------------------

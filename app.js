@@ -287,15 +287,17 @@ async function updateModBadge(){
   const badge = document.getElementById("navModBadge");
   if(!badge) return;
   try{
-    const [evRes, pRes, artRes] = await Promise.all([
+    const [evRes, pRes, artRes, revRes] = await Promise.all([
       sb.from("events").select("*", { count: "exact", head: true }).eq("status", "unconfirmed"),
       sb.from("people").select("*", { count: "exact", head: true }).eq("status", "unconfirmed"),
-      sb.from("articles").select("*", { count: "exact", head: true }).eq("status", "unconfirmed")
+      sb.from("articles").select("*", { count: "exact", head: true }).eq("status", "unconfirmed"),
+      sb.from("revisions").select("*", { count: "exact", head: true }).eq("status", "pending")
     ]);
     let total = 0;
     if(!evRes.error && evRes.count) total += evRes.count;
     if(!pRes.error && pRes.count) total += pRes.count;
     if(!artRes.error && artRes.count) total += artRes.count;
+    if(!revRes.error && revRes.count) total += revRes.count;
     if(total > 0){
       badge.textContent = total;
       badge.style.display = "inline-flex";

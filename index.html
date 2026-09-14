@@ -69,6 +69,12 @@
     margin-top:10px; width:100%; background:var(--confirmed); color:#fff; border:none; border-radius:8px;
     padding:7px 0; font-size:12.5px; cursor:pointer; font-family:var(--font-head); font-weight:700;
   }
+  .et-propose-btn{
+    margin-top:8px; width:100%; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px;
+    padding:7px 0; font-size:12px; cursor:pointer; font-family:var(--font-head); font-weight:700;
+    transition:border-color .15s, background .15s;
+  }
+  .et-propose-btn:hover{border-color:var(--ink); background:#faf8f5}
 </style>
 </head>
 <body data-page="index">
@@ -79,6 +85,43 @@
 <div class="ev-tip" id="evTip">
   <div id="evTipBody"></div>
   <button class="et-confirm" id="etConfirmBtn" style="display:none">Подтвердить</button>
+  <button class="et-propose-btn" id="etProposeBtn" style="display:none">Предложить правку</button>
+</div>
+
+<!-- Модалка предложения правки события -->
+<div class="overlay overlay-bottom-sheet" id="editEventOverlay">
+  <div class="modal modal-unified-add">
+    <div class="modal-header">
+      <h2>Предложить правку события</h2>
+      <button class="modal-close-btn" data-close aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-body">
+      <form id="formEditEvent" onsubmit="return false;">
+        <label for="editEvYear">Год события *</label>
+        <input type="number" id="editEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+
+        <label for="editEvTitle">Что произошло *</label>
+        <input type="text" id="editEvTitle" placeholder="Короткое название события" required>
+
+        <label for="editEvDesc">Подробности (необязательно)</label>
+        <textarea id="editEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+
+        <label for="editEvSource">Источник / ссылка (необязательно)</label>
+        <input type="text" id="editEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+
+        <label for="editEvComment">Комментарий к правке (необязательно)</label>
+        <input type="text" id="editEvComment" placeholder="Пояснение для модератора: что исправили и почему">
+
+        <div class="err" id="errEditEvent"></div>
+        <div class="hint">Правка будет проверена модератором перед обновлением на таймлайне.</div>
+
+        <div class="row-actions">
+          <button type="button" class="btn-cancel" data-close>Отмена</button>
+          <button type="button" class="primary" id="btnSubmitEditEvent">Отправить правку</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -111,6 +154,7 @@ async function loadTimeline(){
   if(error){ console.error(error); return; }
 
   const list = events || [];
+  allTimelineEvents = list;
   const isMobile = window.innerWidth <= 640;
 
   const tlEvents = list.map(e => ({
@@ -245,6 +289,14 @@ function showBadgeTip(badge){
     btn.style.display = "none";
   }
 
+  const proposeBtn = document.getElementById("etProposeBtn");
+  if(currentUser){
+    proposeBtn.style.display = "block";
+    proposeBtn.dataset.id = badge.dataset.id;
+  } else {
+    proposeBtn.style.display = "none";
+  }
+
   const r = badge.getBoundingClientRect();
   const left = Math.min(Math.max(8, r.left), window.innerWidth - 246);
   evTip.style.left = left + "px";
@@ -289,6 +341,99 @@ document.getElementById("etConfirmBtn").addEventListener("click", async () => {
   if(error){ alert("Не получилось подтвердить: " + error.message); return; }
   evTip.classList.remove("open");
   loadTimeline();
+});
+
+let allTimelineEvents = [];
+let currentEditingEvent = null;
+
+document.getElementById("etProposeBtn").addEventListener("click", () => {
+  evTip.classList.remove("open");
+  const id = document.getElementById("etProposeBtn").dataset.id;
+  if(!id) return;
+  if(!currentUser){
+    resetAuthModal();
+    open_("authOverlay");
+    return;
+  }
+  openEditEventModal(id);
+});
+
+function openEditEventModal(id){
+  currentEditingEvent = allTimelineEvents.find(ev => String(ev.id) === String(id));
+  if(!currentEditingEvent) return;
+
+  document.getElementById("editEvYear").value = currentEditingEvent.event_year || "";
+  document.getElementById("editEvTitle").value = currentEditingEvent.title || "";
+  document.getElementById("editEvDesc").value = currentEditingEvent.description || "";
+  document.getElementById("editEvSource").value = currentEditingEvent.source || "";
+  document.getElementById("editEvComment").value = "";
+  document.getElementById("errEditEvent").style.display = "none";
+
+  const submitBtn = document.getElementById("btnSubmitEditEvent");
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Отправить правку";
+
+  open_("editEventOverlay");
+}
+
+document.getElementById("btnSubmitEditEvent").addEventListener("click", async () => {
+  if(!currentEditingEvent) return;
+  const errEl = document.getElementById("errEditEvent");
+  errEl.style.display = "none";
+
+  const yearRaw = document.getElementById("editEvYear").value.trim();
+  const event_year = parseInt(yearRaw, 10);
+  const title = document.getElementById("editEvTitle").value.trim();
+  const description = document.getElementById("editEvDesc").value.trim() || null;
+  const source = document.getElementById("editEvSource").value.trim() || null;
+  const comment = document.getElementById("editEvComment").value.trim() || null;
+
+  if(!event_year || !title){
+    errEl.textContent = "Заполните год и название";
+    errEl.style.display = "block";
+    return;
+  }
+
+  const patch = {};
+  if(event_year !== currentEditingEvent.event_year) patch.event_year = event_year;
+  if(title !== (currentEditingEvent.title || "").trim()) patch.title = title;
+  if((description || null) !== (currentEditingEvent.description || null)) patch.description = description;
+  if((source || null) !== (currentEditingEvent.source || null)) patch.source = source;
+
+  if(Object.keys(patch).length === 0){
+    errEl.textContent = "Вы не внесли никаких изменений";
+    errEl.style.display = "block";
+    return;
+  }
+
+  const submitBtn = document.getElementById("btnSubmitEditEvent");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Отправка…";
+
+  try {
+    const { error: revErr } = await sb.from("revisions").insert({
+      entity_type: "event",
+      entity_id: currentEditingEvent.id,
+      kind: "update",
+      patch,
+      status: "pending",
+      author_id: currentUser.id,
+      author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
+      comment
+    });
+
+    if(revErr) throw new Error(revErr.message);
+
+    close_("editEventOverlay");
+    if(typeof showToast === "function") showToast("Правка отправлена на проверку");
+    if(typeof updateModBadge === "function") updateModBadge();
+  } catch(e){
+    errEl.textContent = e.message || "Ошибка при отправке";
+    errEl.style.display = "block";
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Отправить правку";
+  }
 });
 
 window.onEventAdded = loadTimeline;
