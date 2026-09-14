@@ -143,3 +143,11 @@ begin
   where id = revision_id;
 end;
 $$;
+
+-- ============================================================================
+-- W3: автор удаляет свой черновик статьи (черновик или отклонённую)
+-- ============================================================================
+
+drop policy if exists "articles: автор удаляет свой черновик" on public.articles;
+create policy "articles: автор удаляет свой черновик" on public.articles
+  for delete using (created_by = auth.uid() and status in ('draft', 'rejected'));

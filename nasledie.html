@@ -99,6 +99,7 @@
   <div class="nsl-editor-bar">
     <button type="button" class="btn text" id="btnBackToList"><span class="sym">arrow_back</span> К списку</button>
     <span class="save-state" id="saveState"></span>
+    <button type="button" class="btn text" id="btnDeleteDraft" style="display:none; color:var(--error)"><span class="sym">delete</span> Удалить черновик</button>
     <button type="button" class="btn filled" id="btnPublish">Отправить на публикацию</button>
   </div>
 
@@ -162,6 +163,22 @@
 
   <input type="text" id="artTitle" class="art-title" placeholder="Заголовок">
   <div id="editorjs"></div>
+</div>
+
+<div class="overlay" id="deleteDraftOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header dialog-appbar">
+      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
+      <h2 class="dialog-title">Удалить черновик?</h2>
+    </div>
+    <div class="modal-body">
+      <p id="deleteDraftText" style="font:var(--t-body-large); font-size:16px; color:var(--on-surface); margin:0 0 20px"></p>
+      <div class="row-actions">
+        <button type="button" class="btn text" data-close>Отмена</button>
+        <button type="button" class="btn filled" id="btnConfirmDeleteDraft" style="background:var(--error)">Удалить</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="nsl-read" id="nslRead" style="display:none">
@@ -290,6 +307,7 @@ function cardHtml(a){
       <div class="meta">
         <span>${metaAuthorDate}</span>
         ${isMine ? `<span class="st">${statusLabel}</span>` : ""}
+        ${(a.status === "draft" || a.status === "rejected") ? `<button type="button" class="meta-icon-btn" style="color:var(--error)" data-delete-draft="${a.id}" title="Удалить черновик" aria-label="Удалить черновик"><span class="sym">delete</span></button>` : ""}
         ${typeof renderMetaIcon === "function" ? renderMetaIcon("articles", a.id, a) : ""}
       </div>
     </div>
@@ -346,6 +364,13 @@ function renderList(){
         location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
       });
     });
+    elList.querySelectorAll("[data-delete-draft]").forEach(btn => {
+      btn.addEventListener("click", e => {
+        e.stopPropagation();
+        const art = allArticles.find(a => a.id === btn.dataset.deleteDraft);
+        if(art) promptDeleteDraft(art);
+      });
+    });
     return;
   }
 
@@ -386,6 +411,13 @@ function renderList(){
       if(e.target.closest(".meta-icon-btn")) return;
       const id = card.dataset.id;
       location.hash = card.dataset.status === "confirmed" ? `#read/${id}` : `#edit/${id}`;
+    });
+  });
+  elList.querySelectorAll("[data-delete-draft]").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const art = allArticles.find(a => a.id === btn.dataset.deleteDraft);
+      if(art) promptDeleteDraft(art);
     });
   });
 }
@@ -520,6 +552,60 @@ async function leaveEditor(){
   isProposalMode = false;
 }
 
+// ---------- Удаление черновика автором (W3) ----------
+let pendingDeleteArticle = null;
+
+function promptDeleteDraft(art){
+  pendingDeleteArticle = art;
+  document.getElementById("deleteDraftText").textContent =
+    `Удалить черновик «${art.title || "Без названия"}»? Это нельзя отменить.`;
+  open_("deleteDraftOverlay");
+}
+
+function extractStoragePath(url, bucket){
+  if(!url) return null;
+  const marker = `/storage/v1/object/public/${bucket}/`;
+  const idx = url.indexOf(marker);
+  if(idx === -1) return null;
+  return url.slice(idx + marker.length);
+}
+
+async function deleteArticleImages(content){
+  try{
+    const blocks = (content && content.blocks) || [];
+    const paths = blocks
+      .filter(b => b.type === "image" && b.data && b.data.file && b.data.file.url)
+      .map(b => extractStoragePath(b.data.file.url, "article-images"))
+      .filter(Boolean);
+    if(paths.length) await sb.storage.from("article-images").remove(paths);
+  }catch(e){ /* best effort — ошибку не показываем */ }
+}
+
+document.getElementById("btnConfirmDeleteDraft").addEventListener("click", async () => {
+  if(!pendingDeleteArticle) return;
+  const art = pendingDeleteArticle;
+  const btn = document.getElementById("btnConfirmDeleteDraft");
+  btn.disabled = true;
+  btn.textContent = "Удаление…";
+  try{
+    const { error } = await sb.from("articles").delete().eq("id", art.id);
+    if(error) throw new Error(error.message);
+    await deleteArticleImages(art.content);
+    try{ localStorage.removeItem("nsl_draft_" + art.id); }catch(e){}
+    close_("deleteDraftOverlay");
+    pendingDeleteArticle = null;
+    if(typeof showToast === "function") showToast("Черновик удалён");
+    clearTimeout(saveTimer); clearInterval(periodicTimer);
+    isProposalMode = true; // не даём leaveEditor() пересохранить уже удалённую статью
+    location.hash = "#list";
+  }catch(e){
+    alert("Не получилось удалить: " + e.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Удалить";
+  }
+});
+
 function setEditorAuthorType(cat){
   currentAuthorType = cat;
   btnTypeTi.classList.toggle("active", cat === "ti");
@@ -586,6 +672,9 @@ async function openEditor(id, options = {}){
   dirty = false;
   saveStateEl.textContent = "";
   titleInput.value = art.title || "";
+
+  const btnDeleteDraft = document.getElementById("btnDeleteDraft");
+  if(btnDeleteDraft) btnDeleteDraft.style.display = "none";
 
   const initialCat = getArticleCategory(art);
   setEditorAuthorType(initialCat);
@@ -708,6 +797,11 @@ async function openEditor(id, options = {}){
     btnBackToList.innerHTML = '<span class="sym">arrow_back</span> К списку';
     btnBackToList.onclick = () => location.hash = "#list";
     if(proposeCommentRow) proposeCommentRow.style.display = "none";
+    if(btnDeleteDraft){
+      const canDelete = art.created_by === currentUser.id && (art.status === "draft" || art.status === "rejected");
+      btnDeleteDraft.style.display = canDelete ? "inline-flex" : "none";
+      btnDeleteDraft.onclick = () => promptDeleteDraft(art);
+    }
     btnPublish.textContent = art.status === "rejected" ? "Отправить повторно" : "Отправить на публикацию";
     btnPublish.onclick = async () => {
       clearTimeout(saveTimer); clearInterval(periodicTimer);
