@@ -386,49 +386,53 @@
 <!-- Модалка редактирования карточки человека -->
 <div class="overlay" id="editPersonOverlay">
   <div class="modal modal-person-edit">
-    <div class="modal-head">
-      <h2>Предложить правку данных</h2>
-      <button class="close" data-close>×</button>
+    <div class="modal-head dialog-appbar">
+      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
+      <h2 class="dialog-title">Предложить правку</h2>
+      <button type="button" class="btn filled dialog-bar-action" id="btnEditPersonBarAction">Отправить</button>
     </div>
 
     <div class="modal-body">
       <div class="modal-grid-2col">
         <!-- Левая колонка: фото, ФИО, статус, учёба -->
         <div class="modal-col">
-          <label>Фотография (аватарка)</label>
+          <label style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); display:block; margin-bottom:6px">Фотография (аватарка)</label>
           <div class="avatar-edit-box">
             <div id="avatarPreviewHolder"></div>
             <div class="avatar-edit-actions">
               <input type="file" id="editAvatarInput" accept="image/*" style="display:none">
-              <button type="button" class="btn-upload" id="btnTriggerUpload">Загрузить фото</button>
-              <button type="button" class="btn-remove-avatar" id="btnRemoveAvatar" style="display:none">Удалить фото</button>
+              <button type="button" class="btn tonal" id="btnTriggerUpload" style="font-size:13px; height:36px; padding:0 16px"><span class="sym" style="font-size:18px">upload</span> Загрузить фото</button>
+              <button type="button" class="btn text" id="btnRemoveAvatar" style="display:none; color:var(--error); font-size:13px"><span class="sym" style="font-size:18px">delete</span> Удалить фото</button>
             </div>
           </div>
 
-          <label>Имя и фамилия *</label>
-          <input type="text" id="editFullName" placeholder="Имя Фамилия">
+          <div class="field" style="margin-top:16px">
+            <input type="text" id="editFullName" placeholder="Имя Фамилия" required>
+            <label class="lbl" for="editFullName">Имя и фамилия</label>
+          </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-            <div>
-              <label>Пол</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div class="field">
               <select id="editGender">
                 <option value="">Не указан</option>
                 <option value="m">Мужской (ученик)</option>
                 <option value="f">Женский (ученица)</option>
               </select>
+              <label class="lbl" for="editGender">Пол</label>
+              <div class="sup">Необязательно</div>
             </div>
-            <div>
-              <label>Кем приходится Т.И.?</label>
+            <div class="field">
               <select id="editRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
                 <option value="другое">Другое</option>
               </select>
+              <label class="lbl" for="editRelation">Кем приходится Т.И.?</label>
             </div>
           </div>
 
           <div id="editStudyBlock">
-            <label style="margin-top:14px">Обучение у Т.И. Хитровой</label>
+            <label style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); display:block; margin:12px 0 6px">Обучение у Т.И. Хитровой</label>
             <div class="study-box-wrap">
               <label class="study-check-row">
                 <input type="checkbox" id="editChoirSchool"> Хоровое училище им. М.И. Глинки
@@ -452,27 +456,42 @@
               </div>
             </div>
 
-            <label style="font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); margin-top:8px">Или другие годы учёбы (необязательно)</label>
-            <div style="display:flex; gap:8px">
-              <input type="number" id="editStudyStart" placeholder="начало" min="1955" max="2026">
-              <input type="number" id="editStudyEnd" placeholder="окончание" min="1955" max="2026">
+            <div class="field" style="margin-top:12px">
+              <div style="display:flex; gap:8px">
+                <input type="number" id="editStudyStart" placeholder="начало" min="1955" max="2026">
+                <input type="number" id="editStudyEnd" placeholder="окончание" min="1955" max="2026">
+              </div>
+              <label class="lbl">Или другие годы учёбы</label>
+              <div class="sup">Необязательно</div>
             </div>
           </div>
         </div>
 
         <!-- Правая колонка: работа, биография, источник, комментарий -->
         <div class="modal-col" style="display:flex; flex-direction:column">
-          <label>Место работы / должность</label>
-          <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
+          <div class="field">
+            <input type="text" id="editInstitution" placeholder="например, преподаватель Хорового училища">
+            <label class="lbl" for="editInstitution">Место работы / должность</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label>Заметки, достижения, биография</label>
-          <textarea id="editNotes" placeholder="Звания, достижения, вехи карьеры, воспоминания" style="flex:1; min-height:140px"></textarea>
+          <div class="field" style="flex:1; display:flex; flex-direction:column">
+            <textarea id="editNotes" placeholder="Звания, достижения, вехи карьеры, воспоминания" style="flex:1; min-height:140px"></textarea>
+            <label class="lbl" for="editNotes">Заметки, достижения, биография</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label>Источник информации / ссылка</label>
-          <input type="text" id="editSource" placeholder="Откуда данные (например, kapellanin.ru/id692)">
+          <div class="field">
+            <input type="text" id="editSource" placeholder="Откуда данные (например, kapellanin.ru/id692)">
+            <label class="lbl" for="editSource">Источник информации / ссылка</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label>Комментарий к правке (необязательно)</label>
-          <input type="text" id="editRevisionComment" placeholder="Пояснение: что изменили и почему">
+          <div class="field">
+            <input type="text" id="editRevisionComment" placeholder="Пояснение: что изменили и почему">
+            <label class="lbl" for="editRevisionComment">Комментарий к правке</label>
+            <div class="sup">Необязательно</div>
+          </div>
         </div>
       </div>
     </div>
@@ -480,9 +499,9 @@
     <!-- Зафиксированный подвал с кнопкой "Отправить правку" -->
     <div class="modal-footer">
       <div class="err" id="errEditPerson" style="margin:0"></div>
-      <div style="display:flex; gap:10px; margin-left:auto">
-        <button type="button" class="btn-cancel" data-close>Отмена</button>
-        <button type="button" class="primary" id="btnSavePersonEdit">Отправить правку</button>
+      <div style="display:flex; gap:12px; margin-left:auto">
+        <button type="button" class="btn text" data-close>Отмена</button>
+        <button type="button" class="btn filled" id="btnSavePersonEdit">Отправить правку</button>
       </div>
     </div>
   </div>
@@ -1140,6 +1159,10 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
     saveBtn.disabled = false;
     saveBtn.textContent = "Отправить правку";
   }
+});
+
+document.getElementById("btnEditPersonBarAction")?.addEventListener("click", () => {
+  document.getElementById("btnSavePersonEdit")?.click();
 });
 
 // Инициализация поиска других людей в фиксированной панели

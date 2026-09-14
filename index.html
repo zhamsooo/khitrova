@@ -107,35 +107,49 @@
 </div>
 
 <!-- Модалка предложения правки события -->
-<div class="overlay overlay-bottom-sheet" id="editEventOverlay">
+<div class="overlay" id="editEventOverlay">
   <div class="modal modal-unified-add">
-    <div class="modal-header">
-      <h2>Предложить правку события</h2>
-      <button class="modal-close-btn" data-close aria-label="Закрыть">×</button>
+    <div class="modal-header dialog-appbar">
+      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
+      <h2 class="dialog-title">Предложить правку</h2>
+      <button type="button" class="btn filled dialog-bar-action" id="btnEditEventBarAction">Отправить</button>
     </div>
     <div class="modal-body">
       <form id="formEditEvent" onsubmit="return false;">
-        <label for="editEvYear">Год события *</label>
-        <input type="number" id="editEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+        <div class="field">
+          <input type="number" id="editEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+          <label class="lbl" for="editEvYear">Год события</label>
+        </div>
 
-        <label for="editEvTitle">Что произошло *</label>
-        <input type="text" id="editEvTitle" placeholder="Короткое название события" required>
+        <div class="field">
+          <input type="text" id="editEvTitle" placeholder="Короткое название события" required>
+          <label class="lbl" for="editEvTitle">Что произошло</label>
+        </div>
 
-        <label for="editEvDesc">Подробности (необязательно)</label>
-        <textarea id="editEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+        <div class="field">
+          <textarea id="editEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+          <label class="lbl" for="editEvDesc">Подробности</label>
+          <div class="sup">Необязательно</div>
+        </div>
 
-        <label for="editEvSource">Источник / ссылка (необязательно)</label>
-        <input type="text" id="editEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+        <div class="field">
+          <input type="text" id="editEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+          <label class="lbl" for="editEvSource">Источник / ссылка</label>
+          <div class="sup">Необязательно</div>
+        </div>
 
-        <label for="editEvComment">Комментарий к правке (необязательно)</label>
-        <input type="text" id="editEvComment" placeholder="Пояснение для модератора: что исправили и почему">
+        <div class="field">
+          <input type="text" id="editEvComment" placeholder="Пояснение для модератора: что исправили и почему">
+          <label class="lbl" for="editEvComment">Комментарий к правке</label>
+          <div class="sup">Необязательно</div>
+        </div>
 
         <div class="err" id="errEditEvent"></div>
         <div class="hint">Правка будет проверена модератором перед обновлением на таймлайне.</div>
 
         <div class="row-actions">
-          <button type="button" class="btn-cancel" data-close>Отмена</button>
-          <button type="button" class="primary" id="btnSubmitEditEvent">Отправить правку</button>
+          <button type="button" class="btn text" data-close>Отмена</button>
+          <button type="button" class="btn filled" id="btnSubmitEditEvent">Отправить правку</button>
         </div>
       </form>
     </div>
@@ -463,6 +477,11 @@ document.getElementById("btnSubmitEditEvent").addEventListener("click", async ()
     submitBtn.textContent = "Отправить правку";
   }
 });
+
+const btnEditEventBarAction = document.getElementById("btnEditEventBarAction");
+if(btnEditEventBarAction){
+  btnEditEventBarAction.addEventListener("click", () => document.getElementById("btnSubmitEditEvent").click());
+}
 
 window.onEventAdded = loadTimeline;
 loadTimeline();

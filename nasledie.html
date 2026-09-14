@@ -14,34 +14,16 @@
     background:var(--surface-low); border:1px solid var(--outline-variant); border-radius:var(--r-m);
     padding:16px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px;
   }
+  .editor-meta-box .field .lbl{ background:var(--surface-low); }
   .editor-meta-row{display:flex; flex-wrap:wrap; align-items:center; gap:14px}
   .editor-meta-col{flex:1; min-width:180px}
-  .editor-meta-col label{
-    display:block; font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant);
-    margin-bottom:4px;
-  }
-  .editor-meta-col input, .editor-meta-col select{
-    width:100%; background:var(--surface); border:1px solid var(--outline); border-radius:var(--r-xs);
-    padding:8px 12px; font:var(--t-body-large); font-size:14px; outline:none; color:var(--on-surface);
-  }
-  .editor-meta-col input:focus, .editor-meta-col select:focus{border-color:var(--primary)}
   .author-type-toggle{display:flex; gap:6px}
-  .author-type-btn{
-    flex:1; padding:8px 12px; font:var(--t-label-large); font-size:13px; border-radius:var(--r-s);
-    border:1px solid var(--outline); background:transparent; cursor:pointer; text-align:center;
-    transition:all .12s; color:var(--on-surface-variant);
-  }
-  .author-type-btn:hover{color:var(--on-surface); background:var(--surface-low)}
-  .author-type-btn.active{
-    background:var(--secondary-container); color:var(--on-secondary-container); border-color:transparent; font-weight:500;
-  }
 
   .nsl-editor{max-width:var(--container); margin:0 auto; padding:32px var(--gutter) 120px}
   .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--outline-variant)}
   .btn-plain{background:none; border:none; color:var(--on-surface-variant); font:var(--t-label-large); font-size:14px; padding:0; cursor:pointer}
   .btn-plain:hover{color:var(--on-surface)}
   .save-state{flex:1; font:var(--t-body-medium); font-size:13px; color:var(--on-surface-variant); text-align:center}
-  .btn-publish{background:var(--primary); color:var(--on-primary); border:none; padding:8px 16px; border-radius:var(--r-full); font:var(--t-label-large); font-size:14px; cursor:pointer}
   .art-title{width:100%; border:none; outline:none; font:var(--t-display-small); font-size:36px; line-height:44px; margin-bottom:18px; color:var(--on-surface); background:transparent}
   .art-title::placeholder{color:var(--on-surface-variant)}
   #editorjs{font:var(--t-body-large); font-size:16px; line-height:1.65; max-width:68ch}
@@ -99,51 +81,65 @@
 
 <div class="nsl-editor" id="nslEditor" style="display:none">
   <div class="nsl-editor-bar">
-    <button class="btn-plain" id="btnBackToList">← К списку</button>
+    <button type="button" class="btn text" id="btnBackToList"><span class="sym">arrow_back</span> К списку</button>
     <span class="save-state" id="saveState"></span>
-    <button class="btn-publish" id="btnPublish">Отправить на публикацию</button>
+    <button type="button" class="btn filled" id="btnPublish">Отправить на публикацию</button>
   </div>
 
   <div class="editor-meta-box" id="editorMetaBox">
     <div class="editor-meta-row">
       <div class="editor-meta-col" style="flex:1.5">
-        <label>Раздел / Принадлежность</label>
-        <div class="author-type-toggle">
-          <button type="button" class="author-type-btn" id="btnTypeTi" data-cat="ti">От Татьяны Ивановны</button>
-          <button type="button" class="author-type-btn active" id="btnTypeComm" data-cat="community">От учеников и коллег</button>
+        <div style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); margin-bottom:8px">Раздел / Принадлежность</div>
+        <div class="chips" id="authorTypeToggle">
+          <button type="button" class="chip" id="btnTypeTi" data-cat="ti">От Татьяны Ивановны</button>
+          <button type="button" class="chip active" id="btnTypeComm" data-cat="community"><span class="sym">check</span>От учеников и коллег</button>
         </div>
       </div>
       <div class="editor-meta-col" style="flex:1">
-        <label>Тип материала</label>
-        <select id="editArtType">
-          <option value="статья">Статья</option>
-          <option value="интервью">Интервью</option>
-          <option value="публикация">Публикация</option>
-          <option value="воспоминание">Воспоминание</option>
-          <option value="другое">Другой материал</option>
-        </select>
+        <label class="field" style="margin-bottom:0">
+          <select id="editArtType">
+            <option value="статья">Статья</option>
+            <option value="интервью">Интервью</option>
+            <option value="публикация">Публикация</option>
+            <option value="воспоминание">Воспоминание</option>
+            <option value="другое">Другой материал</option>
+          </select>
+          <span class="lbl">Тип материала</span>
+        </label>
       </div>
     </div>
     <div class="editor-meta-row" id="tiMetaRow" style="display:none">
       <div class="editor-meta-col" style="flex:2">
-        <label>Первоисточник / издание</label>
-        <input type="text" id="editArtSource" placeholder="напр. Журнал «Советская музыка», 1984">
+        <label class="field" style="margin-bottom:0">
+          <input type="text" id="editArtSource" placeholder=" ">
+          <span class="lbl">Первоисточник / издание</span>
+          <span class="sup">напр. Журнал «Советская музыка», 1984</span>
+        </label>
       </div>
       <div class="editor-meta-col" style="flex:1">
-        <label>Год оригинала</label>
-        <input type="number" id="editArtYear" placeholder="напр. 1984" min="1940" max="2026">
+        <label class="field" style="margin-bottom:0">
+          <input type="number" id="editArtYear" placeholder=" " min="1940" max="2026">
+          <span class="lbl">Год оригинала</span>
+          <span class="sup">напр. 1984</span>
+        </label>
       </div>
     </div>
     <div class="editor-meta-row" id="commMetaRow">
       <div class="editor-meta-col">
-        <label>Автор материала</label>
-        <input type="text" id="editArtAuthor" placeholder="Имя и фамилия автора">
+        <label class="field" style="margin-bottom:0">
+          <input type="text" id="editArtAuthor" placeholder=" ">
+          <span class="lbl">Автор материала</span>
+          <span class="sup">Имя и фамилия автора</span>
+        </label>
       </div>
     </div>
     <div class="editor-meta-row" id="proposeCommentRow" style="display:none">
       <div class="editor-meta-col">
-        <label>Комментарий к правке (необязательно)</label>
-        <input type="text" id="editProposeComment" placeholder="Пояснение для модератора: что изменили и почему">
+        <label class="field" style="margin-bottom:0">
+          <input type="text" id="editProposeComment" placeholder=" ">
+          <span class="lbl">Комментарий к правке (необязательно)</span>
+          <span class="sup">Пояснение для модератора: что изменили и почему</span>
+        </label>
       </div>
     </div>
   </div>
@@ -154,10 +150,10 @@
 
 <div class="nsl-read" id="nslRead" style="display:none">
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
-    <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
+    <button type="button" class="btn text" id="btnBackToList2"><span class="sym">arrow_back</span> К списку материалов</button>
     <div style="display:flex; align-items:center; gap:8px">
       <span id="readMetaSlot"></span>
-      <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:var(--fs-ui); font-family:var(--font-ui); border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
+      <button type="button" class="btn tonal" id="btnProposeArticle" style="display:none"><span class="sym">edit</span> Предложить правку</button>
     </div>
   </div>
   <div class="read-badge-wrap">
@@ -510,6 +506,8 @@ function setEditorAuthorType(cat){
   currentAuthorType = cat;
   btnTypeTi.classList.toggle("active", cat === "ti");
   btnTypeComm.classList.toggle("active", cat !== "ti");
+  btnTypeTi.innerHTML = (cat === "ti" ? '<span class="sym">check</span>' : '') + 'От Татьяны Ивановны';
+  btnTypeComm.innerHTML = (cat !== "ti" ? '<span class="sym">check</span>' : '') + 'От учеников и коллег';
   tiMetaRow.style.display = cat === "ti" ? "flex" : "none";
   commMetaRow.style.display = cat !== "ti" ? "flex" : "none";
 
@@ -616,7 +614,7 @@ async function openEditor(id, options = {}){
   const proposeCommentRow = document.getElementById("proposeCommentRow");
   if(isProposal){
     clearInterval(periodicTimer);
-    btnBackToList.textContent = "← К материалу";
+    btnBackToList.innerHTML = '<span class="sym">arrow_back</span> К материалу';
     btnBackToList.onclick = () => location.hash = `#read/${id}`;
     saveStateEl.innerHTML = `<span style="font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); text-transform:uppercase; letter-spacing:.05em; color:var(--warn); background:rgba(164,100,31,.08); padding:3px 8px; border-radius:6px">Предложение правки</span>`;
     btnPublish.textContent = "Отправить предложение правки";
@@ -689,7 +687,7 @@ async function openEditor(id, options = {}){
       }
     };
   } else {
-    btnBackToList.textContent = "← К списку";
+    btnBackToList.innerHTML = '<span class="sym">arrow_back</span> К списку';
     btnBackToList.onclick = () => location.hash = "#list";
     if(proposeCommentRow) proposeCommentRow.style.display = "none";
     btnPublish.textContent = art.status === "rejected" ? "Отправить повторно" : "Отправить на публикацию";
@@ -743,6 +741,15 @@ async function openRead(id){
   if(metaSlot && typeof renderMetaIcon === "function"){
     metaSlot.innerHTML = renderMetaIcon("article", art.id, art);
   }
+  const proposeBtn = document.getElementById("btnProposeArticle");
+  if(proposeBtn){
+    if(currentUser){
+      proposeBtn.style.display = "inline-flex";
+      proposeBtn.onclick = () => { location.hash = `#propose/${art.id}`; };
+    } else {
+      proposeBtn.style.display = "none";
+    }
+  }
   document.getElementById("readBody").innerHTML = renderArticleContent(art.content);
   showView("read");
 }
@@ -754,6 +761,9 @@ async function router(){
   if(route === "edit" && id){
     if(!currentUser){ location.hash = "#list"; return; }
     await openEditor(id);
+  } else if(route === "propose" && id){
+    if(!currentUser){ location.hash = "#list"; return; }
+    await openEditor(id, { isProposal: true });
   } else if(route === "read" && id){
     await openRead(id);
   } else {

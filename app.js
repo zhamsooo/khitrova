@@ -53,55 +53,75 @@ const HEADER_HTML = `
 const MODALS_HTML = `
 <div class="overlay" id="authOverlay">
   <div class="modal">
-    <button class="close" data-close>×</button>
-    <div id="stepEmail">
-      <h2>Войти / зарегистрироваться</h2>
-      <label>Email</label>
-      <input type="email" id="inEmail" placeholder="you@example.com" autocomplete="email">
-      <div class="hint">На почту придёт код из 8 цифр. Если вы здесь впервые — дальше попросим представиться.</div>
-      <div class="err" id="errEmail"></div>
-      <div class="row-actions"><button class="primary" id="btnSendCode">Получить код</button></div>
+    <div class="modal-header dialog-appbar">
+      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
+      <h2 class="dialog-title" id="authModalTitle">Войти</h2>
+      <button type="button" class="btn filled dialog-bar-action" id="btnAuthBarAction">Код</button>
     </div>
-    <div id="stepCode" style="display:none">
-      <h2>Код из письма</h2>
-      <div class="hint" id="codeSentTo"></div>
-      <label>Код (8 цифр)</label>
-      <input type="text" id="inCode" inputmode="numeric" maxlength="8" placeholder="12345678">
-      <div class="err" id="errCode"></div>
-      <div class="row-actions split">
-        <span class="linkgroup">
-          <button type="button" class="linklike" id="btnChangeEmail">Другой email</button>
-          <button type="button" class="linklike" id="btnResendCode">Отправить снова</button>
-        </span>
-        <button class="primary" id="btnVerifyCode">Подтвердить</button>
+    <div class="modal-body">
+      <div id="stepEmail">
+        <div class="field">
+          <input type="email" id="inEmail" placeholder="you@example.com" autocomplete="email">
+          <label class="lbl" for="inEmail">Email</label>
+          <div class="sup">На почту придёт код из 8 цифр</div>
+        </div>
+        <div class="err" id="errEmail"></div>
+        <div class="row-actions">
+          <button type="button" class="btn text" data-close>Отмена</button>
+          <button type="button" class="btn filled" id="btnSendCode">Получить код</button>
+        </div>
       </div>
-    </div>
-    <div id="stepProfile" style="display:none">
-      <h2>Представьтесь</h2>
-      <label>Имя и фамилия</label>
-      <input type="text" id="inName" placeholder="Имя Фамилия">
-      <label>Кем вы приходитесь Т.И.?</label>
-      <select id="inRelation">
-        <option value="ученик">Ученик(ца)</option>
-        <option value="коллега">Коллега</option>
-        <option value="другое">Другое</option>
-      </select>
-      <div id="gradYearWrap">
-        <label>Год выпуска</label>
-        <input type="number" id="inGradYear" placeholder="например, 1998" min="1955" max="2026">
+      <div id="stepCode" style="display:none">
+        <div class="hint" id="codeSentTo" style="margin-bottom:16px"></div>
+        <div class="field">
+          <input type="text" id="inCode" inputmode="numeric" maxlength="8" placeholder="12345678">
+          <label class="lbl" for="inCode">Код из письма</label>
+          <div class="sup">8 цифр</div>
+        </div>
+        <div class="err" id="errCode"></div>
+        <div class="row-actions split">
+          <span class="linkgroup">
+            <button type="button" class="btn text" id="btnChangeEmail" style="padding:0">Другой email</button>
+            <button type="button" class="btn text" id="btnResendCode" style="padding:0">Отправить снова</button>
+          </span>
+          <button type="button" class="btn filled" id="btnVerifyCode">Подтвердить</button>
+        </div>
       </div>
-      <div class="err" id="errProfile"></div>
-      <div class="row-actions"><button class="primary" id="btnSaveProfile">Сохранить</button></div>
+      <div id="stepProfile" style="display:none">
+        <div class="field">
+          <input type="text" id="inName" placeholder="Имя Фамилия">
+          <label class="lbl" for="inName">Имя и фамилия</label>
+        </div>
+        <div class="field">
+          <select id="inRelation">
+            <option value="ученик">Ученик / Ученица</option>
+            <option value="коллега">Коллега</option>
+            <option value="другое">Другое</option>
+          </select>
+          <label class="lbl" for="inRelation">Кем вы приходитесь Т.И.?</label>
+        </div>
+        <div id="gradYearWrap" class="field">
+          <input type="number" id="inGradYear" placeholder="например, 1998" min="1955" max="2026">
+          <label class="lbl" for="inGradYear">Год выпуска</label>
+          <div class="sup">Необязательно</div>
+        </div>
+        <div class="err" id="errProfile"></div>
+        <div class="row-actions">
+          <button type="button" class="btn text" data-close>Отмена</button>
+          <button type="button" class="btn filled" id="btnSaveProfile">Сохранить</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Единая модалка добавления с табами: Событие · Человек · Материал -->
-<div class="overlay overlay-bottom-sheet" id="unifiedAddOverlay">
+<div class="overlay" id="unifiedAddOverlay">
   <div class="modal modal-unified-add">
-    <div class="modal-header">
-      <h2>Добавить на сайт</h2>
-      <button class="modal-close-btn" data-close aria-label="Закрыть">×</button>
+    <div class="modal-header dialog-appbar">
+      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
+      <h2 class="dialog-title">Добавить на сайт</h2>
+      <button type="button" class="btn filled dialog-bar-action" id="btnUnifiedBarAction">Отправить</button>
     </div>
 
     <div class="add-tabs-bar" role="tablist">
@@ -114,23 +134,34 @@ const MODALS_HTML = `
       <!-- Таб 1: Событие -->
       <div class="tab-pane active" id="tabPaneEvent">
         <form id="formAddEvent" onsubmit="return false;">
-          <label for="uEvYear">Год события *</label>
-          <input type="number" id="uEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+          <div class="field">
+            <input type="number" id="uEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+            <label class="lbl" for="uEvYear">Год события</label>
+          </div>
 
-          <label for="uEvTitle">Что произошло *</label>
-          <input type="text" id="uEvTitle" placeholder="Короткое название события" required>
+          <div class="field">
+            <input type="text" id="uEvTitle" placeholder="Короткое название события" required>
+            <label class="lbl" for="uEvTitle">Что произошло</label>
+          </div>
 
-          <label for="uEvDesc">Подробности (необязательно)</label>
-          <textarea id="uEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+          <div class="field">
+            <textarea id="uEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+            <label class="lbl" for="uEvDesc">Подробности</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label for="uEvSource">Источник / ссылка (необязательно)</label>
-          <input type="text" id="uEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+          <div class="field">
+            <input type="text" id="uEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+            <label class="lbl" for="uEvSource">Источник / ссылка</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
           <div class="err" id="errUEvent"></div>
           <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
 
           <div class="row-actions">
-            <button type="button" class="primary" id="btnSubmitUEvent">Отправить</button>
+            <button type="button" class="btn text" data-close>Отмена</button>
+            <button type="button" class="btn filled" id="btnSubmitUEvent">Отправить</button>
           </div>
         </form>
       </div>
@@ -138,30 +169,33 @@ const MODALS_HTML = `
       <!-- Таб 2: Человек -->
       <div class="tab-pane" id="tabPanePerson">
         <form id="formAddPerson" onsubmit="return false;">
-          <label for="uPFullName">Имя и фамилия *</label>
-          <input type="text" id="uPFullName" placeholder="Имя Фамилия" required>
+          <div class="field">
+            <input type="text" id="uPFullName" placeholder="Имя Фамилия" required>
+            <label class="lbl" for="uPFullName">Имя и фамилия</label>
+          </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-            <div>
-              <label for="uPGender">Пол</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+            <div class="field">
               <select id="uPGender">
                 <option value="">Не указан</option>
                 <option value="m">Мужской (ученик)</option>
                 <option value="f">Женский (ученица)</option>
               </select>
+              <label class="lbl" for="uPGender">Пол</label>
+              <div class="sup">Необязательно</div>
             </div>
-            <div>
-              <label for="uPRelation">Кем приходится Т.И.?</label>
+            <div class="field">
               <select id="uPRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
                 <option value="другое">Другое</option>
               </select>
+              <label class="lbl" for="uPRelation">Кем приходится Т.И.?</label>
             </div>
           </div>
 
           <div id="uPStudyWrap">
-            <label>Обучение у Т.И. Хитровой</label>
+            <label style="font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); display:block; margin-bottom:6px">Обучение у Т.И. Хитровой</label>
             <div class="study-box-wrap">
               <label class="study-check-row">
                 <input type="checkbox" id="uPChoirSchool"> Хоровое училище им. М.И. Глинки
@@ -185,27 +219,40 @@ const MODALS_HTML = `
               </div>
             </div>
 
-            <label>Или другие годы учёбы (необязательно)</label>
-            <div style="display:flex; gap:8px">
-              <input type="number" id="uPStudyStart" placeholder="начало" min="1955" max="2026">
-              <input type="number" id="uPStudyEnd" placeholder="окончание" min="1955" max="2026">
+            <div class="field" style="margin-top:12px">
+              <div style="display:flex; gap:8px">
+                <input type="number" id="uPStudyStart" placeholder="начало" min="1955" max="2026">
+                <input type="number" id="uPStudyEnd" placeholder="окончание" min="1955" max="2026">
+              </div>
+              <label class="lbl">Или другие годы учёбы</label>
+              <div class="sup">Необязательно</div>
             </div>
           </div>
 
-          <label for="uPInstitution">Место работы / должность (необязательно)</label>
-          <input type="text" id="uPInstitution" placeholder="например, преподаватель Хорового училища">
+          <div class="field">
+            <input type="text" id="uPInstitution" placeholder="например, преподаватель Хорового училища">
+            <label class="lbl" for="uPInstitution">Место работы / должность</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label for="uPNotes">Ещё что-то важное (необязательно)</label>
-          <textarea id="uPNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
+          <div class="field">
+            <textarea id="uPNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
+            <label class="lbl" for="uPNotes">Ещё что-то важное</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label for="uPSource">Источник / ссылка (необязательно)</label>
-          <input type="text" id="uPSource" placeholder="Откуда эта информация">
+          <div class="field">
+            <input type="text" id="uPSource" placeholder="Откуда эта информация">
+            <label class="lbl" for="uPSource">Источник / ссылка</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
           <div class="err" id="errUPerson"></div>
           <div class="hint">Появится в «Людях» с пометкой «не подтверждено», пока модератор не проверит.</div>
 
           <div class="row-actions">
-            <button type="button" class="primary" id="btnSubmitUPerson">Отправить</button>
+            <button type="button" class="btn text" data-close>Отмена</button>
+            <button type="button" class="btn filled" id="btnSubmitUPerson">Отправить</button>
           </div>
         </form>
       </div>
@@ -213,27 +260,37 @@ const MODALS_HTML = `
       <!-- Таб 3: Материал -->
       <div class="tab-pane" id="tabPaneArticle">
         <form id="formAddArticle" onsubmit="return false;">
-          <label for="uArtTitle">Заголовок материала (необязательно)</label>
-          <input type="text" id="uArtTitle" placeholder="Название статьи, интервью или воспоминания">
+          <div class="field">
+            <input type="text" id="uArtTitle" placeholder="Название статьи, интервью или воспоминания">
+            <label class="lbl" for="uArtTitle">Заголовок материала</label>
+            <div class="sup">Необязательно</div>
+          </div>
 
-          <label for="uArtCategory">Раздел / Авторство</label>
-          <select id="uArtCategory">
-            <option value="community">От учеников и коллег (воспоминания, статьи о Т.И.)</option>
-            <option value="ti">От Татьяны Ивановны (труды, статьи, интервью Т.И.)</option>
-          </select>
+          <div class="field">
+            <select id="uArtCategory">
+              <option value="community">От учеников и коллег (воспоминания, статьи о Т.И.)</option>
+              <option value="ti">От Татьяны Ивановны (труды, статьи, интервью Т.И.)</option>
+            </select>
+            <label class="lbl" for="uArtCategory">Раздел / Авторство</label>
+          </div>
 
-          <label for="uArtType">Тип материала</label>
-          <select id="uArtType">
-            <option value="воспоминание">Воспоминание</option>
-            <option value="статья">Статья или очерк о Т.И.</option>
-            <option value="другое">Другой материал</option>
-          </select>
+          <div class="field">
+            <select id="uArtType">
+              <option value="воспоминание">Воспоминание</option>
+              <option value="статья">Статья или очерк о Т.И.</option>
+              <option value="интервью">Интервью</option>
+              <option value="публикация">Публикация / заметка</option>
+              <option value="другое">Другой материал</option>
+            </select>
+            <label class="lbl" for="uArtType">Тип материала</label>
+          </div>
 
           <div class="err" id="errUArticle"></div>
           <div class="hint">Откроется редактор, где можно написать текст, вставить фотографии и отправить материал на публикацию.</div>
 
           <div class="row-actions">
-            <button type="button" class="primary" id="btnContinueArticle">Продолжить в редакторе</button>
+            <button type="button" class="btn text" data-close>Отмена</button>
+            <button type="button" class="btn filled" id="btnContinueArticle">Продолжить в редакторе</button>
           </div>
         </form>
       </div>
@@ -255,6 +312,10 @@ function resetAuthModal(){
   document.getElementById("errEmail").style.display = "none";
   document.getElementById("errCode").style.display = "none";
   document.getElementById("errProfile").style.display = "none";
+  const bar = document.getElementById("btnAuthBarAction");
+  const title = document.getElementById("authModalTitle");
+  if(bar) bar.textContent = "Код";
+  if(title) title.textContent = "Войти";
 }
 
 function personRelationLabel(p){
@@ -326,13 +387,13 @@ async function updateModBadge(){
 }
 window.updateModBadge = updateModBadge;
 
-// ---------- Тост уведомления (например, "Отправлено на проверку") ----------
+// ---------- Тост / Snackbar (4 секунды, M3) ----------
 function showToast(msg){
   let toast = document.getElementById("siteToast");
   if(!toast){
     toast = document.createElement("div");
     toast.id = "siteToast";
-    toast.className = "site-toast";
+    toast.className = "snackbar";
     document.body.appendChild(toast);
   }
   toast.textContent = msg || "Отправлено на проверку";
@@ -340,7 +401,7 @@ function showToast(msg){
   clearTimeout(showToast._timer);
   showToast._timer = setTimeout(() => {
     toast.classList.remove("show");
-  }, 3200);
+  }, 4000);
 }
 window.showToast = showToast;
 
@@ -382,6 +443,10 @@ function switchAddTab(tab){
   document.querySelectorAll(".tab-pane").forEach(p => {
     p.classList.toggle("active", p.id === `tabPane${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
   });
+  const barAction = document.getElementById("btnUnifiedBarAction");
+  if(barAction){
+    barAction.textContent = tab === "article" ? "Далее" : "Отправить";
+  }
 }
 window.switchAddTab = switchAddTab;
 
@@ -637,6 +702,28 @@ function initHeader(){
   }
 
   document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", e => close_(e.target.closest(".overlay").id)));
+
+  const btnUnifiedBarAction = document.getElementById("btnUnifiedBarAction");
+  if(btnUnifiedBarAction){
+    btnUnifiedBarAction.addEventListener("click", () => {
+      const activeTab = document.querySelector(".add-tab-btn.active")?.dataset.tab;
+      if(activeTab === "event") document.getElementById("btnSubmitUEvent").click();
+      else if(activeTab === "person") document.getElementById("btnSubmitUPerson").click();
+      else if(activeTab === "article") document.getElementById("btnContinueArticle").click();
+    });
+  }
+
+  const btnAuthBarAction = document.getElementById("btnAuthBarAction");
+  if(btnAuthBarAction){
+    btnAuthBarAction.addEventListener("click", () => {
+      const stepEmail = document.getElementById("stepEmail");
+      const stepCode = document.getElementById("stepCode");
+      const stepProfile = document.getElementById("stepProfile");
+      if(stepEmail && stepEmail.style.display !== "none") document.getElementById("btnSendCode").click();
+      else if(stepCode && stepCode.style.display !== "none") document.getElementById("btnVerifyCode").click();
+      else if(stepProfile && stepProfile.style.display !== "none") document.getElementById("btnSaveProfile").click();
+    });
+  }
 
   const btnAuth = document.getElementById("btnAuth");
   if(btnAuth){
@@ -917,12 +1004,20 @@ function initHeader(){
     document.getElementById("codeSentTo").innerHTML = `Код отправлен на <b>${pendingEmail}</b>`;
     document.getElementById("stepEmail").style.display = "none";
     document.getElementById("stepCode").style.display = "block";
+    const bar = document.getElementById("btnAuthBarAction");
+    const title = document.getElementById("authModalTitle");
+    if(bar) bar.textContent = "Войти";
+    if(title) title.textContent = "Код из письма";
   });
 
   document.getElementById("btnChangeEmail").addEventListener("click", () => {
     document.getElementById("errCode").style.display = "none";
     document.getElementById("stepCode").style.display = "none";
     document.getElementById("stepEmail").style.display = "block";
+    const bar = document.getElementById("btnAuthBarAction");
+    const title = document.getElementById("authModalTitle");
+    if(bar) bar.textContent = "Код";
+    if(title) title.textContent = "Войти";
   });
 
   document.getElementById("btnResendCode").addEventListener("click", async () => {
@@ -949,6 +1044,10 @@ function initHeader(){
     else{
       document.getElementById("stepCode").style.display = "none";
       document.getElementById("stepProfile").style.display = "block";
+      const bar = document.getElementById("btnAuthBarAction");
+      const title = document.getElementById("authModalTitle");
+      if(bar) bar.textContent = "Готово";
+      if(title) title.textContent = "Профиль";
     }
   });
 
@@ -1076,7 +1175,7 @@ function ensureMetaPopover(){
   pop.innerHTML = `
     <div class="meta-popover-header">
       <span class="meta-popover-title">О записи</span>
-      <button type="button" class="meta-popover-close" aria-label="Закрыть">✕</button>
+      <button type="button" class="meta-popover-close iconbtn" aria-label="Закрыть"><span class="sym">close</span></button>
     </div>
     <div class="meta-popover-body"></div>
   `;
@@ -1140,11 +1239,11 @@ async function showMetaPopover(btn){
   let line2 = "";
   if(row){
     if(row.status === "unconfirmed" || row.status === "pending"){
-      line2 = `<div class="meta-popover-row" style="color:var(--warn); font-weight:600">На проверке</div>`;
+      line2 = `<div class="meta-popover-row" style="color:var(--tertiary); font-weight:500">На проверке</div>`;
     } else if(row.status === "rejected"){
       const modName = sanitizePublicName(row.moderated_by_name || "");
       const modDate = row.moderated_at ? formatDate(row.moderated_at) : "";
-      line2 = `<div class="meta-popover-row" style="color:#b0413e">Отклонено${modName ? " — " + escapeHtml(modName) : ""}${modDate ? " · " + modDate : ""}</div>`;
+      line2 = `<div class="meta-popover-row" style="color:var(--error)">Отклонено${modName ? " — " + escapeHtml(modName) : ""}${modDate ? " · " + modDate : ""}</div>`;
     } else {
       const modName = sanitizePublicName(row.moderated_by_name || row.confirmed_by_name || "модератор");
       const modDate = formatDate(row.moderated_at || row.confirmed_at);
@@ -1164,7 +1263,7 @@ async function showMetaPopover(btn){
     <div class="meta-popover-history-sec">
       <div class="meta-popover-history-title">История изменений</div>
       <div class="meta-popover-history-content">
-        <div style="color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); font-style:italic">Загрузка истории…</div>
+        <div style="color:var(--on-surface-variant); font-size:var(--fs-label-medium); font-style:italic">Загрузка истории…</div>
       </div>
     </div>
   `;
@@ -1187,7 +1286,7 @@ async function showMetaPopover(btn){
 
       const historyContent = pop.querySelector(".meta-popover-history-content");
       if(error){
-        historyContent.innerHTML = `<div style="color:#b0413e; font-size:var(--fs-meta); font-family:var(--font-ui)">Не удалось загрузить историю</div>`;
+        historyContent.innerHTML = `<div style="color:var(--error); font-size:var(--fs-label-medium)">Не удалось загрузить историю</div>`;
         return;
       }
 
@@ -1206,7 +1305,7 @@ async function showMetaPopover(btn){
 
       const updates = (revs || []).filter(r => r.kind === "update" || r.kind === "moderate");
       if(!updates.length){
-        historyContent.innerHTML = `<div style="color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); font-style:italic">Правок пока не было</div>`;
+        historyContent.innerHTML = `<div style="color:var(--on-surface-variant); font-size:var(--fs-label-medium); font-style:italic">Правок пока не было</div>`;
       } else {
         const listHtml = updates.map(r => {
           const d = formatDate(r.created_at);
@@ -1214,12 +1313,28 @@ async function showMetaPopover(btn){
           if(r.kind === "update"){
             const changed = Object.keys(r.patch || {}).map(k => META_FIELD_NAMES[k] || k).join(", ");
             const comment = r.comment ? ` · <i>«${escapeHtml(r.comment)}»</i>` : "";
-            const isRej = r.status === "rejected" ? ` <span style="color:#b0413e; font-size:var(--fs-badge); font-family:var(--font-ui)">(отклонено)</span>` : "";
-            return `<li class="meta-popover-history-item">${d} · <b>${escapeHtml(who)}</b> · изменил(а): ${escapeHtml(changed || "данные")}${comment}${isRej}</li>`;
+            const isRej = r.status === "rejected" ? ` <span style="color:var(--error); font-size:var(--fs-label-medium)">(отклонено)</span>` : "";
+            return `
+              <li class="m3-list-item" style="padding:6px 0; display:flex; align-items:flex-start; gap:8px;">
+                <span class="sym" style="font-size:18px; color:var(--on-surface-variant); margin-top:2px; flex:none;">history</span>
+                <div style="flex:1; min-width:0">
+                  <div style="font-weight:500; font-size:var(--fs-body-medium); color:var(--on-surface)">${escapeHtml(who)} · ${d}</div>
+                  <div style="font-size:var(--fs-label-medium); color:var(--on-surface-variant)">изменил(а): ${escapeHtml(changed || "данные")}${comment}${isRej}</div>
+                </div>
+              </li>
+            `;
           } else if(r.kind === "moderate"){
             const action = (r.patch && r.patch.status === "confirmed") ? "подтверждение" : "отклонение";
             const note = (r.moderator_note || (r.patch && r.patch.note)) ? ` · <i>«${escapeHtml(r.moderator_note || r.patch.note)}»</i>` : "";
-            return `<li class="meta-popover-history-item">${d} · <b>${escapeHtml(who)}</b> · ${action}${note}</li>`;
+            return `
+              <li class="m3-list-item" style="padding:6px 0; display:flex; align-items:flex-start; gap:8px;">
+                <span class="sym" style="font-size:18px; color:var(--on-surface-variant); margin-top:2px; flex:none;">history</span>
+                <div style="flex:1; min-width:0">
+                  <div style="font-weight:500; font-size:var(--fs-body-medium); color:var(--on-surface)">${escapeHtml(who)} · ${d}</div>
+                  <div style="font-size:var(--fs-label-medium); color:var(--on-surface-variant)">${action}${note}</div>
+                </div>
+              </li>
+            `;
           }
           return "";
         }).join("");
