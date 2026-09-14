@@ -151,3 +151,71 @@ $$;
 drop policy if exists "articles: автор удаляет свой черновик" on public.articles;
 create policy "articles: автор удаляет свой черновик" on public.articles
   for delete using (created_by = auth.uid() and status in ('draft', 'rejected'));
+
+-- ============================================================================
+-- W4: роль администратора — назначение модераторов на сайте
+-- ============================================================================
+
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+
+-- Владельца назначает администратором Claude одним SQL при применении миграции:
+-- update public.profiles set is_admin = true, is_moderator = true where id = '<uuid владельца>';
+-- (см. отчёт — нужен email/id владельца, чтобы подставить сюда).
+
+-- Ставит/снимает is_moderator участнику. Вызывать может только администратор;
+-- снять модератора с самого себя через эту функцию нельзя.
+create or replace function public.set_moderator(target uuid, flag boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_is_admin boolean;
+begin
+  select is_admin into caller_is_admin from public.profiles where id = auth.uid();
+  if not coalesce(caller_is_admin, false) then
+    raise exception 'Доступ запрещён: требуется роль администратора';
+  end if;
+  if target = auth.uid() and flag = false then
+    raise exception 'Нельзя снять модератора с самого себя';
+  end if;
+  update public.profiles set is_moderator = flag where id = target;
+end;
+$$;
+
+revoke all on function public.set_moderator(uuid, boolean) from public;
+grant execute on function public.set_moderator(uuid, boolean) to authenticated;
+
+-- Список участников для вкладки «Участники» (только для администратора).
+-- Почту отдаём — админ и так владелец проекта; больше никому.
+create or replace function public.list_members()
+returns table (
+  id uuid,
+  full_name text,
+  relation_type text,
+  study_end int,
+  is_moderator boolean,
+  is_admin boolean,
+  created_at timestamptz,
+  email text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not exists (select 1 from public.profiles where id = auth.uid() and is_admin = true) then
+    raise exception 'Доступ запрещён: требуется роль администратора';
+  end if;
+  return query
+    select p.id, p.full_name, p.relation_type, p.study_end, p.is_moderator, p.is_admin, p.created_at, u.email::text
+    from public.profiles p
+    join auth.users u on u.id = p.id
+    order by p.full_name;
+end;
+$$;
+
+revoke all on function public.list_members() from public;
+grant execute on function public.list_members() to authenticated;

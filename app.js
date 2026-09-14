@@ -33,6 +33,7 @@ const HEADER_HTML = `
           <div class="profile-card" id="profileCard"></div>
           <button class="opt" id="myCardBtn"><div class="t">Моя карточка</div></button>
           <a class="opt" id="modLink" href="moderation.html" style="display:none"><div class="t">Модерация</div></a>
+          <a class="opt" id="membersLink" href="moderation.html" style="display:none"><div class="t">Участники</div></a>
           <button class="opt" id="btnLogout"><div class="t">Выйти</div></button>
         </div>
       </div>
@@ -395,6 +396,11 @@ function onLoggedIn(profile){
     const navModBtn = document.getElementById("navModBtn");
     if(navModBtn) navModBtn.style.display = "grid";
     updateModBadge();
+  }
+
+  if(profile.is_admin){
+    const membersLink = document.getElementById("membersLink");
+    if(membersLink) membersLink.style.display = "block";
   }
 
   if(!profile.person_id) silentMatchPersonId();

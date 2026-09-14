@@ -146,6 +146,37 @@
   @media (max-width:480px){
     .rev-diff-table th, .rev-diff-table td{padding:6px 10px}
   }
+
+  /* ---------- Участники (W4) ---------- */
+  .member-row{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:14px 4px; border-bottom:1px solid var(--outline-variant);
+  }
+  .member-row:last-child{border-bottom:none}
+  .member-name{font-size:var(--fs-title-medium); font-weight:500; color:var(--on-surface)}
+  .member-sub{font-size:var(--fs-body-medium); color:var(--on-surface-variant); margin-top:2px}
+  .member-admin-badge{
+    font-size:var(--fs-label-medium); font-weight:500; color:var(--on-primary-container);
+    background:var(--primary-container); padding:2px 8px; border-radius:var(--r-xs); margin-left:6px;
+  }
+
+  .m3-switch{ position:relative; display:inline-flex; align-items:center; width:52px; height:32px; flex:none; cursor:pointer; }
+  .m3-switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; }
+  .m3-switch input:disabled{ cursor:not-allowed; }
+  .m3-switch-track{
+    position:absolute; inset:0; border-radius:999px; background:var(--surface-highest);
+    border:2px solid var(--outline); transition:background .15s, border-color .15s;
+  }
+  .m3-switch-thumb{
+    position:absolute; top:50%; left:4px; transform:translate(0,-50%); width:16px; height:16px;
+    border-radius:50%; background:var(--outline); transition:transform .15s, background .15s, width .15s, height .15s, left .15s;
+  }
+  .m3-switch input:checked ~ .m3-switch-track{ background:var(--primary); border-color:var(--primary); }
+  .m3-switch input:checked ~ .m3-switch-track .m3-switch-thumb{
+    background:var(--on-primary); left:auto; transform:translate(18px,-50%); width:20px; height:20px;
+  }
+  .m3-switch input:focus-visible ~ .m3-switch-track{ outline:2px solid var(--primary); outline-offset:2px; }
+  .m3-switch input:disabled ~ .m3-switch-track{ opacity:.5; }
 </style>
 </head>
 <body data-page="moderation">
@@ -178,6 +209,12 @@
       <span class="mod-section-count" id="countArticles">0</span>
     </div>
     <div id="modArticles"><div class="mod-state">Загрузка…</div></div>
+
+    <div class="mod-section-title" id="participantsSectionTitle" style="display:none">
+      <span>Участники</span>
+      <span class="mod-section-count" id="countMembers">0</span>
+    </div>
+    <div id="modParticipants" style="display:none"></div>
   </div>
 </main>
 
@@ -214,6 +251,12 @@ async function initModeration(){
   loadEvents();
   loadPeople();
   loadArticles();
+
+  if(myProfile.is_admin){
+    document.getElementById("participantsSectionTitle").style.display = "flex";
+    document.getElementById("modParticipants").style.display = "block";
+    loadMembers();
+  }
 }
 
 // -------------------- 0. ПРАВКИ К ЗАПИСЯМ --------------------
@@ -1122,6 +1165,78 @@ async function loadArticles(){
       if(!rem){
         content.innerHTML = `<div class="mod-state">Пока пусто — материалов на проверку нет.</div>`;
       }
+    });
+  });
+}
+
+// -------------------- 5. УЧАСТНИКИ (W4, только для администратора) --------------------
+const REL_LABEL_MEMBERS = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Близкий человек" };
+let allMembers = [];
+
+async function loadMembers(){
+  const section = document.getElementById("modParticipants");
+  section.innerHTML = `<div class="mod-state">Загрузка…</div>`;
+  const { data, error } = await sb.rpc("list_members");
+  if(error){ section.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+  allMembers = data || [];
+  document.getElementById("countMembers").textContent = allMembers.length;
+  renderMembers();
+}
+
+function renderMembers(){
+  const section = document.getElementById("modParticipants");
+  const existingSearch = document.getElementById("memberSearch");
+  const q = (existingSearch ? existingSearch.value : "").trim().toLowerCase();
+  let list = allMembers;
+  if(q) list = list.filter(m => (m.full_name || "").toLowerCase().includes(q));
+
+  const searchHtml = allMembers.length > 20 ? `
+    <div class="field" style="max-width:360px; margin-bottom:12px">
+      <input type="text" id="memberSearch" placeholder=" " value="${escapeAttr(q)}">
+      <label class="lbl">Поиск по имени</label>
+    </div>
+  ` : "";
+
+  const rows = list.map(m => `
+    <div class="member-row" data-id="${m.id}">
+      <div class="member-info">
+        <div class="member-name">${escapeHtml(m.full_name)}${m.is_admin ? '<span class="member-admin-badge">Администратор</span>' : ""}</div>
+        <div class="member-sub">${escapeHtml(REL_LABEL_MEMBERS[m.relation_type] || m.relation_type || "")}${m.study_end ? " · выпуск " + m.study_end : ""} · ${escapeHtml(m.email || "")} · ${formatDate(m.created_at)}</div>
+      </div>
+      <label class="m3-switch" title="Модератор">
+        <input type="checkbox" class="mod-toggle" data-uid="${m.id}" ${m.is_moderator ? "checked" : ""} ${m.id === myProfile.id ? "disabled" : ""}>
+        <span class="m3-switch-track"><span class="m3-switch-thumb"></span></span>
+      </label>
+    </div>
+  `).join("");
+
+  section.innerHTML = searchHtml + (rows || `<div class="mod-state">Никого не нашлось.</div>`);
+
+  const searchInput = document.getElementById("memberSearch");
+  if(searchInput){
+    searchInput.addEventListener("input", renderMembers);
+    if(document.activeElement !== searchInput){
+      searchInput.focus();
+      searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+    }
+  }
+
+  section.querySelectorAll(".mod-toggle").forEach(chk => {
+    chk.addEventListener("change", async () => {
+      const uid = chk.dataset.uid;
+      const flag = chk.checked;
+      chk.disabled = true;
+      const { error } = await sb.rpc("set_moderator", { target: uid, flag });
+      if(error){
+        chk.checked = !flag;
+        chk.disabled = false;
+        alert("Не получилось изменить роль: " + error.message);
+        return;
+      }
+      chk.disabled = uid === myProfile.id;
+      const m = allMembers.find(x => x.id === uid);
+      if(m) m.is_moderator = flag;
+      if(typeof showToast === "function") showToast(flag ? "Назначен(а) модератором" : "Роль модератора снята");
     });
   });
 }
