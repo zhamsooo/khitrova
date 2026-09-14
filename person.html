@@ -73,6 +73,19 @@
   .person-section{margin-bottom:24px}
   .person-section:last-of-type{margin-bottom:0}
 
+  /* M3 list item (обучение у Т.И.) — иконка и текст в одной строке */
+  .m3-list{display:flex; flex-direction:column}
+  .m3-list-item{
+    display:flex; align-items:center; gap:12px; padding:10px 0;
+    border-bottom:1px solid var(--outline-variant);
+  }
+  .m3-list-item:last-child{border-bottom:none}
+  .m3-list-item .list-icon{font-size:20px; color:var(--on-surface-variant); flex:none}
+  .list-text{flex:1; min-width:0}
+  .list-title{font:var(--t-title-medium); font-size:15px; color:var(--on-surface)}
+  .list-sub{font:var(--t-body-medium); font-size:13px; color:var(--on-surface-variant); margin-top:2px}
+  .list-badge{font:var(--t-label-medium); font-size:12px; color:var(--on-surface-variant); white-space:nowrap; flex:none}
+
   /* Заметки и биография */
   .notes-paragraph{
     margin:0 0 10px 0; color:var(--on-surface); line-height:1.6; font:var(--t-body-medium); font-size:15px; max-width:68ch;
@@ -414,28 +427,28 @@ function renderEducation(p){
   if(p.studied_choir_school){
     items.push({
       institution: "Хоровое училище им. М.И. Глинки",
-      detail: "Класс Т.И. Хитровой",
+      detail: "",
       year: p.choir_school_end ? `выпуск ${p.choir_school_end} г.` : "выпуск"
     });
   }
   if(p.studied_conservatory){
     items.push({
       institution: "СПбГК им. Н.А. Римского-Корсакова",
-      detail: "Дирижёрско-хоровой факультет · класс проф. Т.И. Хитровой",
+      detail: "Дирижёрско-хоровой факультет",
       year: p.conservatory_end ? `выпуск ${p.conservatory_end} г.` : "выпуск"
     });
   }
   if(p.studied_assistantship){
     items.push({
       institution: "Ассистентура-стажировка в СПбГК",
-      detail: "Класс проф. Т.И. Хитровой",
+      detail: "",
       year: p.assistantship_end ? `выпуск ${p.assistantship_end} г.` : "выпуск"
     });
   }
   if(!items.length && (p.study_start || p.study_end)){
     items.push({
       institution: "Обучение у Т.И. Хитровой",
-      detail: "Класс Т.И. Хитровой",
+      detail: "",
       year: p.study_start && p.study_end
         ? `${p.study_start}–${p.study_end} гг.`
         : (p.study_end ? `выпуск ${p.study_end} г.` : `с ${p.study_start} г.`)
@@ -449,10 +462,10 @@ function renderEducation(p){
       <div class="m3-list">
         ${items.map(it => `
           <div class="m3-list-item">
-            <div class="list-icon"><span class="sym">school</span></div>
+            <span class="sym list-icon">school</span>
             <div class="list-text">
               <div class="list-title">${escapeHtml(it.institution)}</div>
-              <div class="list-sub">${escapeHtml(it.detail)}</div>
+              ${it.detail ? `<div class="list-sub">${escapeHtml(it.detail)}</div>` : ""}
             </div>
             <div class="list-badge">${escapeHtml(it.year)}</div>
           </div>

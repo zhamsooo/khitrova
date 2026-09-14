@@ -723,6 +723,21 @@ h1 {
     font-size: 32px;
     line-height: 40px;
   }
+
+  /* Тач-экраны: hover недоступен — ⓘ показываем постоянно в углу карточки, без полосы метаданных */
+  .card .meta {
+    transform: none;
+    background: transparent;
+    pointer-events: none;
+  }
+  .card .meta > span {
+    display: none;
+  }
+  .card .meta .meta-icon-btn {
+    margin-left: auto;
+    pointer-events: auto;
+    background: var(--surface-high);
+  }
 }
 
 /* ---------- Поля ввода (Fields) ---------- */
