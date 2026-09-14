@@ -122,8 +122,14 @@ html, body {
 .page {
   max-width: var(--container);
   margin: 0 auto;
-  padding: 32px var(--gutter) 120px;
+  padding: 32px var(--gutter) 48px;
   width: 100%;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding-bottom: 96px;
+  }
 }
 
 h1 {
@@ -146,9 +152,10 @@ h1 {
   margin: 0 0 24px;
 }
 
-/* ---------- Top App Bar ---------- */
+/* ---------- Top App Bar: одна полоса 52px ---------- */
 .appbar {
   background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -158,23 +165,26 @@ h1 {
   max-width: var(--container);
   margin: 0 auto;
   padding: 0 var(--gutter);
-  height: 64px;
+  height: 52px;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
 }
 
-.appbar .title {
-  font: var(--t-title-large);
-  font-size: 22px;
-  font-weight: 400;
-  letter-spacing: 0;
-  flex: 1;
-  color: var(--on-surface);
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.appbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.btn.appbar-add-btn {
+  height: 36px;
+  padding: 0 16px;
+}
+
+.iconbtn.appbar-add-icon {
+  display: none;
 }
 
 /* ---------- Иконочные кнопки и аватар ---------- */
@@ -230,29 +240,71 @@ h1 {
   place-items: center;
   font-weight: 500;
   font-size: 14px;
-  cursor: pointer;
-  border: 0;
-  padding: 0;
-  margin-left: 8px;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
-/* ---------- Primary Tabs (десктоп) ---------- */
-.tabs {
-  border-bottom: 1px solid var(--outline-variant);
-  background: var(--surface);
+/* ---------- Блок пользователя (справа в шапке) ---------- */
+.who-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
 }
 
-.tabs .row {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 var(--gutter);
+.who-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 8px 0 2px;
+  border-radius: 999px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--on-surface);
+}
+
+.who-main:hover {
+  background: var(--surface-high);
+}
+
+.who-name {
+  font: var(--t-label-large);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--on-surface);
+}
+
+.who-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+}
+
+.who-arrow:hover {
+  background: var(--surface-high);
+}
+
+/* ---------- Primary Tabs (в самой шапке) ---------- */
+.appbar-tabs {
   display: flex;
+  align-items: stretch;
+  gap: 24px;
+  flex: 1;
+  min-width: 0;
 }
 
 .tab {
   position: relative;
-  padding: 14px 16px;
+  padding: 0 2px;
   font: var(--t-label-large);
   font-size: 14px;
   font-weight: 500;
@@ -267,7 +319,6 @@ h1 {
 }
 
 .tab:hover {
-  background: var(--surface-low);
   color: var(--on-surface);
 }
 
@@ -278,11 +329,10 @@ h1 {
 .tab.on::after, .tab.active::after {
   content: "";
   position: absolute;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
+  height: 2px;
   background: var(--primary);
 }
 
@@ -292,7 +342,16 @@ h1 {
 }
 
 @media (max-width: 600px) {
-  .tabs {
+  .appbar-tabs {
+    display: none;
+  }
+  .btn.appbar-add-btn {
+    display: none;
+  }
+  .iconbtn.appbar-add-icon {
+    display: grid;
+  }
+  .who-name, .who-arrow {
     display: none;
   }
   .navbar {
@@ -341,45 +400,6 @@ h1 {
   .navbar .nav-item.active, .navbar .nav-item.on {
     color: var(--on-surface);
     font-weight: 700;
-  }
-}
-
-/* ---------- Extended FAB ---------- */
-.fab {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  height: 56px;
-  padding: 0 20px 0 16px;
-  border-radius: var(--r-l);
-  background: var(--primary-container);
-  color: var(--on-primary-container);
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  font: var(--t-label-large);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: .1px;
-  border: 0;
-  cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 8px 3px rgba(0,0,0,.15);
-  z-index: 24;
-  transition: box-shadow .15s, background .15s;
-}
-
-.fab:hover {
-  box-shadow: 0 2px 3px rgba(0,0,0,.3), 0 6px 10px 4px rgba(0,0,0,.15);
-}
-
-.fab .sym {
-  font-size: 24px;
-}
-
-@media (max-width: 600px) {
-  .fab {
-    bottom: 96px;
-    right: 16px;
   }
 }
 

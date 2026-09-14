@@ -10,29 +10,35 @@ const CONTACT_EMAIL = "post@khitrova.org";
 const HEADER_HTML = `
 <header class="appbar">
   <div class="row">
-    <a href="index.html" class="title">Татьяна Ивановна Хитрова</a>
-    <button class="iconbtn" id="navSearchBtn" aria-label="Поиск" style="display:none"><span class="sym">search</span></button>
-    <a class="iconbtn" id="navModBtn" href="moderation.html" aria-label="Модерация" style="display:none">
-      <span class="sym">fact_check</span>
-      <span class="badge-count" id="navModBadge" style="display:none">0</span>
-    </a>
-    <button class="btn text" id="btnAuth">Войти</button>
-    <div class="who-wrap" id="whoWrap" style="display:none">
-      <button class="avatar-btn" id="whoChip" aria-label="Профиль"><span id="whoAvatar"></span></button>
-      <span id="whoName" style="display:none"></span>
-      <div class="dropdown" id="whoDropdown">
-        <div class="profile-card" id="profileCard"></div>
-        <a class="opt" id="modLink" href="moderation.html" style="display:none"><div class="t">Модерация</div></a>
-        <button class="opt" id="btnLogout"><div class="t">Выйти</div></button>
+    <nav class="appbar-tabs">
+      <a href="index.html" class="tab" data-page="index">Линия жизни</a>
+      <a href="people.html" class="tab" data-page="people">Люди</a>
+      <a href="nasledie.html" class="tab" data-page="nasledie">Наследие</a>
+    </nav>
+    <div class="appbar-right">
+      <button type="button" class="btn tonal appbar-add-btn" id="addBtn"><span class="sym">add</span>Добавить</button>
+      <button type="button" class="iconbtn appbar-add-icon" id="addBtnMobile" aria-label="Добавить"><span class="sym">add</span></button>
+      <a class="iconbtn" id="navModBtn" href="moderation.html" aria-label="Модерация" style="display:none">
+        <span class="sym">fact_check</span>
+        <span class="badge-count" id="navModBadge" style="display:none">0</span>
+      </a>
+      <button class="btn text" id="btnAuth">Войти</button>
+      <div class="who-wrap" id="whoWrap" style="display:none">
+        <button class="who-main" id="whoChip" aria-label="Моя карточка">
+          <span class="avatar-btn" id="whoAvatar"></span>
+          <span class="who-name" id="whoName"></span>
+        </button>
+        <button class="who-arrow" id="whoArrowBtn" aria-label="Меню профиля"><span class="sym">expand_more</span></button>
+        <div class="dropdown" id="whoDropdown">
+          <div class="profile-card" id="profileCard"></div>
+          <button class="opt" id="myCardBtn"><div class="t">Моя карточка</div></button>
+          <a class="opt" id="modLink" href="moderation.html" style="display:none"><div class="t">Модерация</div></a>
+          <button class="opt" id="btnLogout"><div class="t">Выйти</div></button>
+        </div>
       </div>
     </div>
   </div>
 </header>
-<nav class="tabs"><div class="row">
-  <a href="index.html" class="tab" data-page="index">Линия жизни</a>
-  <a href="people.html" class="tab" data-page="people">Люди</a>
-  <a href="nasledie.html" class="tab" data-page="nasledie">Наследие</a>
-</div></nav>
 <nav class="navbar">
   <a href="index.html" class="nav-item" data-page="index">
     <div class="icon-pill"><span class="sym">timeline</span></div>
@@ -47,7 +53,6 @@ const HEADER_HTML = `
     <span>Наследие</span>
   </a>
 </nav>
-<button class="fab" id="fabAdd" aria-label="Добавить"><span class="sym">add</span>Добавить</button>
 `;
 
 const MODALS_HTML = `
@@ -248,6 +253,7 @@ const MODALS_HTML = `
           </div>
 
           <div class="err" id="errUPerson"></div>
+          <div class="hint" id="uPOwnCardHint" style="display:none">Это будет ваша карточка на сайте.</div>
           <div class="hint">Появится в «Людях» с пометкой «не подтверждено», пока модератор не проверит.</div>
 
           <div class="row-actions">
@@ -301,9 +307,17 @@ const MODALS_HTML = `
 
 let currentUser = null;
 let myProfile = null;
+let ownCardFlow = false;
 
 function open_(id){ document.getElementById(id).classList.add("open"); }
-function close_(id){ document.getElementById(id).classList.remove("open"); }
+function close_(id){
+  document.getElementById(id).classList.remove("open");
+  if(id === "unifiedAddOverlay"){
+    ownCardFlow = false;
+    const hint = document.getElementById("uPOwnCardHint");
+    if(hint) hint.style.display = "none";
+  }
+}
 
 function resetAuthModal(){
   document.getElementById("stepEmail").style.display = "block";
@@ -357,6 +371,63 @@ function onLoggedIn(profile){
     if(navModBtn) navModBtn.style.display = "grid";
     updateModBadge();
   }
+
+  if(!profile.person_id) silentMatchPersonId();
+}
+
+// ---------- Своя карточка (F2): сопоставление профиля с записью в people ----------
+function normalizeName(s){
+  return (s || "").toLowerCase().replace(/ё/g, "е").trim();
+}
+
+async function findMyPersonMatch(){
+  if(!myProfile || !myProfile.full_name || !sb) return null;
+  const target = normalizeName(myProfile.full_name);
+  const { data, error } = await sb.from("people").select("id, full_name");
+  if(error || !data) return null;
+  const matches = data.filter(p => normalizeName(p.full_name) === target);
+  return matches.length === 1 ? matches[0] : null;
+}
+
+async function silentMatchPersonId(){
+  const match = await findMyPersonMatch();
+  if(!match) return;
+  const { data } = await sb.from("profiles").update({ person_id: match.id }).eq("id", myProfile.id).select().single();
+  if(data) myProfile = data;
+}
+
+async function goToMyCard(){
+  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  if(!myProfile) return;
+  if(myProfile.person_id){
+    window.location.href = `person.html?id=${myProfile.person_id}`;
+    return;
+  }
+  const match = await findMyPersonMatch();
+  if(match){
+    const { data } = await sb.from("profiles").update({ person_id: match.id }).eq("id", myProfile.id).select().single();
+    if(data) myProfile = data;
+    window.location.href = `person.html?id=${match.id}`;
+    return;
+  }
+  openOwnCardModal();
+}
+window.goToMyCard = goToMyCard;
+
+function openOwnCardModal(){
+  ownCardFlow = true;
+  switchAddTab("person");
+  open_("unifiedAddOverlay");
+  const nameInput = document.getElementById("uPFullName");
+  const relationInput = document.getElementById("uPRelation");
+  const studyEndInput = document.getElementById("uPStudyEnd");
+  const studyWrap = document.getElementById("uPStudyWrap");
+  if(nameInput) nameInput.value = myProfile.full_name || "";
+  if(relationInput) relationInput.value = myProfile.relation_type || "ученик";
+  if(studyEndInput) studyEndInput.value = myProfile.study_end || "";
+  if(studyWrap) studyWrap.style.display = (relationInput && relationInput.value === "ученик") ? "block" : "none";
+  const hint = document.getElementById("uPOwnCardHint");
+  if(hint) hint.style.display = "block";
 }
 
 async function updateModBadge(){
@@ -456,6 +527,9 @@ function openAddModal(tab){
     open_("authOverlay");
     return;
   }
+  ownCardFlow = false;
+  const hint = document.getElementById("uPOwnCardHint");
+  if(hint) hint.style.display = "none";
   if(!tab){
     const page = document.body.dataset.page;
     if(page === "index") tab = "event";
@@ -581,7 +655,7 @@ async function submitPersonForm(){
   if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
 
   try {
-    const { error } = await sb.from("people").insert({
+    const { data, error } = await sb.from("people").insert({
       full_name,
       gender,
       relation_type,
@@ -598,7 +672,7 @@ async function submitPersonForm(){
       source: source || null,
       created_by: currentUser.id,
       created_by_name: myProfile ? myProfile.full_name : ""
-    });
+    }).select().single();
 
     if(error){
       errEl.textContent = error.message;
@@ -606,6 +680,11 @@ async function submitPersonForm(){
       if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
       return;
     }
+
+    const wasOwnCardFlow = ownCardFlow;
+    ownCardFlow = false;
+    const ownCardHint = document.getElementById("uPOwnCardHint");
+    if(ownCardHint) ownCardHint.style.display = "none";
 
     close_("unifiedAddOverlay");
     nameInput.value = "";
@@ -627,6 +706,14 @@ async function submitPersonForm(){
     if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
 
     showToast("Отправлено на проверку");
+
+    if(wasOwnCardFlow && data){
+      await sb.from("profiles").update({ person_id: data.id }).eq("id", currentUser.id);
+      if(myProfile) myProfile.person_id = data.id;
+      window.location.href = `person.html?id=${data.id}`;
+      return;
+    }
+
     if(typeof window.onPersonAdded === "function") window.onPersonAdded();
     if(typeof updateModBadge === "function") updateModBadge();
   } catch(e){
@@ -697,7 +784,7 @@ function initHeader(){
 
   const page = document.body.dataset.page;
   if(page){
-    document.querySelectorAll(`.tabs .tab[data-page="${page}"]`).forEach(l => l.classList.add("on"));
+    document.querySelectorAll(`.appbar-tabs .tab[data-page="${page}"]`).forEach(l => l.classList.add("on"));
     document.querySelectorAll(`.navbar .nav-item[data-page="${page}"]`).forEach(l => l.classList.add("on"));
   }
 
@@ -730,14 +817,6 @@ function initHeader(){
     btnAuth.addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
   }
 
-  const fabAdd = document.getElementById("fabAdd");
-  if(fabAdd){
-    fabAdd.addEventListener("click", e => {
-      e.stopPropagation();
-      openAddModal();
-    });
-  }
-
   const addBtn = document.getElementById("addBtn");
   if(addBtn){
     addBtn.addEventListener("click", e => {
@@ -746,18 +825,12 @@ function initHeader(){
     });
   }
 
-  const navSearchBtn = document.getElementById("navSearchBtn");
-  const searchEl = document.querySelector('input[type="search"], .search input, #personSearchInput, .ppl-search');
-  if(navSearchBtn){
-    if(searchEl){
-      navSearchBtn.style.display = "grid";
-      navSearchBtn.addEventListener("click", () => {
-        searchEl.focus();
-        searchEl.scrollIntoView({ behavior: "smooth", block: "center" });
-      });
-    } else {
-      navSearchBtn.style.display = "none";
-    }
+  const addBtnMobile = document.getElementById("addBtnMobile");
+  if(addBtnMobile){
+    addBtnMobile.addEventListener("click", e => {
+      e.stopPropagation();
+      openAddModal();
+    });
   }
 
   document.querySelectorAll(".add-tab-btn").forEach(tabBtn => {
@@ -817,8 +890,23 @@ function initHeader(){
   }
 
   const whoChip = document.getElementById("whoChip");
+  const whoArrowBtn = document.getElementById("whoArrowBtn");
   const whoDropdown = document.getElementById("whoDropdown");
-  whoChip.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
+  whoChip.addEventListener("click", e => {
+    e.stopPropagation();
+    if(window.innerWidth < 600){
+      whoDropdown.classList.toggle("open");
+    } else {
+      goToMyCard();
+    }
+  });
+  if(whoArrowBtn){
+    whoArrowBtn.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.toggle("open"); });
+  }
+  const myCardBtn = document.getElementById("myCardBtn");
+  if(myCardBtn){
+    myCardBtn.addEventListener("click", e => { e.stopPropagation(); whoDropdown.classList.remove("open"); goToMyCard(); });
+  }
   document.getElementById("btnLogout").addEventListener("click", async () => { await sb.auth.signOut(); location.reload(); });
 
   // Функция инициализации живого поиска людей с подсказками (используется на person.html и др.)
