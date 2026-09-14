@@ -1395,7 +1395,12 @@ document.addEventListener("mouseout", e => {
 });
 
 document.addEventListener("keydown", e => {
-  if(e.key === "Escape") hideMetaPopover();
+  if(e.key === "Escape"){
+    hideMetaPopover();
+    document.querySelectorAll(".overlay.open").forEach(ov => ov.classList.remove("open"));
+    const whoDd = document.getElementById("whoDropdown");
+    if(whoDd) whoDd.classList.remove("open");
+  }
 });
 
 // текст из Editor.js хранится с инлайн-разметкой (<b>, <i>, <a>...) — просто escapeHtml её сломает,

@@ -199,7 +199,7 @@ async function initModeration(){
   const body = document.getElementById("modBody");
 
   if(!currentUser){
-    gate.innerHTML = `<div class="mod-state">Эта страница только для модераторов. <a href="#" onclick="document.getElementById('btnAuth').click(); return false;" style="color:var(--accent)">Войдите</a>, чтобы проверить доступ.</div>`;
+    gate.innerHTML = `<div class="mod-state">Эта страница только для модераторов. <a href="#" onclick="document.getElementById('btnAuth').click(); return false;" style="color:var(--primary)">Войдите</a>, чтобы проверить доступ.</div>`;
     return;
   }
   if(!myProfile || !myProfile.is_moderator){

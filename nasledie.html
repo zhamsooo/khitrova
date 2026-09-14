@@ -616,7 +616,7 @@ async function openEditor(id, options = {}){
     clearInterval(periodicTimer);
     btnBackToList.innerHTML = '<span class="sym">arrow_back</span> К материалу';
     btnBackToList.onclick = () => location.hash = `#read/${id}`;
-    saveStateEl.innerHTML = `<span style="font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); text-transform:uppercase; letter-spacing:.05em; color:var(--warn); background:rgba(164,100,31,.08); padding:3px 8px; border-radius:6px">Предложение правки</span>`;
+    saveStateEl.innerHTML = `<span style="font:var(--t-label-medium); font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--tertiary); background:var(--tertiary-container); padding:3px 8px; border-radius:var(--r-xs)">Предложение правки</span>`;
     btnPublish.textContent = "Отправить предложение правки";
     if(proposeCommentRow) proposeCommentRow.style.display = "flex";
     document.getElementById("editProposeComment").value = "";
