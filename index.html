@@ -12,81 +12,81 @@
 <link rel="stylesheet" href="style.css">
 <style>
   html,body{height:100%; overflow-x:hidden}
-  .page-timeline{
-    max-width:var(--container); margin:0 auto; padding:0 var(--gutter);
-    height:calc(100dvh - 113px); position:relative;
-  }
-  @media (max-width:600px){
-    .page-timeline{
-      height:calc(100dvh - 144px);
-    }
-  }
-  #timeline-embed{width:100%; height:100%}
-  .nav-hint{
-    position:fixed; right:20px; bottom:22%;
-    font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); background:#fff; padding:6px 14px; border:none;
-    border-radius:8px; z-index:15; opacity:1; transition:opacity .8s ease; pointer-events:none;
-  }
-  .nav-hint.hide{opacity:0}
-  .nav-hint .hint-text{
-    display:inline-block; animation:navHintPulse 2.6s ease-in-out infinite;
-  }
-  .nav-hint .arrows{ font-weight:700; font-size:var(--fs-meta); color:var(--ink) }
-  @keyframes navHintPulse{
-    0%, 100% { opacity:.35; }
-    50% { opacity:1; }
-  }
   .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
   .tl-timeaxis-minor{display:none !important} /* лишняя мелкая шкала (1931, 1933…) поверх основной — не нужна */
 
   @media (max-width:640px){
     .nav-hint{display:none} /* на мобильном полоса теперь не про "пролистать слайды", подсказка не нужна */
-
     .tl-menubar{display:none !important} /* кнопки zoom/стрелки — не нужны на мобильном */
-
-    /* шкала десятилетий — прячем совсем, год пишем прямо под риской-меткой (см. .ms-yr в JS) */
     .tl-timeaxis{display:none !important}
     .tl-timemarker-content-container{display:none !important} /* флажок с текстом — не нужен, год отдельно под риской */
 
     .ms-yr{
       position:absolute; top:100%; left:50%; transform:translateX(-50%);
-      margin-top:4px; font-size:var(--fs-meta); font-family:var(--font-ui); color:var(--muted); white-space:nowrap; /* nowrap = не обрезается по ширине */
+      margin-top:4px; font:var(--t-body-small); font-size:11px; font-weight:500;
+      color:var(--on-surface-variant); white-space:nowrap;
     }
   }
 
   /* ---------- галочка подтверждения на событии + всплывающая карточка ---------- */
   .ev-badge{
     position:relative;
-    display:inline-flex; align-items:center; justify-content:center; width:19px; height:19px; border-radius:50%;
-    margin-left:7px; cursor:pointer; vertical-align:middle; border:1.5px solid var(--muted); color:var(--muted);
-    font-size:var(--fs-badge); line-height:1; background:#fff; font-family:var(--font-ui);
+    display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+    margin-left:8px; cursor:pointer; vertical-align:middle;
+    border:1px solid var(--outline); color:var(--on-surface-variant);
+    background:var(--surface-low); font-size:13px; line-height:1; transition:all .15s;
   }
   .ev-badge::before{
     content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
     min-width:44px; min-height:44px;
   }
-  .ev-badge.confirmed{border-color:var(--confirmed); color:var(--confirmed); background:rgba(51,84,122,.08)}
-  .ev-badge.rejected{border-color:#b0413e; color:#b0413e; background:rgba(176,65,62,.08)}
+  .ev-badge.confirmed{
+    border-color:transparent; color:var(--on-primary-container); background:var(--primary-container);
+  }
+  .ev-badge.rejected{
+    border-color:transparent; color:var(--on-error-container); background:var(--error-container);
+  }
+  .ev-badge:hover{
+    filter:brightness(.95);
+  }
 
   .ev-tip{
-    display:none; position:fixed; z-index:70; background:#fff; border:1px solid var(--line); border-radius:10px;
-    box-shadow:0 10px 30px rgba(0,0,0,.14); padding:13px 14px; width:230px; font-size:var(--fs-meta); color:var(--ink); line-height:1.4; font-family:var(--font-ui);
+    display:none; position:fixed; z-index:70;
+    background:var(--surface-high); border:1px solid var(--outline-variant); border-radius:var(--r-m);
+    box-shadow:var(--elev-2); padding:16px; width:260px;
+    font:var(--t-body-medium); font-size:13px; line-height:18px; color:var(--on-surface);
   }
   .ev-tip.open{display:block}
-  .ev-tip .et-row{margin-bottom:6px}
+  .ev-tip-badge{
+    font:var(--t-label-medium); font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    padding:3px 8px; border-radius:var(--r-xs); background:var(--surface-mid); color:var(--on-surface-variant);
+  }
+  .ev-tip-badge.confirmed{ background:var(--primary-container); color:var(--on-primary-container); }
+  .ev-tip-badge.rejected{ background:var(--error-container); color:var(--on-error-container); }
+  .ev-tip .et-row{margin-bottom:6px; color:var(--on-surface-variant)}
   .ev-tip .et-row:last-child{margin-bottom:0}
-  .ev-tip b{font-weight:700}
-  .ev-tip a{color:var(--accent)}
-  .et-confirm{
-    margin-top:10px; width:100%; background:var(--confirmed); color:#fff; border:none; border-radius:8px;
-    padding:7px 0; font-size:var(--fs-ui); cursor:pointer; font-family:var(--font-ui); font-weight:600;
+  .ev-tip .et-row b{color:var(--on-surface); font-weight:600}
+  .ev-tip .et-row a{color:var(--primary); text-decoration:underline}
+
+  /* Подсказка навигации - M3 plain tooltip */
+  .nav-hint{
+    position:fixed; right:24px; bottom:22%;
+    background:var(--inverse-surface); color:var(--inverse-on-surface);
+    font:var(--t-body-small); font-size:12px; line-height:16px;
+    padding:8px 14px; border-radius:var(--r-xs); z-index:15; opacity:1;
+    box-shadow:var(--elev-2); transition:opacity .8s ease; pointer-events:none;
   }
-  .et-propose-btn{
-    margin-top:8px; width:100%; background:#fff; color:var(--ink); border:1px solid var(--line); border-radius:8px;
-    padding:7px 0; font-size:var(--fs-ui); cursor:pointer; font-family:var(--font-ui); font-weight:600;
-    transition:border-color .15s, background .15s;
+  .nav-hint.hide{opacity:0}
+  .nav-hint .hint-text{
+    display:inline-block; animation:navHintPulse 2.6s ease-in-out infinite;
   }
-  .et-propose-btn:hover{border-color:var(--ink); background:#faf8f5}
+  .nav-hint .arrows{
+    font-weight:700; color:var(--inverse-primary); margin-left:4px;
+  }
+  @keyframes navHintPulse{
+    0%, 100% { opacity:.45; }
+    50% { opacity:1; }
+  }
 </style>
 </head>
 <body data-page="index">
@@ -97,13 +97,13 @@
 </main>
 
 <div class="ev-tip" id="evTip">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px">
-    <span style="font-size:var(--fs-meta); font-family:var(--font-ui); font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:.05em">Верификация</span>
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
+    <span class="ev-tip-badge" id="evTipStatusBadge">Подтверждено</span>
     <span id="evMetaIconSlot"></span>
   </div>
   <div id="evTipBody"></div>
-  <button class="et-confirm" id="etConfirmBtn" style="display:none">Подтвердить</button>
-  <button class="et-propose-btn" id="etProposeBtn" style="display:none">Предложить правку</button>
+  <button type="button" class="btn filled" id="etConfirmBtn" style="display:none; width:100%; margin-top:12px">Подтвердить</button>
+  <button type="button" class="btn tonal" id="etProposeBtn" style="display:none; width:100%; margin-top:8px"><span class="sym">edit</span> Предложить правку</button>
 </div>
 
 <!-- Модалка предложения правки события -->
@@ -173,19 +173,24 @@ function formatDate(iso){
 }
 function badgeHtml(e){
   if(e.verification_hidden) return ""; // для очевидных фактов (дата рождения и т.п.) — галочку можно скрыть вручную в базе
+  const icon = e.status === "rejected" ? "close" : "check";
   return `<span class="ev-badge ${escapeAttr(e.status)}"` +
     ` data-id="${escapeAttr(e.id)}" data-status="${escapeAttr(e.status)}"` +
     ` data-created-name="${escapeAttr(e.created_by_name || "")}" data-created-at="${escapeAttr(formatDate(e.created_at))}"` +
     ` data-moderated-name="${escapeAttr(e.moderated_by_name || "")}" data-moderated-at="${escapeAttr(formatDate(e.moderated_at))}"` +
     ` data-note="${escapeAttr(e.moderator_note || "")}"` +
-    ` data-source="${escapeAttr(e.source || "")}">${e.status === "rejected" ? "✕" : "✓"}</span>`;
+    ` data-source="${escapeAttr(e.source || "")}"><span class="sym" style="font-size:14px">${icon}</span></span>`;
 }
 
 async function loadTimeline(){
-  const { data: events, error } = await sb.from("events").select("*").order("event_year");
-  if(error){ console.error(error); return; }
+  let list = [];
+  try {
+    const { data: events, error } = await sb.from("events").select("*").order("event_year");
+    if(!error && events) list = events;
+  } catch(e){
+    console.warn("Failed to load events:", e);
+  }
 
-  const list = events || [];
   allTimelineEvents = list;
   const isMobile = window.innerWidth <= 640;
 
@@ -242,47 +247,8 @@ async function loadTimeline(){
         tick.appendChild(yr);
       });
     }, 300);
-  } else {
-    // на десктопе — подгоняем левый край меню точно под левый край фото (не фиксированный отступ у TimelineJS).
-    // фото появляется в DOM не сразу (TimelineJS вставляет его асинхронно) — ждём через MutationObserver,
-    // а не гадаем с таймером, сколько именно миллисекунд надо; ResizeObserver дальше держит подгонку в синхроне
-    const setupAlign = (photo) => {
-      if(window.__navAlignObserver) window.__navAlignObserver.disconnect();
-      window.__navAlignObserver = new ResizeObserver(alignNavToPhoto);
-      window.__navAlignObserver.observe(photo);
-      window.__navAlignObserver.observe(document.body);
-      // сама картинка может быть в DOM, но ещё без размеров (не догрузилась) — пересчитываем
-      // ещё раз по её load, и отдельно когда догрузятся веб-шрифты (они тоже сдвигают текст рядом)
-      if(photo.complete) alignNavToPhoto(); else photo.addEventListener("load", alignNavToPhoto, { once: true });
-      if(document.fonts && document.fonts.ready) document.fonts.ready.then(alignNavToPhoto);
-      alignNavToPhoto();
-    };
-    const existingPhoto = document.querySelector("#timeline-embed img");
-    if(existingPhoto){
-      setupAlign(existingPhoto);
-    } else {
-      const mo = new MutationObserver(() => {
-        const photo = document.querySelector("#timeline-embed img");
-        if(photo){ mo.disconnect(); setupAlign(photo); }
-      });
-      mo.observe(document.getElementById("timeline-embed"), { childList: true, subtree: true });
-    }
-    // страховка: если что-то пошло не так (например, фото не загрузилось) — не держать меню скрытым вечно
-    setTimeout(() => document.body.classList.add("nav-ready"), 2500);
   }
 }
-
-function alignNavToPhoto(){
-  const photo = document.querySelector("#timeline-embed img");
-  const links = document.querySelector(".site-nav .links");
-  if(!photo || !links) return;
-  const left = photo.getBoundingClientRect().left;
-  const margin = Math.max(0, Math.round(left) - 20); // -20 = свой паддинг .site-nav
-  links.style.marginLeft = margin + "px";
-  document.body.classList.add("nav-ready");
-  try { localStorage.setItem("navMarginLeft", String(margin)); } catch(e){}
-}
-window.addEventListener("resize", () => { if(window.innerWidth > 640) alignNavToPhoto(); });
 
 // ---- галочка подтверждения: подсказка + действие модератора ----
 const evTip = document.getElementById("evTip");
@@ -296,13 +262,27 @@ function showBadgeTip(badge){
   const note = badge.dataset.note;
   const source = badge.dataset.source;
 
+  const statusBadge = document.getElementById("evTipStatusBadge");
+  if(statusBadge){
+    if(status === "confirmed"){
+      statusBadge.textContent = "Подтверждено";
+      statusBadge.className = "ev-tip-badge confirmed";
+    } else if(status === "rejected"){
+      statusBadge.textContent = "Отклонено";
+      statusBadge.className = "ev-tip-badge rejected";
+    } else {
+      statusBadge.textContent = "На проверке";
+      statusBadge.className = "ev-tip-badge";
+    }
+  }
+
   let html = `<div class="et-row">${createdName ? `Добавил(а): <b>${createdName}</b>` : "Добавлено модератором"}${createdAt ? " · " + createdAt : ""}</div>`;
   if(status === "confirmed"){
     html += `<div class="et-row">Подтвердил(а): <b>${modName || "модератор"}</b>${modAt ? " · " + modAt : ""}</div>`;
   } else if(status === "rejected"){
-    html += `<div class="et-row" style="color:#b0413e">Отклонено${modName ? " — " + modName : ""}${modAt ? " · " + modAt : ""}</div>`;
+    html += `<div class="et-row" style="color:var(--error)">Отклонено${modName ? " — " + modName : ""}${modAt ? " · " + modAt : ""}</div>`;
   } else {
-    html += `<div class="et-row" style="color:var(--muted)">Ждёт подтверждения</div>`;
+    html += `<div class="et-row" style="color:var(--on-surface-variant)">Ждёт подтверждения</div>`;
   }
   if(note){
     html += `<div class="et-row">Заметка модератора: ${escapeHtml(note)}</div>`;
