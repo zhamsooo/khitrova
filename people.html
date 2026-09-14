@@ -81,6 +81,9 @@
   <div class="ppl-head">
     <h1>Люди</h1>
     <p class="sub">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный и таким и останется — дополняйте его.</p>
+    <div class="write-wrap" style="margin-bottom: 20px;">
+      <button class="add-link" id="btnAddPerson">+ Добавить человека</button>
+    </div>
   </div>
 
   <div class="ppl-controls-bar" id="pplControlsBar">
@@ -243,6 +246,13 @@ if(pplBar){
   window.addEventListener("scroll", () => {
     pplBar.classList.toggle("is-stuck", window.scrollY > 80);
   }, { passive: true });
+}
+
+const btnAddPerson = document.getElementById("btnAddPerson");
+if(btnAddPerson){
+  btnAddPerson.addEventListener("click", () => {
+    window.openAddModal("person");
+  });
 }
 
 window.onPersonAdded = loadPeople;

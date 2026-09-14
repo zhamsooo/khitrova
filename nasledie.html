@@ -139,31 +139,6 @@
     <p class="sub">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
     <div class="write-wrap">
       <button class="add-link" id="writeBtn">+ Написать</button>
-      <div class="dropdown dropdown-write" id="writeDropdown">
-        <div class="dd-group-title">От Татьяны Ивановны</div>
-        <button class="opt" data-author="ti" data-type="статья">
-          <div class="t">Статья или публикация Т.И.</div>
-          <div class="d">Текст, статья или заметка авторства Татьяны Ивановны</div>
-        </button>
-        <button class="opt" data-author="ti" data-type="интервью">
-          <div class="t">Интервью с Т.И.</div>
-          <div class="d">Беседа или интервью, данное Татьяной Ивановной</div>
-        </button>
-        <div class="dd-divider"></div>
-        <div class="dd-group-title">От учеников и коллег</div>
-        <button class="opt" data-author="community" data-type="воспоминание">
-          <div class="t">Воспоминание</div>
-          <div class="d">Личная история или память о Т.И. от первого лица</div>
-        </button>
-        <button class="opt" data-author="community" data-type="статья">
-          <div class="t">Статья или очерк о Т.И.</div>
-          <div class="d">Текст о педагогике или жизни Т.И. от автора</div>
-        </button>
-        <button class="opt" data-author="community" data-type="другое">
-          <div class="t">Другой материал</div>
-          <div class="d">Архивный документ, разбор, памятка</div>
-        </button>
-      </div>
     </div>
   </div>
 
@@ -682,37 +657,12 @@ async function router(){
 document.getElementById("btnBackToList").addEventListener("click", () => location.hash = "#list");
 document.getElementById("btnBackToList2").addEventListener("click", () => location.hash = "#list");
 
-document.getElementById("writeBtn").addEventListener("click", e => {
-  e.stopPropagation();
-  document.getElementById("writeDropdown").classList.toggle("open");
-});
-document.addEventListener("click", () => document.getElementById("writeDropdown").classList.remove("open"));
-
-document.querySelectorAll("#writeDropdown .opt").forEach(opt => {
-  opt.addEventListener("click", async e => {
-    e.stopPropagation();
-    document.getElementById("writeDropdown").classList.remove("open");
-    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
-
-    const author_type = opt.dataset.author || "community";
-    const type = opt.dataset.type || "воспоминание";
-    const author_name = author_type === "ti" ? "Татьяна Ивановна Хитрова" : myProfile.full_name;
-
-    const { data, error } = await sb.from("articles").insert({
-      author_type,
-      type,
-      author_name,
-      title: "",
-      content: { blocks: [], meta: { author_type, type, author_name } },
-      status: "draft",
-      created_by: currentUser.id,
-      created_by_name: myProfile.full_name
-    }).select().single();
-
-    if(error){ alert(error.message); return; }
-    location.hash = `#edit/${data.id}`;
+const writeBtn = document.getElementById("writeBtn");
+if(writeBtn){
+  writeBtn.addEventListener("click", () => {
+    window.openAddModal("article");
   });
-});
+}
 
 window.addEventListener("hashchange", router);
 window.addEventListener("authReady", router, { once: true });

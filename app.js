@@ -17,21 +17,7 @@ const HEADER_HTML = `
   <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
   <div class="nav-right">
     <div class="add-wrap">
-      <button class="add-link" id="addBtn">+ Добавить материал</button>
-      <div class="dropdown" id="addDropdown">
-        <button class="opt" id="optEvent">
-          <div class="t">Событие на линию жизни</div>
-          <div class="d">Дата, место, что произошло — появится на таймлайне</div>
-        </button>
-        <button class="opt" id="optPerson">
-          <div class="t">Человека в «Людях»</div>
-          <div class="d">Ученик, коллега — появится в разделе «Люди»</div>
-        </button>
-        <a class="opt" href="mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Материал для сайта памяти Т.И. Хитровой")}">
-          <div class="t">Написать на почту</div>
-          <div class="d">Фото, статья, воспоминание — что угодно, на ${CONTACT_EMAIL}</div>
-        </a>
-      </div>
+      <button class="add-link" id="addBtn">+ Добавить</button>
     </div>
     <a class="nav-mod-link" id="navModBtn" href="moderation.html" style="display:none">
       <span>Модерация</span>
@@ -100,79 +86,148 @@ const MODALS_HTML = `
   </div>
 </div>
 
-<div class="overlay" id="addOverlay">
-  <div class="modal">
-    <button class="close" data-close>×</button>
-    <h2>Добавить событие на таймлайн</h2>
-    <label>Год</label>
-    <input type="number" id="evYear" placeholder="например, 1962" min="1940" max="2026">
-    <label>Что произошло</label>
-    <input type="text" id="evTitle" placeholder="Короткое название события">
-    <label>Подробности (необязательно)</label>
-    <textarea id="evDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
-    <label>Источник / ссылка (необязательно)</label>
-    <input type="text" id="evSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
-    <div class="err" id="errEvent"></div>
-    <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
-    <div class="row-actions"><button class="primary" id="btnSubmitEvent">Отправить</button></div>
-  </div>
-</div>
+<!-- Единая модалка добавления с табами: Событие · Человек · Материал -->
+<div class="overlay overlay-bottom-sheet" id="unifiedAddOverlay">
+  <div class="modal modal-unified-add">
+    <div class="modal-header">
+      <h2>Добавить на сайт</h2>
+      <button class="modal-close-btn" data-close aria-label="Закрыть">×</button>
+    </div>
 
-<div class="overlay" id="addPersonOverlay">
-  <div class="modal">
-    <button class="close" data-close>×</button>
-    <h2>Добавить человека</h2>
-    <label>Имя и фамилия</label>
-    <input type="text" id="pFullName" placeholder="Имя Фамилия">
-    <label>Пол</label>
-    <select id="pGender">
-      <option value="">Не указан</option>
-      <option value="m">Мужской (ученик)</option>
-      <option value="f">Женский (ученица)</option>
-    </select>
-    <label>Кем приходится Т.И.?</label>
-    <select id="pRelation">
-      <option value="ученик">Ученик / Ученица</option>
-      <option value="коллега">Коллега</option>
-      <option value="другое">Другое</option>
-    </select>
-    <div id="pStudyWrap">
-      <label>Где учился(лась) у Т.И.?</label>
-      <div style="margin-bottom:8px">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="pChoirSchool" style="width:auto; margin:0"> Хоровое училище им. М.И. Глинки
-        </label>
-        <div id="pChoirBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="pChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
-        </div>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="pConservatory" style="width:auto; margin:0"> СПбГК им. Н.А. Римского-Корсакова
-        </label>
-        <div id="pConservatoryBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="pConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
-        </div>
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12.5px; margin:5px 0">
-          <input type="checkbox" id="pAssistantship" style="width:auto; margin:0"> Ассистентура-стажировка в СПбГК
-        </label>
-        <div id="pAssistantBox" style="display:none; margin:4px 0 8px 24px">
-          <input type="number" id="pAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
-        </div>
+    <div class="add-tabs-bar" role="tablist">
+      <button type="button" class="add-tab-btn active" data-tab="event" role="tab">Событие</button>
+      <button type="button" class="add-tab-btn" data-tab="person" role="tab">Человек</button>
+      <button type="button" class="add-tab-btn" data-tab="article" role="tab">Материал</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Таб 1: Событие -->
+      <div class="tab-pane active" id="tabPaneEvent">
+        <form id="formAddEvent" onsubmit="return false;">
+          <label for="uEvYear">Год события *</label>
+          <input type="number" id="uEvYear" placeholder="например, 1962" min="1940" max="2026" required>
+
+          <label for="uEvTitle">Что произошло *</label>
+          <input type="text" id="uEvTitle" placeholder="Короткое название события" required>
+
+          <label for="uEvDesc">Подробности (необязательно)</label>
+          <textarea id="uEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
+
+          <label for="uEvSource">Источник / ссылка (необязательно)</label>
+          <input type="text" id="uEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
+
+          <div class="err" id="errUEvent"></div>
+          <div class="hint">Появится на таймлайне с пометкой «не подтверждено», пока модератор не проверит.</div>
+
+          <div class="row-actions">
+            <button type="button" class="primary" id="btnSubmitUEvent">Отправить</button>
+          </div>
+        </form>
       </div>
-      <label>Или другие годы учёбы (необязательно)</label>
-      <div style="display:flex; gap:8px">
-        <input type="number" id="pStudyStart" placeholder="начало" min="1955" max="2026">
-        <input type="number" id="pStudyEnd" placeholder="окончание" min="1955" max="2026">
+
+      <!-- Таб 2: Человек -->
+      <div class="tab-pane" id="tabPanePerson">
+        <form id="formAddPerson" onsubmit="return false;">
+          <label for="uPFullName">Имя и фамилия *</label>
+          <input type="text" id="uPFullName" placeholder="Имя Фамилия" required>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+            <div>
+              <label for="uPGender">Пол</label>
+              <select id="uPGender">
+                <option value="">Не указан</option>
+                <option value="m">Мужской (ученик)</option>
+                <option value="f">Женский (ученица)</option>
+              </select>
+            </div>
+            <div>
+              <label for="uPRelation">Кем приходится Т.И.?</label>
+              <select id="uPRelation">
+                <option value="ученик">Ученик / Ученица</option>
+                <option value="коллега">Коллега</option>
+                <option value="другое">Другое</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="uPStudyWrap">
+            <label>Обучение у Т.И. Хитровой</label>
+            <div class="study-box-wrap">
+              <label class="study-check-row">
+                <input type="checkbox" id="uPChoirSchool"> Хоровое училище им. М.И. Глинки
+              </label>
+              <div id="uPChoirBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="uPChoirEnd" placeholder="год выпуска (напр. 1980)" min="1955" max="2026">
+              </div>
+
+              <label class="study-check-row">
+                <input type="checkbox" id="uPConservatory"> СПбГК им. Н.А. Римского-Корсакова
+              </label>
+              <div id="uPConservatoryBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="uPConservatoryEnd" placeholder="год выпуска (напр. 1985)" min="1955" max="2026">
+              </div>
+
+              <label class="study-check-row">
+                <input type="checkbox" id="uPAssistantship"> Ассистентура-стажировка в СПбГК
+              </label>
+              <div id="uPAssistantBox" style="display:none; margin:4px 0 8px 24px">
+                <input type="number" id="uPAssistantEnd" placeholder="год окончания (напр. 2005)" min="1955" max="2026">
+              </div>
+            </div>
+
+            <label>Или другие годы учёбы (необязательно)</label>
+            <div style="display:flex; gap:8px">
+              <input type="number" id="uPStudyStart" placeholder="начало" min="1955" max="2026">
+              <input type="number" id="uPStudyEnd" placeholder="окончание" min="1955" max="2026">
+            </div>
+          </div>
+
+          <label for="uPInstitution">Место работы / должность (необязательно)</label>
+          <input type="text" id="uPInstitution" placeholder="например, преподаватель Хорового училища">
+
+          <label for="uPNotes">Ещё что-то важное (необязательно)</label>
+          <textarea id="uPNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
+
+          <label for="uPSource">Источник / ссылка (необязательно)</label>
+          <input type="text" id="uPSource" placeholder="Откуда эта информация">
+
+          <div class="err" id="errUPerson"></div>
+          <div class="hint">Появится в «Людях» с пометкой «не подтверждено», пока модератор не проверит.</div>
+
+          <div class="row-actions">
+            <button type="button" class="primary" id="btnSubmitUPerson">Отправить</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Таб 3: Материал -->
+      <div class="tab-pane" id="tabPaneArticle">
+        <form id="formAddArticle" onsubmit="return false;">
+          <label for="uArtTitle">Заголовок материала (необязательно)</label>
+          <input type="text" id="uArtTitle" placeholder="Название статьи, интервью или воспоминания">
+
+          <label for="uArtCategory">Раздел / Авторство</label>
+          <select id="uArtCategory">
+            <option value="community">От учеников и коллег (воспоминания, статьи о Т.И.)</option>
+            <option value="ti">От Татьяны Ивановны (труды, статьи, интервью Т.И.)</option>
+          </select>
+
+          <label for="uArtType">Тип материала</label>
+          <select id="uArtType">
+            <option value="воспоминание">Воспоминание</option>
+            <option value="статья">Статья или очерк о Т.И.</option>
+            <option value="другое">Другой материал</option>
+          </select>
+
+          <div class="err" id="errUArticle"></div>
+          <div class="hint">Откроется редактор, где можно написать текст, вставить фотографии и отправить материал на публикацию.</div>
+
+          <div class="row-actions">
+            <button type="button" class="primary" id="btnContinueArticle">Продолжить в редакторе</button>
+          </div>
+        </form>
       </div>
     </div>
-    <label>Место работы / должность (необязательно)</label>
-    <input type="text" id="pInstitution" placeholder="например, преподаватель Хорового училища">
-    <label>Ещё что-то важное (необязательно)</label>
-    <textarea id="pNotes" placeholder="Звания, достижения, каким запомнился"></textarea>
-    <label>Источник / ссылка (необязательно)</label>
-    <input type="text" id="pSource" placeholder="Откуда эта информация">
-    <div class="err" id="errPerson"></div>
-    <div class="hint">Появится в «Людях» с пометкой «не подтверждено», пока модератор не проверит.</div>
-    <div class="row-actions"><button class="primary" id="btnSubmitPerson">Отправить</button></div>
   </div>
 </div>
 `;
@@ -253,6 +308,298 @@ async function updateModBadge(){
 }
 window.updateModBadge = updateModBadge;
 
+// ---------- Тост уведомления (например, "Отправлено на проверку") ----------
+function showToast(msg){
+  let toast = document.getElementById("siteToast");
+  if(!toast){
+    toast = document.createElement("div");
+    toast.id = "siteToast";
+    toast.className = "site-toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg || "Отправлено на проверку";
+  toast.classList.add("show");
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3200);
+}
+window.showToast = showToast;
+
+// ---------- Логика единого окна «+ Добавить» ----------
+const ART_TYPES_BY_CAT = {
+  community: [
+    { value: "воспоминание", label: "Воспоминание" },
+    { value: "статья", label: "Статья или очерк о Т.И." },
+    { value: "другое", label: "Другой материал" }
+  ],
+  ti: [
+    { value: "статья", label: "Статья или публикация Т.И." },
+    { value: "интервью", label: "Интервью с Т.И." },
+    { value: "публикация", label: "Публикация / архивный очерк" },
+    { value: "другое", label: "Другой материал" }
+  ]
+};
+
+function updateArticleTypeOptions(){
+  const catEl = document.getElementById("uArtCategory");
+  const typeEl = document.getElementById("uArtType");
+  if(!catEl || !typeEl) return;
+  const cat = catEl.value || "community";
+  const types = ART_TYPES_BY_CAT[cat] || ART_TYPES_BY_CAT.community;
+  const currentVal = typeEl.value;
+  typeEl.innerHTML = types.map(t => `<option value="${t.value}">${t.label}</option>`).join("");
+  if(types.some(t => t.value === currentVal)){
+    typeEl.value = currentVal;
+  }
+}
+window.updateArticleTypeOptions = updateArticleTypeOptions;
+
+function switchAddTab(tab){
+  const validTabs = ["event", "person", "article"];
+  if(!validTabs.includes(tab)) tab = "event";
+  document.querySelectorAll(".add-tab-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === tab);
+  });
+  document.querySelectorAll(".tab-pane").forEach(p => {
+    p.classList.toggle("active", p.id === `tabPane${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+  });
+}
+window.switchAddTab = switchAddTab;
+
+function openAddModal(tab){
+  if(!currentUser){
+    resetAuthModal();
+    open_("authOverlay");
+    return;
+  }
+  if(!tab){
+    const page = document.body.dataset.page;
+    if(page === "index") tab = "event";
+    else if(page === "people" || page === "person" || document.body.classList.contains("page-person")) tab = "person";
+    else if(page === "nasledie") tab = "article";
+    else tab = "event";
+  }
+  switchAddTab(tab);
+  open_("unifiedAddOverlay");
+}
+window.openAddModal = openAddModal;
+
+// Функция отправки события из таба «Событие»
+async function submitEventForm(){
+  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  const yearInput = document.getElementById("uEvYear");
+  const titleInput = document.getElementById("uEvTitle");
+  const descInput = document.getElementById("uEvDesc");
+  const sourceInput = document.getElementById("uEvSource");
+  const errEl = document.getElementById("errUEvent");
+  const btn = document.getElementById("btnSubmitUEvent");
+
+  const event_year = parseInt(yearInput.value, 10);
+  const title = titleInput.value.trim();
+  const description = descInput.value.trim();
+  const source = sourceInput.value.trim();
+
+  if(!event_year || !title){
+    errEl.textContent = "Заполните год и название события";
+    errEl.style.display = "block";
+    return;
+  }
+  errEl.style.display = "none";
+  if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
+
+  try {
+    const { error } = await sb.from("events").insert({
+      event_year,
+      title,
+      description: description || null,
+      source: source || null,
+      created_by: currentUser.id,
+      created_by_name: myProfile ? myProfile.full_name : ""
+    });
+
+    if(error){
+      errEl.textContent = error.message;
+      errEl.style.display = "block";
+      if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+      return;
+    }
+
+    close_("unifiedAddOverlay");
+    yearInput.value = "";
+    titleInput.value = "";
+    descInput.value = "";
+    sourceInput.value = "";
+    if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+
+    showToast("Отправлено на проверку");
+    if(typeof window.onEventAdded === "function") window.onEventAdded();
+    if(typeof updateModBadge === "function") updateModBadge();
+  } catch(e){
+    errEl.textContent = e.message || "Ошибка при отправке";
+    errEl.style.display = "block";
+    if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+  }
+}
+window.submitEventForm = submitEventForm;
+
+// Функция отправки человека из таба «Человек»
+async function submitPersonForm(){
+  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  const nameInput = document.getElementById("uPFullName");
+  const genderInput = document.getElementById("uPGender");
+  const relationInput = document.getElementById("uPRelation");
+  const choirChk = document.getElementById("uPChoirSchool");
+  const choirEndInput = document.getElementById("uPChoirEnd");
+  const consChk = document.getElementById("uPConservatory");
+  const consEndInput = document.getElementById("uPConservatoryEnd");
+  const assistChk = document.getElementById("uPAssistantship");
+  const assistEndInput = document.getElementById("uPAssistantEnd");
+  const studyStartInput = document.getElementById("uPStudyStart");
+  const studyEndInput = document.getElementById("uPStudyEnd");
+  const instInput = document.getElementById("uPInstitution");
+  const notesInput = document.getElementById("uPNotes");
+  const sourceInput = document.getElementById("uPSource");
+  const errEl = document.getElementById("errUPerson");
+  const btn = document.getElementById("btnSubmitUPerson");
+
+  const full_name = nameInput.value.trim();
+  const gender = genderInput.value || null;
+  const relation_type = relationInput.value;
+  const studied_choir_school = choirChk ? choirChk.checked : false;
+  const choir_school_end = (studied_choir_school && choirEndInput.value) ? parseInt(choirEndInput.value, 10) : null;
+  const studied_conservatory = consChk ? consChk.checked : false;
+  const conservatory_end = (studied_conservatory && consEndInput.value) ? parseInt(consEndInput.value, 10) : null;
+  const studied_assistantship = assistChk ? assistChk.checked : false;
+  const assistantship_end = (studied_assistantship && assistEndInput.value) ? parseInt(assistEndInput.value, 10) : null;
+
+  let study_start = relation_type === "ученик" && studyStartInput.value ? parseInt(studyStartInput.value, 10) : null;
+  let study_end = relation_type === "ученик" && studyEndInput.value ? parseInt(studyEndInput.value, 10) : null;
+  if(!study_end && relation_type === "ученик"){
+    study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
+  }
+  const institution = instInput.value.trim();
+  const notes = notesInput.value.trim();
+  const source = sourceInput.value.trim();
+
+  if(!full_name){
+    errEl.textContent = "Укажите имя и фамилию";
+    errEl.style.display = "block";
+    return;
+  }
+  errEl.style.display = "none";
+  if(btn){ btn.disabled = true; btn.textContent = "Отправка…"; }
+
+  try {
+    const { error } = await sb.from("people").insert({
+      full_name,
+      gender,
+      relation_type,
+      studied_choir_school,
+      choir_school_end,
+      studied_conservatory,
+      conservatory_end,
+      studied_assistantship,
+      assistantship_end,
+      study_start,
+      study_end,
+      institution: institution || null,
+      notes: notes || null,
+      source: source || null,
+      created_by: currentUser.id,
+      created_by_name: myProfile ? myProfile.full_name : ""
+    });
+
+    if(error){
+      errEl.textContent = error.message;
+      errEl.style.display = "block";
+      if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+      return;
+    }
+
+    close_("unifiedAddOverlay");
+    nameInput.value = "";
+    genderInput.value = "";
+    relationInput.value = "ученик";
+    const studyWrap = document.getElementById("uPStudyWrap");
+    if(studyWrap) studyWrap.style.display = "block";
+    if(choirChk){ choirChk.checked = false; document.getElementById("uPChoirBox").style.display = "none"; }
+    choirEndInput.value = "";
+    if(consChk){ consChk.checked = false; document.getElementById("uPConservatoryBox").style.display = "none"; }
+    consEndInput.value = "";
+    if(assistChk){ assistChk.checked = false; document.getElementById("uPAssistantBox").style.display = "none"; }
+    assistEndInput.value = "";
+    studyStartInput.value = "";
+    studyEndInput.value = "";
+    instInput.value = "";
+    notesInput.value = "";
+    sourceInput.value = "";
+    if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+
+    showToast("Отправлено на проверку");
+    if(typeof window.onPersonAdded === "function") window.onPersonAdded();
+    if(typeof updateModBadge === "function") updateModBadge();
+  } catch(e){
+    errEl.textContent = e.message || "Ошибка при отправке";
+    errEl.style.display = "block";
+    if(btn){ btn.disabled = false; btn.textContent = "Отправить"; }
+  }
+}
+window.submitPersonForm = submitPersonForm;
+
+// Функция создания черновика из таба «Материал»
+async function submitArticleDraft(){
+  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  const titleInput = document.getElementById("uArtTitle");
+  const catSelect = document.getElementById("uArtCategory");
+  const typeSelect = document.getElementById("uArtType");
+  const errEl = document.getElementById("errUArticle");
+  const btn = document.getElementById("btnContinueArticle");
+
+  const author_type = catSelect.value || "community";
+  const type = typeSelect.value || "воспоминание";
+  const title = titleInput.value.trim();
+  const author_name = author_type === "ti" ? "Татьяна Ивановна Хитрова" : (myProfile ? myProfile.full_name : "Автор");
+
+  errEl.style.display = "none";
+  if(btn){ btn.disabled = true; btn.textContent = "Создание черновика…"; }
+
+  try {
+    const { data, error } = await sb.from("articles").insert({
+      author_type,
+      type,
+      author_name,
+      title,
+      content: { blocks: [], meta: { author_type, type, author_name } },
+      status: "draft",
+      created_by: currentUser.id,
+      created_by_name: myProfile ? myProfile.full_name : ""
+    }).select().single();
+
+    if(error){
+      errEl.textContent = error.message;
+      errEl.style.display = "block";
+      if(btn){ btn.disabled = false; btn.textContent = "Продолжить в редакторе"; }
+      return;
+    }
+
+    close_("unifiedAddOverlay");
+    titleInput.value = "";
+    if(btn){ btn.disabled = false; btn.textContent = "Продолжить в редакторе"; }
+
+    if(location.pathname.endsWith("nasledie.html")){
+      location.hash = `#edit/${data.id}`;
+    } else {
+      window.location.href = `nasledie.html#edit/${data.id}`;
+    }
+  } catch(e){
+    errEl.textContent = e.message || "Ошибка при создании";
+    errEl.style.display = "block";
+    if(btn){ btn.disabled = false; btn.textContent = "Продолжить в редакторе"; }
+  }
+}
+window.submitArticleDraft = submitArticleDraft;
+
 function initHeader(){
   if(document.querySelector(".site-nav")) return;
   document.body.insertAdjacentHTML("afterbegin", MODALS_HTML);
@@ -282,39 +629,67 @@ function initHeader(){
   document.getElementById("btnAuth").addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
 
   const addBtn = document.getElementById("addBtn");
-  const dropdown = document.getElementById("addDropdown");
-  addBtn.addEventListener("click", e => { e.stopPropagation(); dropdown.classList.toggle("open"); addBtn.classList.toggle("open"); });
-  document.getElementById("optEvent").addEventListener("click", e => {
-    e.stopPropagation();
-    dropdown.classList.remove("open");
-    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
-    open_("addOverlay");
-  });
-  document.getElementById("optPerson").addEventListener("click", e => {
-    e.stopPropagation();
-    dropdown.classList.remove("open");
-    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
-    open_("addPersonOverlay");
+  if(addBtn){
+    addBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      openAddModal();
+    });
+  }
+
+  document.querySelectorAll(".add-tab-btn").forEach(tabBtn => {
+    tabBtn.addEventListener("click", () => {
+      switchAddTab(tabBtn.dataset.tab);
+    });
   });
 
-  document.getElementById("pRelation").addEventListener("change", e => {
-    document.getElementById("pStudyWrap").style.display = e.target.value === "ученик" ? "block" : "none";
-  });
+  const uArtCategory = document.getElementById("uArtCategory");
+  if(uArtCategory){
+    uArtCategory.addEventListener("change", updateArticleTypeOptions);
+  }
 
-  const pChoirSchool = document.getElementById("pChoirSchool");
-  const pChoirBox = document.getElementById("pChoirBox");
-  if(pChoirSchool && pChoirBox){
-    pChoirSchool.addEventListener("change", () => pChoirBox.style.display = pChoirSchool.checked ? "block" : "none");
+  const uPRelation = document.getElementById("uPRelation");
+  const uPStudyWrap = document.getElementById("uPStudyWrap");
+  if(uPRelation && uPStudyWrap){
+    uPRelation.addEventListener("change", e => {
+      uPStudyWrap.style.display = e.target.value === "ученик" ? "block" : "none";
+    });
   }
-  const pConservatory = document.getElementById("pConservatory");
-  const pConservatoryBox = document.getElementById("pConservatoryBox");
-  if(pConservatory && pConservatoryBox){
-    pConservatory.addEventListener("change", () => pConservatoryBox.style.display = pConservatory.checked ? "block" : "none");
+
+  const uPChoirSchool = document.getElementById("uPChoirSchool");
+  const uPChoirBox = document.getElementById("uPChoirBox");
+  if(uPChoirSchool && uPChoirBox){
+    uPChoirSchool.addEventListener("change", () => {
+      uPChoirBox.style.display = uPChoirSchool.checked ? "block" : "none";
+    });
   }
-  const pAssistantship = document.getElementById("pAssistantship");
-  const pAssistantBox = document.getElementById("pAssistantBox");
-  if(pAssistantship && pAssistantBox){
-    pAssistantship.addEventListener("change", () => pAssistantBox.style.display = pAssistantship.checked ? "block" : "none");
+
+  const uPConservatory = document.getElementById("uPConservatory");
+  const uPConservatoryBox = document.getElementById("uPConservatoryBox");
+  if(uPConservatory && uPConservatoryBox){
+    uPConservatory.addEventListener("change", () => {
+      uPConservatoryBox.style.display = uPConservatory.checked ? "block" : "none";
+    });
+  }
+
+  const uPAssistantship = document.getElementById("uPAssistantship");
+  const uPAssistantBox = document.getElementById("uPAssistantBox");
+  if(uPAssistantship && uPAssistantBox){
+    uPAssistantship.addEventListener("change", () => {
+      uPAssistantBox.style.display = uPAssistantship.checked ? "block" : "none";
+    });
+  }
+
+  const btnSubmitUEvent = document.getElementById("btnSubmitUEvent");
+  if(btnSubmitUEvent){
+    btnSubmitUEvent.addEventListener("click", submitEventForm);
+  }
+  const btnSubmitUPerson = document.getElementById("btnSubmitUPerson");
+  if(btnSubmitUPerson){
+    btnSubmitUPerson.addEventListener("click", submitPersonForm);
+  }
+  const btnContinueArticle = document.getElementById("btnContinueArticle");
+  if(btnContinueArticle){
+    btnContinueArticle.addEventListener("click", submitArticleDraft);
   }
 
   const whoChip = document.getElementById("whoChip");
@@ -478,7 +853,6 @@ function initHeader(){
   burgerBtn.addEventListener("click", e => { e.stopPropagation(); navRight.classList.toggle("open"); });
 
   document.addEventListener("click", e => {
-    dropdown.classList.remove("open"); addBtn.classList.remove("open");
     whoDropdown.classList.remove("open");
     navRight.classList.remove("open");
     if(searchWrap && !searchWrap.contains(e.target)){
@@ -563,78 +937,7 @@ function initHeader(){
     onLoggedIn(profile);
   });
 
-  document.getElementById("btnSubmitEvent").addEventListener("click", async () => {
-    const event_year = parseInt(document.getElementById("evYear").value, 10);
-    const title = document.getElementById("evTitle").value.trim();
-    const description = document.getElementById("evDesc").value.trim();
-    const source = document.getElementById("evSource").value.trim();
-    const errEl = document.getElementById("errEvent");
-    if(!event_year || !title){ errEl.textContent = "Заполните год и название"; errEl.style.display = "block"; return; }
-    errEl.style.display = "none";
-    const { error } = await sb.from("events").insert({
-      event_year, title, description, source: source || null, created_by: currentUser.id, created_by_name: myProfile.full_name
-    });
-    if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
-    close_("addOverlay");
-    document.getElementById("evYear").value = "";
-    document.getElementById("evTitle").value = "";
-    document.getElementById("evDesc").value = "";
-    document.getElementById("evSource").value = "";
-    if(typeof window.onEventAdded === "function") window.onEventAdded();
-    if(typeof updateModBadge === "function") updateModBadge();
-  });
 
-  document.getElementById("btnSubmitPerson").addEventListener("click", async () => {
-    const full_name = document.getElementById("pFullName").value.trim();
-    const gender = document.getElementById("pGender").value || null;
-    const relation_type = document.getElementById("pRelation").value;
-    const studyStartRaw = document.getElementById("pStudyStart").value;
-    const studyEndRaw = document.getElementById("pStudyEnd").value;
-    const studied_choir_school = pChoirSchool ? pChoirSchool.checked : false;
-    const choir_school_end = (studied_choir_school && document.getElementById("pChoirEnd").value) ? parseInt(document.getElementById("pChoirEnd").value, 10) : null;
-    const studied_conservatory = pConservatory ? pConservatory.checked : false;
-    const conservatory_end = (studied_conservatory && document.getElementById("pConservatoryEnd").value) ? parseInt(document.getElementById("pConservatoryEnd").value, 10) : null;
-    const studied_assistantship = pAssistantship ? pAssistantship.checked : false;
-    const assistantship_end = (studied_assistantship && document.getElementById("pAssistantEnd").value) ? parseInt(document.getElementById("pAssistantEnd").value, 10) : null;
-
-    let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
-    let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
-    if(!study_end && relation_type === "ученик"){
-      study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
-    }
-    const institution = document.getElementById("pInstitution").value.trim();
-    const notes = document.getElementById("pNotes").value.trim();
-    const source = document.getElementById("pSource").value.trim();
-    const errEl = document.getElementById("errPerson");
-    if(!full_name){ errEl.textContent = "Укажите имя и фамилию"; errEl.style.display = "block"; return; }
-    errEl.style.display = "none";
-    const { error } = await sb.from("people").insert({
-      full_name, gender, relation_type,
-      studied_choir_school, choir_school_end,
-      studied_conservatory, conservatory_end,
-      studied_assistantship, assistantship_end,
-      study_start, study_end,
-      institution: institution || null, notes: notes || null, source: source || null,
-      created_by: currentUser.id, created_by_name: myProfile.full_name
-    });
-    if(error){ errEl.textContent = error.message; errEl.style.display = "block"; return; }
-    close_("addPersonOverlay");
-    document.getElementById("pFullName").value = "";
-    document.getElementById("pGender").value = "";
-    if(pChoirSchool){ pChoirSchool.checked = false; pChoirBox.style.display = "none"; }
-    document.getElementById("pChoirEnd").value = "";
-    if(pConservatory){ pConservatory.checked = false; pConservatoryBox.style.display = "none"; }
-    document.getElementById("pConservatoryEnd").value = "";
-    if(pAssistantship){ pAssistantship.checked = false; pAssistantBox.style.display = "none"; }
-    document.getElementById("pAssistantEnd").value = "";
-    document.getElementById("pStudyStart").value = "";
-    document.getElementById("pStudyEnd").value = "";
-    document.getElementById("pInstitution").value = "";
-    document.getElementById("pNotes").value = "";
-    document.getElementById("pSource").value = "";
-    if(typeof window.onPersonAdded === "function") window.onPersonAdded();
-    if(typeof updateModBadge === "function") updateModBadge();
-  });
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if(session && session.user){
