@@ -885,9 +885,6 @@ function initHeader(){
       navRight.classList.remove("open");
       if(burgerBtn) burgerBtn.textContent = "☰";
     }
-    if(searchWrap && !searchWrap.contains(e.target)){
-      if(searchDropdown) searchDropdown.classList.remove("open");
-    }
   });
 
   document.getElementById("inRelation").addEventListener("change", e => {
