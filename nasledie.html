@@ -6,10 +6,9 @@
 <title>Наследие — сайт памяти Т.И. Хитровой</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-  .nsl-wrap{max-width:740px; margin:0 auto; padding:8vh 24px 10vh}
   .nsl-head h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin:0 0 10px}
   .nsl-head .sub{color:var(--muted); font-size:var(--fs-body); line-height:1.6; margin:0 0 22px; max-width:68ch; font-family:var(--font-body)}
   .write-wrap{position:relative; display:inline-block; margin-bottom:8px}
@@ -105,7 +104,7 @@
     background:var(--ink); color:#fff; border-color:var(--ink); font-weight:600;
   }
 
-  .nsl-editor{max-width:740px; margin:0 auto; padding:24px 24px 80px}
+  .nsl-editor{max-width:var(--container); margin:0 auto; padding:32px var(--gutter) 120px}
   .nsl-editor-bar{display:flex; align-items:center; gap:14px; margin-bottom:22px; padding-bottom:14px; border-bottom:1px solid var(--line)}
   .btn-plain{background:none; border:none; color:var(--muted); font-size:var(--fs-ui); padding:0; cursor:pointer; font-family:var(--font-ui)}
   .btn-plain:hover{color:var(--ink)}
@@ -115,7 +114,7 @@
   .art-title::placeholder{color:var(--muted)}
   #editorjs{font-family:var(--font-body); font-size:var(--fs-body-art); line-height:1.65; max-width:68ch}
 
-  .nsl-read{max-width:640px; margin:0 auto; padding:8vh 24px 10vh}
+  .nsl-read{max-width:var(--container); margin:0 auto; padding:32px var(--gutter) 120px}
   .read-badge-wrap{margin-top:16px; margin-bottom:10px}
   .read-category-badge{
     font-family:var(--font-ui); font-weight:700; font-size:var(--fs-badge); letter-spacing:.06em;
@@ -152,13 +151,10 @@
 </head>
 <body data-page="nasledie">
 
-<div class="nsl-wrap" id="nslWrap">
+<main class="page" id="nslWrap">
   <div class="nsl-head">
     <h1>Наследие</h1>
     <p class="sub">Труды, статьи и интервью Татьяны Ивановны, а также воспоминания и очерки её учеников и коллег.</p>
-    <div class="write-wrap">
-      <button class="add-link" id="writeBtn">+ Написать</button>
-    </div>
   </div>
 
   <div class="nsl-controls-bar">
@@ -170,7 +166,7 @@
   </div>
 
   <div id="nslList"><div class="nsl-state">Загрузка…</div></div>
-</div>
+</main>
 
 <div class="nsl-editor" id="nslEditor" style="display:none">
   <div class="nsl-editor-bar">

@@ -6,10 +6,9 @@
 <title>Модерация — сайт памяти Т.И. Хитровой</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-  .mod-wrap{max-width:680px; margin:0 auto; padding:40px 24px 60px}
   .mod-wrap h1{font-family:var(--font-head); font-weight:700; font-size:var(--fs-h1); line-height:1.1; text-wrap:balance; margin:0 0 6px}
   .mod-wrap .sub{color:var(--muted); font-size:var(--fs-meta); font-family:var(--font-ui); margin-bottom:28px; line-height:1.5}
   .mod-section-title{
@@ -138,7 +137,6 @@
   .rev-diff-new{color:#2a7a4c; font-weight:600; word-break:break-word}
 
   @media (max-width:480px){
-    .mod-wrap{padding:20px 14px 60px}
     .rev-diff-table{display:block; overflow-x:auto}
     .rev-diff-table th, .rev-diff-table td{padding:5px 6px}
   }
@@ -146,7 +144,7 @@
 </head>
 <body data-page="moderation">
 
-<div class="mod-wrap">
+<main class="page">
   <h1>Модерация</h1>
   <div class="sub">События, люди и материалы «Наследия», предложенные читателями, — отредактируйте неточности при необходимости и подтвердите или отклоните.</div>
   <div id="modGate"><div class="mod-state">Проверяем доступ…</div></div>
@@ -175,7 +173,7 @@
     </div>
     <div id="modArticles"><div class="mod-state">Загрузка…</div></div>
   </div>
-</div>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>

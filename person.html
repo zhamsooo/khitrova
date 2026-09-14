@@ -6,10 +6,9 @@
 <title>Карточка человека — сайт памяти Т.И. Хитровой</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=PT+Sans+Narrow:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <style>
-  .person-wrap{max-width:1040px; margin:0 auto; padding:5vh 24px 10vh}
   .btn-back{
     display:inline-flex; align-items:center; gap:6px; color:var(--muted); text-decoration:none;
     font-size:var(--fs-ui); margin-bottom:24px; transition:color .15s; font-family:var(--font-ui);
@@ -244,7 +243,7 @@
 
   /* Фиксированная панель навигации карточки с поиском */
   .person-sticky-bar{
-    position:sticky; top:0; z-index:35; background:rgba(255,255,255,.96);
+    position:sticky; top:64px; z-index:15; background:rgba(254,247,255,.96);
     backdrop-filter:blur(6px); border-bottom:1px solid #edebe8;
     padding:10px 0; margin-bottom:24px;
     display:flex; align-items:center; justify-content:space-between; gap:16px;
@@ -361,7 +360,7 @@
 </head>
 <body data-page="people" class="page-person">
 
-<div class="person-wrap">
+<main class="page">
   <div class="person-sticky-bar" id="personStickyBar">
     <nav class="breadcrumbs" aria-label="Навигация">
       <a href="people.html">Люди</a>
@@ -382,7 +381,7 @@
     </div>
     <div id="peersSidebar" style="display:none"></div>
   </div>
-</div>
+</main>
 
 <!-- Модалка редактирования карточки человека -->
 <div class="overlay" id="editPersonOverlay">

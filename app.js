@@ -3,40 +3,23 @@
 
 const SUPABASE_URL = "https://vvcxnqqyuvakrcmkmhjq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SMTkWj9fHPpUG3e9arN3tg_knlaKKfp";
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = (window.supabase && window.supabase.createClient) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 const CONTACT_EMAIL = "post@khitrova.org";
 
 const HEADER_HTML = `
-<header class="site-nav">
-  <a href="index.html" class="nav-brand">Т. И. Хитрова</a>
-  <nav class="links">
-    <a href="index.html" data-page="index">Линия жизни</a>
-    <a href="people.html" data-page="people">Люди</a>
-    <a href="nasledie.html" data-page="nasledie">Наследие</a>
-  </nav>
-  <button class="burger-btn" id="burgerBtn" aria-label="Меню">☰</button>
-  <div class="nav-right">
-    <nav class="mobile-nav-links">
-      <a href="index.html" data-page="index">Линия жизни</a>
-      <a href="people.html" data-page="people">Люди</a>
-      <a href="nasledie.html" data-page="nasledie">Наследие</a>
-    </nav>
-    <div class="mobile-nav-divider"></div>
-    <div class="add-wrap">
-      <button class="add-link" id="addBtn">+ Добавить</button>
-    </div>
-    <a class="nav-mod-link" id="navModBtn" href="moderation.html" style="display:none">
-      <span>Модерация</span>
-      <span class="nav-mod-badge" id="navModBadge" style="display:none">0</span>
+<header class="appbar">
+  <div class="row">
+    <a href="index.html" class="title">Татьяна Ивановна Хитрова</a>
+    <button class="iconbtn" id="navSearchBtn" aria-label="Поиск" style="display:none"><span class="sym">search</span></button>
+    <a class="iconbtn" id="navModBtn" href="moderation.html" aria-label="Модерация" style="display:none">
+      <span class="sym">fact_check</span>
+      <span class="badge-count" id="navModBadge" style="display:none">0</span>
     </a>
-    <span class="nav-divider"></span>
-    <button class="auth-link" id="btnAuth">Войти</button>
-    <div class="who-wrap" id="whoWrap">
-      <button class="who-chip" id="whoChip">
-        <span class="avatar" id="whoAvatar"></span>
-        <span id="whoName"></span>
-      </button>
+    <button class="btn text" id="btnAuth">Войти</button>
+    <div class="who-wrap" id="whoWrap" style="display:none">
+      <button class="avatar-btn" id="whoChip" aria-label="Профиль"><span id="whoAvatar"></span></button>
+      <span id="whoName" style="display:none"></span>
       <div class="dropdown" id="whoDropdown">
         <div class="profile-card" id="profileCard"></div>
         <a class="opt" id="modLink" href="moderation.html" style="display:none"><div class="t">Модерация</div></a>
@@ -45,6 +28,26 @@ const HEADER_HTML = `
     </div>
   </div>
 </header>
+<nav class="tabs"><div class="row">
+  <a href="index.html" class="tab" data-page="index">Линия жизни</a>
+  <a href="people.html" class="tab" data-page="people">Люди</a>
+  <a href="nasledie.html" class="tab" data-page="nasledie">Наследие</a>
+</div></nav>
+<nav class="navbar">
+  <a href="index.html" class="nav-item" data-page="index">
+    <div class="icon-pill"><span class="sym">timeline</span></div>
+    <span>Линия жизни</span>
+  </a>
+  <a href="people.html" class="nav-item" data-page="people">
+    <div class="icon-pill"><span class="sym">group</span></div>
+    <span>Люди</span>
+  </a>
+  <a href="nasledie.html" class="nav-item" data-page="nasledie">
+    <div class="icon-pill"><span class="sym">menu_book</span></div>
+    <span>Наследие</span>
+  </a>
+</nav>
+<button class="fab" id="fabAdd" aria-label="Добавить"><span class="sym">add</span>Добавить</button>
 `;
 
 const MODALS_HTML = `
@@ -271,20 +274,26 @@ const relLabel = { "ученик": "Ученик(ца)", "коллега": "Ко
 
 function onLoggedIn(profile){
   myProfile = profile;
-  document.getElementById("btnAuth").style.display = "none";
-  document.getElementById("whoWrap").style.display = "block";
-  document.getElementById("whoName").textContent = profile.full_name;
-  document.getElementById("whoAvatar").textContent = profile.full_name.trim().charAt(0).toUpperCase();
+  const btnAuth = document.getElementById("btnAuth");
+  if(btnAuth) btnAuth.style.display = "none";
+  const whoWrap = document.getElementById("whoWrap");
+  if(whoWrap) whoWrap.style.display = "inline-flex";
+  const whoName = document.getElementById("whoName");
+  if(whoName) whoName.textContent = profile.full_name;
+  const whoAvatar = document.getElementById("whoAvatar");
+  if(whoAvatar) whoAvatar.textContent = profile.full_name.trim().charAt(0).toUpperCase();
 
   let rows = `<div class="pn">${profile.full_name}</div><div class="pr">${relLabel[profile.relation_type] || profile.relation_type}`;
   if(profile.relation_type === "ученик" && profile.study_end) rows += ` · выпуск ${profile.study_end}`;
   rows += `</div>`;
-  document.getElementById("profileCard").innerHTML = rows;
+  const profileCard = document.getElementById("profileCard");
+  if(profileCard) profileCard.innerHTML = rows;
 
   if(profile.is_moderator){
-    document.getElementById("modLink").style.display = "block";
+    const modLink = document.getElementById("modLink");
+    if(modLink) modLink.style.display = "block";
     const navModBtn = document.getElementById("navModBtn");
-    if(navModBtn) navModBtn.style.display = "inline-flex";
+    if(navModBtn) navModBtn.style.display = "grid";
     updateModBadge();
   }
 }
@@ -377,12 +386,6 @@ function switchAddTab(tab){
 window.switchAddTab = switchAddTab;
 
 function openAddModal(tab){
-  const navRight = document.querySelector(".nav-right");
-  const burgerBtn = document.getElementById("burgerBtn");
-  if(navRight){
-    navRight.classList.remove("open");
-    if(burgerBtn) burgerBtn.textContent = "☰";
-  }
   if(!currentUser){
     resetAuthModal();
     open_("authOverlay");
@@ -623,31 +626,30 @@ async function submitArticleDraft(){
 window.submitArticleDraft = submitArticleDraft;
 
 function initHeader(){
-  if(document.querySelector(".site-nav")) return;
+  if(document.querySelector(".appbar")) return;
   document.body.insertAdjacentHTML("afterbegin", MODALS_HTML);
   document.body.insertAdjacentHTML("afterbegin", HEADER_HTML);
 
   const page = document.body.dataset.page;
-  document.querySelectorAll(`.site-nav a[data-page="${page}"]`).forEach(l => l.classList.add("active"));
-
-  // подхватываем позицию меню, посчитанную на "Линии жизни" в прошлый раз — чтобы не прыгало между страницами.
-  // тот же отступ применяем к блоку страниц-заглушек (Люди/Наследие), чтобы всё стояло в одну сетку
-  try {
-    const saved = localStorage.getItem("navMarginLeft");
-    const linksEl = document.querySelector(".site-nav .links");
-    if(saved !== null && linksEl){
-      linksEl.style.marginLeft = saved + "px";
-      document.body.classList.add("nav-ready");
-      if(window.innerWidth > 640){
-        const stubEl = document.querySelector(".stub");
-        if(stubEl) stubEl.style.paddingLeft = (20 + parseInt(saved, 10)) + "px"; // 20 = свой паддинг .site-nav
-      }
-    }
-  } catch(e){}
+  if(page){
+    document.querySelectorAll(`.tabs .tab[data-page="${page}"]`).forEach(l => l.classList.add("on"));
+    document.querySelectorAll(`.navbar .nav-item[data-page="${page}"]`).forEach(l => l.classList.add("on"));
+  }
 
   document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", e => close_(e.target.closest(".overlay").id)));
 
-  document.getElementById("btnAuth").addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
+  const btnAuth = document.getElementById("btnAuth");
+  if(btnAuth){
+    btnAuth.addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
+  }
+
+  const fabAdd = document.getElementById("fabAdd");
+  if(fabAdd){
+    fabAdd.addEventListener("click", e => {
+      e.stopPropagation();
+      openAddModal();
+    });
+  }
 
   const addBtn = document.getElementById("addBtn");
   if(addBtn){
@@ -655,6 +657,20 @@ function initHeader(){
       e.stopPropagation();
       openAddModal();
     });
+  }
+
+  const navSearchBtn = document.getElementById("navSearchBtn");
+  const searchEl = document.querySelector('input[type="search"], .search input, #personSearchInput, .ppl-search');
+  if(navSearchBtn){
+    if(searchEl){
+      navSearchBtn.style.display = "grid";
+      navSearchBtn.addEventListener("click", () => {
+        searchEl.focus();
+        searchEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    } else {
+      navSearchBtn.style.display = "none";
+    }
   }
 
   document.querySelectorAll(".add-tab-btn").forEach(tabBtn => {
@@ -868,23 +884,8 @@ function initHeader(){
   }
   window.initPeopleSearch = initPeopleSearch;
 
-  // бургер — на мобильном открывает панель с разделами, "добавить материал" и "войти"
-  const burgerBtn = document.getElementById("burgerBtn");
-  const navRight = document.querySelector(".nav-right");
-  if(burgerBtn && navRight){
-    burgerBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const isOpen = navRight.classList.toggle("open");
-      burgerBtn.textContent = isOpen ? "✕" : "☰";
-    });
-  }
-
   document.addEventListener("click", e => {
     if(whoDropdown) whoDropdown.classList.remove("open");
-    if(navRight && !navRight.contains(e.target) && (!burgerBtn || !burgerBtn.contains(e.target))){
-      navRight.classList.remove("open");
-      if(burgerBtn) burgerBtn.textContent = "☰";
-    }
   });
 
   document.getElementById("inRelation").addEventListener("change", e => {
@@ -966,15 +967,19 @@ function initHeader(){
 
 
 
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if(session && session.user){
-      currentUser = session.user;
-      const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
-      if(profile) onLoggedIn(profile);
-    }
-    // сигнал для других страниц (например moderation.html) — авторизация проверена, можно смотреть currentUser/myProfile
+  if (sb && sb.auth) {
+    sb.auth.onAuthStateChange(async (event, session) => {
+      if(session && session.user){
+        currentUser = session.user;
+        const { data: profile } = await sb.from("profiles").select("*").eq("id", currentUser.id).maybeSingle();
+        if(profile) onLoggedIn(profile);
+      }
+      // сигнал для других страниц (например moderation.html) — авторизация проверена, можно смотреть currentUser/myProfile
+      window.dispatchEvent(new Event("authReady"));
+    });
+  } else {
     window.dispatchEvent(new Event("authReady"));
-  });
+  }
 }
 
 // ---------- общие хелперы для статей "Наследия" (используются на nasledie.html и moderation.html) ----------
@@ -1353,4 +1358,8 @@ function excerptFromContent(content, maxLen){
   return "";
 }
 
-document.addEventListener("DOMContentLoaded", initHeader);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initHeader);
+} else {
+  initHeader();
+}
