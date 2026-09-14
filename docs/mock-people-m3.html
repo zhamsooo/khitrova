@@ -1,0 +1,213 @@
+<title>Сайт памяти в Material 3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
+<style>
+  /* ---------- Material 3 light schemes (три seed-цвета) ---------- */
+  :root{
+    --primary:#6750A4; --on-primary:#fff; --primary-container:#EADDFF; --on-primary-container:#21005D;
+    --secondary:#625B71; --secondary-container:#E8DEF8; --on-secondary-container:#1D192B;
+    --tertiary:#7D5260; --tertiary-container:#FFD8E4; --on-tertiary-container:#31111D;
+    --surface:#FEF7FF; --surface-low:#F7F2FA; --surface-mid:#F3EDF7; --surface-high:#ECE6F0; --surface-highest:#E6E0E9;
+    --on-surface:#1D1B20; --on-surface-variant:#49454F; --outline:#79747E; --outline-variant:#CAC4D0;
+    --error:#B3261E; --error-container:#F9DEDC;
+    --radius-xs:4px; --radius-s:8px; --radius-m:12px; --radius-l:16px; --radius-xl:28px;
+    --container:1040px; --gutter:24px;
+  }
+  :root[data-scheme="bronze"]{
+    --primary:#795A2E; --on-primary:#fff; --primary-container:#FFDDB3; --on-primary-container:#2A1700;
+    --secondary:#6E5B44; --secondary-container:#F8DFC1; --on-secondary-container:#261907;
+    --tertiary:#4E6543; --tertiary-container:#D0EBC0; --on-tertiary-container:#0C2005;
+    --surface:#FFF8F4; --surface-low:#FEF2EA; --surface-mid:#F8ECE4; --surface-high:#F2E7DE; --surface-highest:#ECE1D8;
+    --on-surface:#201B16; --on-surface-variant:#504539; --outline:#82746A; --outline-variant:#D4C4B6;
+  }
+  :root[data-scheme="blue"]{
+    --primary:#355F8A; --on-primary:#fff; --primary-container:#D3E4FF; --on-primary-container:#001C39;
+    --secondary:#545F70; --secondary-container:#D8E3F8; --on-secondary-container:#111C2B;
+    --tertiary:#6D5677; --tertiary-container:#F6D9FF; --on-tertiary-container:#271431;
+    --surface:#F8F9FF; --surface-low:#F2F3FA; --surface-mid:#ECEEF5; --surface-high:#E6E8EF; --surface-highest:#E1E2E9;
+    --on-surface:#191C20; --on-surface-variant:#43474E; --outline:#73777F; --outline-variant:#C3C6CF;
+  }
+  html,body{margin:0;background:var(--surface);color:var(--on-surface);font-family:Roboto,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5}
+  .sym{font-family:"Material Symbols Rounded";font-weight:400;font-style:normal;font-size:24px;line-height:1;display:inline-block;vertical-align:middle;font-variation-settings:"FILL" 0,"wght" 400,"GRAD" 0,"opsz" 24}
+  /* ---------- Панель макета (не часть сайта) ---------- */
+  .lab{background:#1D1B20;color:#E6E0E9;padding:14px var(--gutter);display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:14px}
+  .lab b{font-weight:500;color:#fff}
+  .seg{display:inline-flex;border:1px solid #79747E;border-radius:999px;overflow:hidden}
+  .seg button{background:none;border:0;color:#E6E0E9;padding:8px 18px;font:500 14px Roboto,sans-serif;cursor:pointer;border-right:1px solid #79747E}
+  .seg button:last-child{border-right:0}
+  .seg button.on{background:#E8DEF8;color:#1D192B}
+  .seg button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+  .lab .note{margin-left:auto;color:#CAC4D0}
+  /* ---------- Top app bar + tabs ---------- */
+  .appbar{background:var(--surface);position:sticky;top:0;z-index:5}
+  .appbar .row{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);height:64px;display:flex;align-items:center;gap:8px}
+  .appbar .title{font-size:22px;font-weight:400;flex:1;letter-spacing:0}
+  .iconbtn{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;color:var(--on-surface-variant);border:0;background:none;cursor:pointer}
+  .iconbtn:hover{background:var(--surface-high)}
+  .avatar-btn{width:32px;height:32px;border-radius:50%;background:var(--primary-container);color:var(--on-primary-container);display:grid;place-items:center;font-weight:500;font-size:14px;margin-left:8px}
+  .tabs{border-bottom:1px solid var(--outline-variant)}
+  .tabs .row{max-width:var(--container);margin:0 auto;padding:0 var(--gutter);display:flex}
+  .tab{position:relative;padding:14px 16px;font-size:14px;font-weight:500;color:var(--on-surface-variant);letter-spacing:.1px;cursor:pointer}
+  .tab:hover{background:var(--surface-low)}
+  .tab.on{color:var(--primary)}
+  .tab.on::after{content:"";position:absolute;left:16px;right:16px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--primary)}
+  /* ---------- Page ---------- */
+  .page{max-width:var(--container);margin:0 auto;padding:32px var(--gutter) 120px}
+  h1{font-size:36px;line-height:44px;font-weight:400;margin:0 0 8px;letter-spacing:0;text-wrap:balance}
+  .lead{font-size:16px;line-height:24px;color:var(--on-surface-variant);max-width:64ch;margin:0 0 24px}
+  .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px}
+  .search{flex:1;min-width:260px;max-width:420px;height:56px;border-radius:28px;background:var(--surface-high);display:flex;align-items:center;gap:12px;padding:0 16px;color:var(--on-surface-variant)}
+  .search span.t{font-size:16px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{height:32px;padding:0 16px;border-radius:8px;border:1px solid var(--outline);display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--on-surface-variant);background:transparent;cursor:pointer;font-family:inherit}
+  .chip:hover{background:var(--surface-low)}
+  .chip.on{background:var(--secondary-container);color:var(--on-secondary-container);border-color:transparent}
+  .chip.on .sym{font-size:18px}
+  .group{font-size:14px;font-weight:500;color:var(--on-surface-variant);letter-spacing:.1px;margin:8px 0 12px}
+  /* ---------- Cards: одинаковые по высоте и ширине ---------- */
+  .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+  .card{position:relative;height:172px;border-radius:var(--radius-m);background:var(--surface-low);padding:16px;display:flex;flex-direction:column;gap:8px;overflow:hidden;cursor:pointer;
+    transition:background .15s, box-shadow .15s;text-decoration:none;color:inherit}
+  .card:hover{background:var(--surface-mid);box-shadow:0 1px 3px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06)}
+  .card:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+  .card .top{display:flex;gap:12px;align-items:center}
+  .card .ava{width:40px;height:40px;border-radius:50%;background:var(--primary-container);color:var(--on-primary-container);display:grid;place-items:center;font-weight:500;flex:none;overflow:hidden}
+  .card .ava img{width:100%;height:100%;object-fit:cover;display:block}
+  .card .name{font-size:16px;font-weight:500;line-height:24px;letter-spacing:.15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .sub{font-size:12px;line-height:16px;color:var(--on-surface-variant);letter-spacing:.4px}
+  .card .txt{font-size:14px;line-height:20px;color:var(--on-surface-variant);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .meta{position:absolute;left:0;right:0;bottom:0;padding:8px 8px 8px 16px;background:var(--surface-high);display:flex;align-items:center;gap:8px;font-size:12px;line-height:16px;color:var(--on-surface-variant);
+    transform:translateY(100%);transition:transform .18s ease}
+  .card:hover .meta,.card:focus-within .meta{transform:none}
+  .card .meta .sym{font-size:18px;margin-left:auto;color:var(--on-surface-variant)}
+  .card .meta .st{color:var(--primary);font-weight:500}
+  .card.pending .st{color:var(--tertiary)}
+  @media (prefers-reduced-motion:reduce){.card .meta{transition:none}}
+  /* ---------- Components sample ---------- */
+  .sample{margin-top:40px;padding-top:24px;border-top:1px solid var(--outline-variant)}
+  .sample h2{font-size:24px;font-weight:400;line-height:32px;margin:0 0 4px}
+  .sample p.d{color:var(--on-surface-variant);margin:0 0 20px;font-size:14px}
+  .btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:24px}
+  .btn{height:40px;padding:0 24px;border-radius:20px;border:0;font:500 14px Roboto,sans-serif;letter-spacing:.1px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+  .btn .sym{font-size:18px}
+  .btn.filled{background:var(--primary);color:var(--on-primary)}
+  .btn.tonal{background:var(--secondary-container);color:var(--on-secondary-container)}
+  .btn.outl{background:none;border:1px solid var(--outline);color:var(--primary)}
+  .btn.text{background:none;color:var(--primary);padding:0 12px}
+  .field{position:relative;max-width:360px;margin-bottom:16px}
+  .field .in{height:56px;border:1px solid var(--outline);border-radius:4px;padding:0 16px;display:flex;align-items:center;font-size:16px;color:var(--on-surface)}
+  .field .lbl{position:absolute;left:12px;top:-8px;background:var(--surface);padding:0 4px;font-size:12px;color:var(--primary)}
+  .field .sup{font-size:12px;color:var(--on-surface-variant);padding:4px 16px 0}
+  .field.err .in{border-color:var(--error)} .field.err .lbl,.field.err .sup{color:var(--error)}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{height:24px;padding:0 10px;border-radius:6px;font-size:12px;font-weight:500;letter-spacing:.5px;display:inline-flex;align-items:center;gap:6px}
+  .badge .sym{font-size:16px}
+  .b-ok{background:var(--primary-container);color:var(--on-primary-container)}
+  .b-wait{background:var(--tertiary-container);color:var(--on-tertiary-container)}
+  .b-no{background:var(--error-container);color:#410E0B}
+  /* ---------- FAB ---------- */
+  .fab{position:fixed;right:24px;bottom:24px;height:56px;padding:0 20px 0 16px;border-radius:16px;background:var(--primary-container);color:var(--on-primary-container);
+    display:inline-flex;align-items:center;gap:12px;font:500 14px Roboto,sans-serif;border:0;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.3),0 4px 8px 3px rgba(0,0,0,.15);z-index:6}
+  .fab:hover{box-shadow:0 2px 3px rgba(0,0,0,.3),0 6px 10px 4px rgba(0,0,0,.15)}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:600px){.grid{grid-template-columns:1fr}.card{height:auto;min-height:120px}h1{font-size:32px;line-height:40px}}
+</style>
+
+<div class="lab">
+  <b>Макет · страница «Люди» в Material 3</b>
+  <span>Палитра:</span>
+  <div class="seg" role="group" aria-label="Цветовая схема">
+    <button class="on" data-s="baseline">Фиолетовая (базовая M3)</button>
+    <button data-s="bronze">Бронза (от текущего акцента)</button>
+    <button data-s="blue">Синяя (от цвета «подтверждено»)</button>
+  </div>
+  <span class="note">Roboto · наведите на карточку, чтобы увидеть метаданные</span>
+</div>
+
+<header class="appbar">
+  <div class="row">
+    <span class="title">Татьяна Ивановна Хитрова</span>
+    <button class="iconbtn" aria-label="Поиск"><span class="sym">search</span></button>
+    <button class="iconbtn" aria-label="Модерация"><span class="sym">fact_check</span></button>
+    <span class="avatar-btn">Ж</span>
+  </div>
+</header>
+<nav class="tabs"><div class="row">
+  <span class="tab">Линия жизни</span><span class="tab on">Люди</span><span class="tab">Наследие</span>
+</div></nav>
+
+<main class="page">
+  <h1>Люди</h1>
+  <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный и таким и останется, дополняйте его.</p>
+
+  <div class="toolbar">
+    <div class="search"><span class="sym">search</span><span class="t">Имя, год выпуска, училище</span></div>
+    <div class="chips">
+      <button class="chip on"><span class="sym">check</span>Все</button>
+      <button class="chip">Ученики</button>
+      <button class="chip">Коллеги</button>
+      <button class="chip">Другое</button>
+    </div>
+  </div>
+
+  <div class="group">2000-е · 12 человек</div>
+  <div class="grid">
+    <a class="card" href="#" tabindex="0">
+      <div class="top"><div class="ava">В</div><div><div class="name">Волкова Е.</div><div class="sub">Выпуск 2006</div></div></div>
+      <p class="txt">Преподаватель Академии культуры и искусства им. Крупской</p>
+      <div class="meta"><span>Из архива · 13 сен</span><span class="st">Подтверждено</span><span class="sym">info</span></div>
+    </a>
+    <a class="card" href="#" tabindex="0">
+      <div class="top"><div class="ava">И</div><div><div class="name">Иванов Я.</div><div class="sub">Выпуск 2006</div></div></div>
+      <p class="txt">Руководитель хора любителей (Ижоры)</p>
+      <div class="meta"><span>Из архива · 13 сен</span><span class="st">Подтверждено</span><span class="sym">info</span></div>
+    </a>
+    <a class="card" href="#" tabindex="0">
+      <div class="top"><div class="ava">Д</div><div><div class="name">Демутский И.</div><div class="sub">Выпуск 2006</div></div></div>
+      <p class="txt">Руководитель вокального ансамбля</p>
+      <div class="meta"><span>Из архива · 13 сен</span><span class="st">Подтверждено</span><span class="sym">info</span></div>
+    </a>
+    <a class="card" href="#" tabindex="0">
+      <div class="top"><div class="ava">Ш</div><div><div class="name">Шопенко А.</div><div class="sub">Выпуск 2005</div></div></div>
+      <p class="txt">Студент 2 курса оперно-симфонического отделения СПбГК (на момент составления списка). Далее работал в театре и вёл хор при школе искусств, текст длиннее двух строк обрезается.</p>
+      <div class="meta"><span>Из архива · 13 сен</span><span class="st">Подтверждено</span><span class="sym">info</span></div>
+    </a>
+    <a class="card" href="#" tabindex="0">
+      <div class="top"><div class="ava">К</div><div><div class="name">Калинин Фёдор Дмитриевич</div><div class="sub">Хоровое училище ’98 · СПбГК ’03 · ассистентура ’05</div></div></div>
+      <p class="txt">Преподаватель Хорового училища им. Глинки, руководитель хора ДМШ № 9 (Санкт-Петербург)</p>
+      <div class="meta"><span>Жамсо · 13 сен</span><span class="st">Подтверждено</span><span class="sym">info</span></div>
+    </a>
+    <a class="card pending" href="#" tabindex="0">
+      <div class="top"><div class="ava">К</div><div><div class="name">Кочановский С.</div><div class="sub">Выпуск 2004</div></div></div>
+      <p class="txt">Хормейстер Собора Св. Ап. Петра и Павла (Санкт-Петербург)</p>
+      <div class="meta"><span>Из архива · 13 сен</span><span class="st">На проверке</span><span class="sym">info</span></div>
+    </a>
+  </div>
+
+  <section class="sample">
+    <h2>Компоненты в этой палитре</h2>
+    <p class="d">Кнопки, поле формы, статусы. Всё из системы Material 3, без самодельных стилей.</p>
+    <div class="btns">
+      <button class="btn filled"><span class="sym">send</span>Отправить</button>
+      <button class="btn tonal">Предложить правку</button>
+      <button class="btn outl">Отмена</button>
+      <button class="btn text">Подробнее</button>
+    </div>
+    <div class="field"><span class="lbl">Что произошло</span><div class="in">Первый концерт класса</div><div class="sup">Короткое название события</div></div>
+    <div class="field err"><span class="lbl">Год события</span><div class="in">19962</div><div class="sup">Введите год из четырёх цифр</div></div>
+    <div class="badges">
+      <span class="badge b-ok"><span class="sym">check_circle</span>Подтверждено</span>
+      <span class="badge b-wait"><span class="sym">schedule</span>На проверке</span>
+      <span class="badge b-no"><span class="sym">cancel</span>Отклонено</span>
+    </div>
+  </section>
+</main>
+
+<button class="fab"><span class="sym">add</span>Добавить</button>
+
+<script>
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.documentElement.setAttribute('data-scheme', b.dataset.s);
+  }));
+</script>
