@@ -2,3 +2,5 @@
 .wrangler
 wrangler.toml
 supabase
+docs
+data
