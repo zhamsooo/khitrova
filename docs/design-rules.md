@@ -1,26 +1,26 @@
 # Дизайн-правила: Material Design 3 (решение владельца 2026-09-14)
 
-Сайт целиком переводится на Material Design 3 (m3.material.io). Это не «вдохновение», а система: компоненты, токены цвета, типографика и формы берутся из M3 буквально. Самодельных стилей «по вкусу» не заводить. Эталон внешнего вида — `docs/mock-people-m3.html` (страница «Люди», палитра «baseline»): открой его в браузере перед работой и делай так же.
+Сайт целиком переводится на Material Design 3 (m3.material.io). Это не «вдохновение», а система: компоненты, токены цвета, типографика и формы берутся из M3 буквально. Самодельных стилей «по вкусу» не заводить. Эталон вёрстки и плотности — `docs/mock-people-m3.html` (страница «Люди»): открой его в браузере перед работой и делай так же по структуре; цвета в нём устарели (фиолетовые палитры), токены брать из §1 ниже.
 
-Старые правила (Cormorant/PT Serif, бронза) — в `docs/design-rules-v1-archive.md`, они отменены. Откат всего дизайна: git-тег `v1-design`.
+Старые правила (Cormorant/PT Serif, бронза) — в `docs/design-rules-v1-archive.md`, они отменены. Откат всего дизайна: git-тег `v1-design`. Откат к фиолетовой палитре M3: git-тег `v2-m3-purple`.
 
-## 1. Цвет — базовая светлая схема M3 (seed #6750A4)
+## 1. Цвет — нейтральная светлая схема M3 (монохром)
 Все цвета только через переменные в `:root` в `style.css`. Ни одного hex в компонентах.
 
 ```
---primary:#6750A4;  --on-primary:#FFFFFF;  --primary-container:#EADDFF;  --on-primary-container:#21005D;
---secondary:#625B71; --secondary-container:#E8DEF8; --on-secondary-container:#1D192B;
---tertiary:#7D5260; --tertiary-container:#FFD8E4; --on-tertiary-container:#31111D;
+--primary:#1A1A1A;  --on-primary:#FFFFFF;  --primary-container:#E3E3E3;  --on-primary-container:#1A1A1A;
+--secondary:#5C5C5C; --secondary-container:#E8E8E8; --on-secondary-container:#1A1A1A;
+--tertiary:#5C5C5C; --tertiary-container:#F0F0F0; --on-tertiary-container:#3A3A3A;
 --error:#B3261E; --on-error:#FFFFFF; --error-container:#F9DEDC; --on-error-container:#410E0B;
---surface:#FEF7FF; --surface-low:#F7F2FA; --surface-mid:#F3EDF7; --surface-high:#ECE6F0; --surface-highest:#E6E0E9;
---on-surface:#1D1B20; --on-surface-variant:#49454F; --outline:#79747E; --outline-variant:#CAC4D0;
---inverse-surface:#322F35; --inverse-on-surface:#F5EFF7;
+--surface:#FFFFFF; --surface-low:#F5F5F5; --surface-mid:#EFEFEF; --surface-high:#E9E9E9; --surface-highest:#E2E2E2;
+--on-surface:#1A1A1A; --on-surface-variant:#5C5C5C; --outline:#8A8A8A; --outline-variant:#D6D6D6;
+--inverse-surface:#2E2E2E; --inverse-on-surface:#F2F2F2; --inverse-primary:#D0D0D0;
 ```
 Роли (кому что):
 - Фон страницы `--surface`; карточки и панели `--surface-low` (покой) / `--surface-mid` (hover) / `--surface-high` (поля поиска, выезжающая полоска метаданных); диалоги `--surface-high`.
 - Основной текст `--on-surface`; вторичный и подписи `--on-surface-variant`; рамки `--outline` (поля, outlined-кнопки) и `--outline-variant` (разделители).
-- Главное действие `--primary` (filled-кнопка, активная вкладка, индикатор); tonal-кнопки и активные чипы `--secondary-container`; FAB `--primary-container`.
-- Статусы: подтверждено `--primary-container`/`--on-primary-container`; на проверке `--tertiary-container`/`--on-tertiary-container`; отклонено и ошибки `--error-container`/`--on-error-container`. Отдельных «зелёных/жёлтых» не заводить.
+- Главное действие `--primary` (filled-кнопка, активная вкладка, индикатор); tonal-кнопки и активные чипы `--secondary-container`; выбранный chip и активная вкладка — `--primary` (чёрный); tonal-кнопки — `--secondary-container`.
+- Статусы: подтверждено `--primary-container`/`--on-primary-container`; на проверке `--tertiary-container`/`--on-tertiary-container` с иконкой `schedule`; отклонено `--error-container`. Отдельных «зелёных/жёлтых» не заводить.
 - State layers: hover = `--on-surface` 8 %, focus/pressed = 12 % (можно через `color-mix(in srgb, var(--on-surface) 8%, transparent)` поверх фона).
 - Тёмная тема — не в этом объёме; но красить фон и текст только токенами, чтобы её можно было добавить одним блоком.
 
@@ -46,8 +46,8 @@
 - Тени почти не используем: иерархию задают tonal-поверхности (`--surface-low/mid/high`). Тень только у FAB и у поднятой карточки при hover (уровень 1–2).
 
 ## 4. Компоненты (что чем является)
-- **Top app bar** (64px, `--surface`, sticky): слева заголовок «Татьяна Ивановна Хитрова» (`title-large`), справа иконки: поиск (только на страницах, где он есть), модерация с бейджем-счётчиком (только модератору), аватар/вход. Под ним **primary tabs** «Линия жизни · Люди · Наследие» с индикатором 3px `--primary`. На телефоне (< 600px) вкладки заменяются **navigation bar** внизу экрана (3 пункта с иконками `timeline / group / menu_book`, активный — `--secondary-container` пилюля), бургер убирается совсем.
-- **FAB extended** «Добавить» (`add`), фиксирован справа внизу (24px; на телефоне над navigation bar). Это единственная кнопка добавления на сайте; старые «+ Добавить человека», «+ Написать» удаляются. Гостю FAB открывает вход.
+- **Top app bar** — одна полоса `.appbar` высотой 52px, sticky, фон `--surface`, нижняя граница 1px `--outline-variant`, заголовка «Татьяна Ивановна Хитрова» нет. Слева — вкладки «Линия жизни · Люди · Наследие» (`label-large`, зазор 24px, активная — `--on-surface` с индикатором 2px `--primary` по нижнему краю шапки, неактивная — `--on-surface-variant`). Справа, слева направо: кнопка «Добавить» (`.btn.tonal`, иконка `add`, высота 36px), иконка модерации с бейджем-счётчиком (только модератору), блок пользователя (аватар-инициал 32px + полное имя `label-large` без обрезки + стрелка `expand_more`, клик по имени/аватару — своя карточка, клик по стрелке — меню «Моя карточка / Модерация / Выйти»; гость — text-кнопка «Войти»). Поиска в шапке нет. На телефоне (< 600px) шапка та же 52px без вкладок — их заменяет **navigation bar** внизу экрана (3 пункта с иконками `timeline / group / menu_book`, активный — `--secondary-container` пилюля); справа в шапке — «Добавить» как `.iconbtn` и аватар без имени. Бургера нет.
+- **FAB убран полностью.** Кнопка «Добавить» живёт только в шапке (см. выше); клиренс контента под FAB (96px) не нужен, только отступ под мобильный navigation bar.
 - **Кнопки:** filled (главное действие диалога: «Отправить», «Применить»), tonal (второстепенное: «Предложить правку»), outlined («Отмена»), text (ссылки-действия). Высота 40, радиус 999, `label-large`, иконка 18px слева, если есть. Названия — глаголами.
 - **Chips (filter):** высота 32, радиус 8, `--outline` рамка; активный — `--secondary-container` + иконка `check`.
 - **Поиск:** search bar 56px, радиус 28, `--surface-high`, иконка `search`.
@@ -57,14 +57,14 @@
 - **Snackbar** вместо тостов: `--inverse-surface` / `--inverse-on-surface`, внизу по центру, 4 с.
 - **Поповер метаданных:** menu-подобная карточка `--surface-high`, радиус 12, тень уровня 2, позиция по `getBoundingClientRect()` кнопки; список истории — M3 list items (иконка + две строки).
 - **Бейджи статусов:** высота 24, радиус 6, `label-medium`, иконка 16px, цвета из п.1.
-- **TimelineJS на главной:** шрифт Roboto, цвета из токенов (заголовки `--on-surface`, маркеры `--primary`, фон навигации `--surface-low`), контент слайда выровнен по контейнеру.
+- **TimelineJS на главной:** стандартный вид библиотеки, переопределяется только `font-family`.
 
 ## 5. Доступность и поведение
 - Область нажатия ≥ 48×48 (M3), иконочные кнопки 48px круг со state layer.
 - `:focus-visible` — 2px `--primary`, offset 2. Escape закрывает диалоги, меню, поповеры.
 - `prefers-reduced-motion: reduce` — отключить transitions.
 - Контраст текста ≥ 4.5:1 (все пары «on-X / X» из п.1 это дают; не изобретать свои).
-- 375px: без горизонтального скролла, FAB не перекрывает последнюю карточку (нижний отступ контента 96px).
+- 375px: без горизонтального скролла, нижний отступ контента под navigation bar.
 
 ## 6. Чек-лист перед коммитом
 1. [ ] Ни одного hex-цвета и ни одного `font-family` вне `:root` в `style.css`.
