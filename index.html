@@ -13,20 +13,11 @@
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
   html,body{height:100%; overflow-x:hidden}
-  .tl-message-full{display:none !important} /* штатная англоязычная подсказка про свайп — путает, оставляем свою */
-  .tl-timeaxis-minor{display:none !important} /* лишняя мелкая шкала (1931, 1933…) поверх основной — не нужна */
+  #timeline-embed{width:100%; height:calc(100dvh - 52px)}
 
   @media (max-width:640px){
+    #timeline-embed{height:calc(100dvh - 52px - 80px)} /* минус нижний navigation bar */
     .nav-hint{display:none} /* на мобильном полоса теперь не про "пролистать слайды", подсказка не нужна */
-    .tl-menubar{display:none !important} /* кнопки zoom/стрелки — не нужны на мобильном */
-    .tl-timeaxis{display:none !important}
-    .tl-timemarker-content-container{display:none !important} /* флажок с текстом — не нужен, год отдельно под риской */
-
-    .ms-yr{
-      position:absolute; top:100%; left:50%; transform:translateX(-50%);
-      margin-top:4px; font:var(--t-body-small); font-size:11px; font-weight:500;
-      color:var(--on-surface-variant); white-space:nowrap;
-    }
   }
 
   /* ---------- галочка подтверждения на событии + всплывающая карточка ---------- */
@@ -92,10 +83,8 @@
 </head>
 <body data-page="index">
 
-<main class="page page-timeline">
-  <div id="timeline-embed"></div>
-  <div class="nav-hint" id="navHint"><span class="hint-text">используйте стрелки на клавиатуре для навигации <span class="arrows">← →</span></span></div>
-</main>
+<div id="timeline-embed"></div>
+<div class="nav-hint" id="navHint"><span class="hint-text">используйте стрелки на клавиатуре для навигации <span class="arrows">← →</span></span></div>
 
 <div class="ev-tip" id="evTip">
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
@@ -233,22 +222,6 @@ async function loadTimeline(){
     if(firstChange){ firstChange = false; return; }
     document.getElementById("navHint").classList.add("hide");
   });
-
-  // на мобильном ось скрыта — подписываем год прямо под каждой риской-меткой события
-  if(isMobile){
-    setTimeout(() => {
-      const ticks = document.querySelectorAll(".tl-timemarker-line-left");
-      ticks.forEach((tick, i) => {
-        const ev = list[i];
-        if(!ev) return;
-        tick.style.position = "relative";
-        const yr = document.createElement("span");
-        yr.className = "ms-yr";
-        yr.textContent = ev.event_year;
-        tick.appendChild(yr);
-      });
-    }, 300);
-  }
 }
 
 // ---- галочка подтверждения: подсказка + действие модератора ----
