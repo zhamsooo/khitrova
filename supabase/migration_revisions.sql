@@ -59,10 +59,18 @@ drop policy if exists "revisions: модератор видит все" on publi
 create policy "revisions: модератор видит все" on public.revisions
   for select using (public.is_moderator());
 
--- Чтение: применённые и отклонённые ревизии (история изменений) доступны для публичного просмотра
+-- Чтение: применённая история видна всем, но ТОЛЬКО для подтверждённых записей —
+-- иначе через снимок kind='create' наружу утекал бы текст черновиков и неподтверждённых записей.
+-- Отклонённые предложения правок публично не показываем (видят автор и модератор).
 drop policy if exists "revisions: применённые видны всем" on public.revisions;
 create policy "revisions: применённые видны всем" on public.revisions
-  for select using (status in ('applied', 'rejected'));
+  for select using (
+    status = 'applied' and (
+      (entity_type = 'event'   and exists (select 1 from public.events   e where e.id = entity_id and e.status = 'confirmed')) or
+      (entity_type = 'person'  and exists (select 1 from public.people   p where p.id = entity_id and p.status = 'confirmed')) or
+      (entity_type = 'article' and exists (select 1 from public.articles a where a.id = entity_id and a.status = 'confirmed'))
+    )
+  );
 
 -- Прямой UPDATE и DELETE запрещены всем (модерация выполняется исключительно через RPC)
 
@@ -218,6 +226,9 @@ begin
 end;
 $$;
 
+-- По умолчанию Postgres даёт execute роли public — отзываем, оставляем только залогиненным (внутри ещё проверка is_moderator()).
+revoke execute on function public.apply_revision(uuid, text) from public, anon;
+revoke execute on function public.reject_revision(uuid, text) from public, anon;
 grant execute on function public.apply_revision(uuid, text) to authenticated;
 grant execute on function public.reject_revision(uuid, text) to authenticated;
 
@@ -335,3 +346,25 @@ drop trigger if exists tr_articles_record_revision on public.articles;
 create trigger tr_articles_record_revision
   after insert or update of status on public.articles
   for each row execute function public.trig_record_revision();
+
+-- -----------------------------------------------------------------------------
+-- 7. Разовое заполнение истории для уже существующих записей (kind='create'),
+--    чтобы иконка метаданных сразу показывала «кто добавил». Идемпотентно.
+-- -----------------------------------------------------------------------------
+insert into public.revisions (entity_type, entity_id, kind, patch, status, author_id, author_name, created_at)
+select 'event', e.id, 'create', to_jsonb(e), 'applied', e.created_by, coalesce(e.created_by_name, 'Пользователь'), e.created_at
+from public.events e
+where e.created_by is not null
+  and not exists (select 1 from public.revisions r where r.entity_type = 'event' and r.entity_id = e.id and r.kind = 'create');
+
+insert into public.revisions (entity_type, entity_id, kind, patch, status, author_id, author_name, created_at)
+select 'person', p.id, 'create', to_jsonb(p), 'applied', p.created_by, coalesce(p.created_by_name, 'Пользователь'), p.created_at
+from public.people p
+where p.created_by is not null
+  and not exists (select 1 from public.revisions r where r.entity_type = 'person' and r.entity_id = p.id and r.kind = 'create');
+
+insert into public.revisions (entity_type, entity_id, kind, patch, status, author_id, author_name, created_at)
+select 'article', a.id, 'create', to_jsonb(a), 'applied', a.created_by, coalesce(a.created_by_name, 'Пользователь'), a.created_at
+from public.articles a
+where a.created_by is not null
+  and not exists (select 1 from public.revisions r where r.entity_type = 'article' and r.entity_id = a.id and r.kind = 'create');
