@@ -116,7 +116,7 @@ function personCard(p){
       <p class="txt">${escapeHtml(desc)}</p>
       <div class="meta">
         <span>${metaAuthorDate}</span>
-        ${isMine ? `<span class="st">${statusLabel}</span>` : ""}
+        ${isMine ? `<span class="st"${p.moderator_note ? ` title="Заметка модератора: ${escapeAttr(p.moderator_note)}"` : ""}>${statusLabel}</span>` : ""}
         ${typeof renderMetaIcon === "function" ? renderMetaIcon("people", p.id, p) : ""}
       </div>
     </a>

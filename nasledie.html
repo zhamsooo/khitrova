@@ -306,7 +306,7 @@ function cardHtml(a){
       ${excerpt ? `<p class="txt">${escapeHtml(excerpt)}</p>` : ""}
       <div class="meta">
         <span>${metaAuthorDate}</span>
-        ${isMine ? `<span class="st">${statusLabel}</span>` : ""}
+        ${isMine ? `<span class="st"${a.moderator_note ? ` title="Заметка модератора: ${escapeAttr(a.moderator_note)}"` : ""}>${statusLabel}</span>` : ""}
         ${(a.status === "draft" || a.status === "rejected") ? `<button type="button" class="meta-icon-btn" style="color:var(--error)" data-delete-draft="${a.id}" title="Удалить черновик" aria-label="Удалить черновик"><span class="sym">delete</span></button>` : ""}
         ${typeof renderMetaIcon === "function" ? renderMetaIcon("articles", a.id, a) : ""}
       </div>
@@ -849,6 +849,23 @@ async function openRead(id){
     if(src) byline += ` · Источник: ${escapeHtml(src)}`;
   }
   document.getElementById("readByline").innerHTML = byline;
+
+  const pendingAlertEl = document.getElementById("readPendingAlert");
+  if(pendingAlertEl){
+    if(art.status !== "confirmed"){
+      const statusLabel = art.status === "draft" ? "Черновик" : (art.status === "rejected" ? "Отклонено" : "На проверке");
+      const bg = art.status === "rejected" ? "var(--error-container)" : "var(--tertiary-container)";
+      const fg = art.status === "rejected" ? "var(--on-error-container)" : "var(--on-tertiary-container)";
+      pendingAlertEl.innerHTML = `
+        <div style="margin:0 0 20px; padding:10px 14px; background:${bg}; border-radius:var(--r-s); font:var(--t-body-medium); color:${fg}; line-height:1.45">
+          <b>${statusLabel}</b>${art.moderator_note ? ` — Заметка модератора: ${escapeHtml(art.moderator_note)}` : ""}
+        </div>
+      `;
+    } else {
+      pendingAlertEl.innerHTML = "";
+    }
+  }
+
   const metaSlot = document.getElementById("readMetaSlot");
   if(metaSlot && typeof renderMetaIcon === "function"){
     metaSlot.innerHTML = renderMetaIcon("article", art.id, art);

@@ -552,6 +552,11 @@ function renderPerson(p){
             <button class="btn tonal" id="btnOpenEdit"><span class="sym">edit</span>Предложить правку</button>
             ${typeof renderMetaIcon === "function" ? renderMetaIcon("people", p.id, p) : ""}
           </div>
+          ${(isUnconfirmed && p.moderator_note) ? `
+            <div class="pending-alert-box" style="margin-top:10px; padding:10px 14px; background:${p.status === "rejected" ? "var(--error-container)" : "var(--tertiary-container)"}; border-radius:var(--r-s); font:var(--t-body-medium); color:${p.status === "rejected" ? "var(--on-error-container)" : "var(--on-tertiary-container)"}; line-height:1.45">
+              Заметка модератора: ${escapeHtml(p.moderator_note)}
+            </div>
+          ` : ""}
           <div id="personPendingAlert"></div>
         </div>
       </div>

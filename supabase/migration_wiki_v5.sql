@@ -219,3 +219,287 @@ $$;
 
 revoke all on function public.list_members() from public;
 grant execute on function public.list_members() to authenticated;
+
+-- ============================================================================
+-- W5: обратная связь — письма автору и модераторам (волна 1)
+-- ============================================================================
+
+create extension if not exists pg_net with schema extensions;
+
+-- Адрес сайта в одном месте: пока custom-домен khitrova.org не привязан к хостингу,
+-- ссылки в письмах ведут на текущий рабочий адрес. Когда домен подключат — поменять
+-- только эту функцию.
+create or replace function public.site_base_url()
+returns text
+language sql
+immutable
+as $$
+  select 'https://khitrova.zhamsx.workers.dev'::text;
+$$;
+
+-- Отправка одного письма через Resend. Ключ читается из Supabase Vault (секрет
+-- resend_api_key), в коде и в репозитории его нет. Ошибки отправки (нет ключа,
+-- сеть недоступна, Resend вернул ошибку) не должны ломать основную операцию —
+-- поэтому вся логика обёрнута в exception-блок, который проглатывает любую ошибку.
+create or replace function public.notify_email(to_email text, subject text, html text)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  api_key text;
+begin
+  if to_email is null or to_email = '' then
+    return;
+  end if;
+  begin
+    select decrypted_secret into api_key from vault.decrypted_secrets where name = 'resend_api_key';
+    if api_key is null or api_key = '' then
+      return;
+    end if;
+    perform net.http_post(
+      url := 'https://api.resend.com/emails',
+      headers := jsonb_build_object(
+        'Authorization', 'Bearer ' || api_key,
+        'Content-Type', 'application/json'
+      ),
+      body := jsonb_build_object(
+        'from', 'post@khitrova.org',
+        'to', to_email,
+        'subject', subject,
+        'html', html
+      )
+    );
+  exception when others then
+    null; -- письмо не критично для основной операции — просто не отправилось
+  end;
+end;
+$$;
+
+revoke all on function public.notify_email(text, text, text) from public;
+
+-- Письмо всем модераторам разом (по одному вызову notify_email на адрес).
+create or replace function public.notify_moderators(subject text, html text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  rec record;
+begin
+  for rec in
+    select u.email
+    from public.profiles p
+    join auth.users u on u.id = p.id
+    where p.is_moderator = true and u.email is not null
+  loop
+    perform public.notify_email(rec.email, subject, html);
+  end loop;
+end;
+$$;
+
+revoke all on function public.notify_moderators(text, text) from public;
+
+-- ---- Новая запись на проверку (события, люди, материалы) → письмо модераторам ----
+create or replace function public.trg_notify_new_entry()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  entity_label text;
+  title text;
+  author_name text;
+  url text := public.site_base_url();
+begin
+  if TG_TABLE_NAME = 'events' then
+    entity_label := 'событие'; title := new.title; author_name := new.created_by_name;
+  elsif TG_TABLE_NAME = 'people' then
+    entity_label := 'человек'; title := new.full_name; author_name := new.created_by_name;
+  elsif TG_TABLE_NAME = 'articles' then
+    entity_label := 'материал'; title := new.title; author_name := new.created_by_name;
+  end if;
+
+  perform public.notify_moderators(
+    'Новая запись на проверку — сайт памяти Т.И. Хитровой',
+    format(
+      'Новая запись на проверку: %s «%s» от %s.<br>Открыть: <a href="%s/moderation.html">%s/moderation.html</a>',
+      entity_label, coalesce(title, 'без названия'), coalesce(nullif(author_name, ''), 'неизвестно'), url, url
+    )
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_events_notify_new on public.events;
+create trigger trg_events_notify_new
+after insert on public.events
+for each row when (new.status = 'unconfirmed')
+execute function public.trg_notify_new_entry();
+
+drop trigger if exists trg_people_notify_new on public.people;
+create trigger trg_people_notify_new
+after insert on public.people
+for each row when (new.status = 'unconfirmed')
+execute function public.trg_notify_new_entry();
+
+-- Статьи создаются всегда черновиком (status='draft'), поэтому переход в очередь
+-- модерации — это UPDATE (draft/rejected → unconfirmed), а не INSERT; но на случай
+-- прямой вставки со статусом unconfirmed добавлен и insert-триггер.
+drop trigger if exists trg_articles_notify_new_insert on public.articles;
+create trigger trg_articles_notify_new_insert
+after insert on public.articles
+for each row when (new.status = 'unconfirmed')
+execute function public.trg_notify_new_entry();
+
+drop trigger if exists trg_articles_notify_new_submit on public.articles;
+create trigger trg_articles_notify_new_submit
+after update of status on public.articles
+for each row when (new.status = 'unconfirmed' and old.status is distinct from 'unconfirmed')
+execute function public.trg_notify_new_entry();
+
+-- ---- Новая правка на проверку (revisions) → письмо модераторам ----
+create or replace function public.trg_notify_new_revision()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  url text := public.site_base_url();
+  entity_label text;
+begin
+  entity_label := case new.entity_type
+    when 'event' then 'событию'
+    when 'person' then 'человеку'
+    when 'article' then 'материалу'
+    else new.entity_type
+  end;
+
+  perform public.notify_moderators(
+    'Новая правка на проверку — сайт памяти Т.И. Хитровой',
+    format(
+      'Новая правка к записи (%s) от %s.<br>Комментарий: %s<br>Открыть: <a href="%s/moderation.html">%s/moderation.html</a>',
+      entity_label, coalesce(nullif(new.author_name, ''), 'неизвестно'), coalesce(new.comment, '—'), url, url
+    )
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_revisions_notify_new on public.revisions;
+create trigger trg_revisions_notify_new
+after insert on public.revisions
+for each row when (new.status = 'pending')
+execute function public.trg_notify_new_revision();
+
+-- ---- Запись подтверждена/отклонена → письмо автору ----
+create or replace function public.trg_notify_author_moderated()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  author_email text;
+  title text;
+  subject text;
+  body text;
+  entity_link text;
+  url text := public.site_base_url();
+begin
+  select u.email into author_email from auth.users u where u.id = new.created_by;
+  if author_email is null then
+    return new;
+  end if;
+
+  if TG_TABLE_NAME = 'events' then
+    title := new.title; entity_link := url || '/index.html';
+  elsif TG_TABLE_NAME = 'people' then
+    title := new.full_name; entity_link := url || '/person.html?id=' || new.id;
+  elsif TG_TABLE_NAME = 'articles' then
+    title := new.title; entity_link := url || '/nasledie.html#read/' || new.id;
+  end if;
+
+  if new.status = 'confirmed' then
+    subject := 'Ваша запись опубликована — сайт памяти Т.И. Хитровой';
+    body := format('Ваша запись «%s» опубликована.<br>Открыть: <a href="%s">%s</a>', coalesce(title, 'без названия'), entity_link, entity_link);
+  elsif new.status = 'rejected' then
+    subject := 'Ваша запись отклонена — сайт памяти Т.И. Хитровой';
+    body := format('Ваша запись «%s» отклонена. Заметка модератора: %s', coalesce(title, 'без названия'), coalesce(new.moderator_note, '—'));
+  else
+    return new;
+  end if;
+
+  perform public.notify_email(author_email, subject, body);
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_events_notify_author on public.events;
+create trigger trg_events_notify_author
+after update of status on public.events
+for each row when (old.status = 'unconfirmed' and new.status in ('confirmed', 'rejected'))
+execute function public.trg_notify_author_moderated();
+
+drop trigger if exists trg_people_notify_author on public.people;
+create trigger trg_people_notify_author
+after update of status on public.people
+for each row when (old.status = 'unconfirmed' and new.status in ('confirmed', 'rejected'))
+execute function public.trg_notify_author_moderated();
+
+drop trigger if exists trg_articles_notify_author on public.articles;
+create trigger trg_articles_notify_author
+after update of status on public.articles
+for each row when (old.status = 'unconfirmed' and new.status in ('confirmed', 'rejected'))
+execute function public.trg_notify_author_moderated();
+
+-- ---- Правка применена/отклонена → письмо автору правки ----
+create or replace function public.trg_notify_author_revision_moderated()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  author_email text;
+  subject text;
+  body text;
+  url text := public.site_base_url();
+  entity_label text;
+begin
+  select u.email into author_email from auth.users u where u.id = new.author_id;
+  if author_email is null then
+    return new;
+  end if;
+
+  entity_label := case new.entity_type
+    when 'event' then 'событию'
+    when 'person' then 'человеку'
+    when 'article' then 'материалу'
+    else new.entity_type
+  end;
+
+  if new.status = 'applied' then
+    subject := 'Ваша правка опубликована — сайт памяти Т.И. Хитровой';
+    body := format('Ваша правка к записи (%s) применена.<br>Открыть: <a href="%s/moderation.html">%s/moderation.html</a>', entity_label, url, url);
+  elsif new.status = 'rejected' then
+    subject := 'Ваша правка отклонена — сайт памяти Т.И. Хитровой';
+    body := format('Ваша правка к записи (%s) отклонена. Заметка модератора: %s', entity_label, coalesce(new.moderator_note, '—'));
+  else
+    return new;
+  end if;
+
+  perform public.notify_email(author_email, subject, body);
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_revisions_notify_author on public.revisions;
+create trigger trg_revisions_notify_author
+after update of status on public.revisions
+for each row when (old.status = 'pending' and new.status in ('applied', 'rejected'))
+execute function public.trg_notify_author_revision_moderated();
