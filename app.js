@@ -959,10 +959,304 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
+function escapeAttr(s){
+  return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
 function formatDate(iso){
   if(!iso) return "";
   return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
 }
+
+function formatSourceLink(s){
+  if(!s) return "";
+  s = String(s).trim();
+  if(/^https?:\/\//i.test(s)){
+    return `<a href="${escapeHtml(s)}" target="_blank" rel="noopener">${escapeHtml(s)}</a>`;
+  }
+  return escapeHtml(s);
+}
+
+// Гостю показывать всё, кроме e-mail (e-mail нигде не выводить)
+function sanitizePublicName(name){
+  if(!name) return "";
+  let s = String(name).trim();
+  if(s.includes("@")){
+    const prefix = s.split("@")[0].trim();
+    return prefix || "Участник";
+  }
+  return s;
+}
+
+// ---------- Универсальная иконка метаданных и поповер (Задача 4) ----------
+const META_FIELD_NAMES = {
+  // people
+  full_name: "имя",
+  gender: "пол",
+  relation_type: "отношение к Т.И.",
+  studied_choir_school: "училище им. Глинки",
+  choir_school_start: "училище (начало)",
+  choir_school_end: "выпуск училища",
+  studied_conservatory: "консерватория",
+  conservatory_start: "консерватория (начало)",
+  conservatory_end: "выпуск консерватории",
+  studied_assistantship: "ассистентура",
+  assistantship_start: "ассистентура (начало)",
+  assistantship_end: "окончание ассистентуры",
+  study_start: "годы учёбы (начало)",
+  study_end: "годы учёбы (окончание)",
+  institution: "место работы",
+  notes: "заметки",
+  source: "источник",
+  avatar_url: "фотография",
+  verification_hidden: "видимость верификации",
+  // events
+  event_year: "год",
+  title: "название",
+  description: "описание",
+  // articles
+  type: "тип материала",
+  author_type: "раздел авторства",
+  author_name: "автор текста",
+  original_year: "год первоисточника",
+  content: "текст статьи",
+  cover_image_url: "обложка"
+};
+
+window.__metaCache = window.__metaCache || new Map();
+
+function renderMetaIcon(entity_type, entity_id, row){
+  if(row){
+    window.__metaCache.set(`${entity_type}:${entity_id}`, row);
+  }
+  return `<button type="button" class="meta-icon-btn" data-meta-type="${escapeAttr(entity_type)}" data-meta-id="${escapeAttr(entity_id)}" aria-label="Информация и история записи" title="Информация и история записи">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+  </button>`;
+}
+
+let activeMetaBtn = null;
+let metaHideTimer = null;
+let metaShowTimer = null;
+
+function ensureMetaPopover(){
+  let pop = document.getElementById("globalMetaPopover");
+  if(pop) return pop;
+  pop = document.createElement("div");
+  pop.id = "globalMetaPopover";
+  pop.className = "meta-popover";
+  pop.style.display = "none";
+  pop.innerHTML = `
+    <div class="meta-popover-header">
+      <span class="meta-popover-title">О записи</span>
+      <button type="button" class="meta-popover-close" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="meta-popover-body"></div>
+  `;
+  document.body.appendChild(pop);
+
+  pop.querySelector(".meta-popover-close").addEventListener("click", () => hideMetaPopover());
+  pop.addEventListener("mouseenter", () => clearTimeout(metaHideTimer));
+  pop.addEventListener("mouseleave", () => {
+    clearTimeout(metaHideTimer);
+    metaHideTimer = setTimeout(hideMetaPopover, 250);
+  });
+  return pop;
+}
+
+function positionMetaPopover(pop, btn){
+  const r = btn.getBoundingClientRect();
+  const pr = pop.getBoundingClientRect();
+  const padding = 10;
+
+  let left = r.left + (r.width / 2) - (pr.width / 2);
+  if(left < padding) left = padding;
+  if(left + pr.width > window.innerWidth - padding){
+    left = window.innerWidth - padding - pr.width;
+  }
+
+  let top = r.bottom + 6;
+  if(top + pr.height > window.innerHeight - padding){
+    const above = r.top - pr.height - 6;
+    if(above >= padding) top = above;
+  }
+
+  pop.style.left = Math.round(left) + "px";
+  pop.style.top = Math.round(top) + "px";
+}
+
+async function showMetaPopover(btn){
+  clearTimeout(metaHideTimer);
+  const type = btn.dataset.metaType;
+  const id = btn.dataset.metaId;
+  if(!type || !id) return;
+
+  const pop = ensureMetaPopover();
+  activeMetaBtn = btn;
+
+  let row = window.__metaCache.get(`${type}:${id}`);
+  if(!row && typeof sb !== "undefined"){
+    const table = type === "person" ? "people" : type === "event" ? "events" : "articles";
+    const { data } = await sb.from(table).select("*").eq("id", id).maybeSingle();
+    if(data){
+      row = data;
+      window.__metaCache.set(`${type}:${id}`, row);
+    }
+  }
+
+  const body = pop.querySelector(".meta-popover-body");
+
+  const authorName = sanitizePublicName(row ? (row.created_by_name || "") : "");
+  const authorDate = (row && row.created_at) ? formatDate(row.created_at) : "";
+  const line1 = `<div class="meta-popover-row" id="metaRowLine1">Добавил(а): <b>${escapeHtml(authorName || "Архивная запись")}</b>${authorDate ? " · " + authorDate : ""}</div>`;
+
+  let line2 = "";
+  if(row){
+    if(row.status === "unconfirmed" || row.status === "pending"){
+      line2 = `<div class="meta-popover-row" style="color:var(--warn); font-weight:600">На проверке</div>`;
+    } else if(row.status === "rejected"){
+      const modName = sanitizePublicName(row.moderated_by_name || "");
+      const modDate = row.moderated_at ? formatDate(row.moderated_at) : "";
+      line2 = `<div class="meta-popover-row" style="color:#b0413e">Отклонено${modName ? " — " + escapeHtml(modName) : ""}${modDate ? " · " + modDate : ""}</div>`;
+    } else {
+      const modName = sanitizePublicName(row.moderated_by_name || row.confirmed_by_name || "модератор");
+      const modDate = formatDate(row.moderated_at || row.confirmed_at);
+      line2 = `<div class="meta-popover-row">Проверил(а): <b>${escapeHtml(modName)}</b>${modDate ? " · " + modDate : ""}</div>`;
+    }
+  }
+
+  let line3 = "";
+  if(row && row.source){
+    line3 = `<div class="meta-popover-row">Источник: ${formatSourceLink(row.source)}</div>`;
+  }
+
+  body.innerHTML = `
+    ${line1}
+    ${line2}
+    ${line3}
+    <div class="meta-popover-history-sec">
+      <div class="meta-popover-history-title">История изменений</div>
+      <div class="meta-popover-history-content">
+        <div style="color:var(--muted); font-size:12px; font-style:italic">Загрузка истории…</div>
+      </div>
+    </div>
+  `;
+
+  pop.style.display = "block";
+  positionMetaPopover(pop, btn);
+
+  // Ленивая загрузка истории из revisions
+  if(typeof sb !== "undefined"){
+    try{
+      const { data: revs, error } = await sb
+        .from("revisions")
+        .select("*")
+        .eq("entity_type", type)
+        .eq("entity_id", id)
+        .in("status", ["applied", "rejected"])
+        .order("created_at", { ascending: false });
+
+      if(activeMetaBtn !== btn) return; // пользователь уже переключился на другую иконку
+
+      const historyContent = pop.querySelector(".meta-popover-history-content");
+      if(error){
+        historyContent.innerHTML = `<div style="color:#b0413e; font-size:12px">Не удалось загрузить историю</div>`;
+        return;
+      }
+
+      // Если в строке 1 не было автора (архивная запись без created_by_name), проверяем revisions на kind='create'
+      if((!authorName || authorName === "Архивная запись") && revs){
+        const createRev = revs.find(r => r.kind === "create");
+        if(createRev){
+          const l1El = pop.querySelector("#metaRowLine1");
+          if(l1El){
+            const cName = sanitizePublicName(createRev.author_name);
+            const cDate = formatDate(createRev.created_at);
+            l1El.innerHTML = `Добавил(а): <b>${escapeHtml(cName || "Пользователь")}</b>${cDate ? " · " + cDate : ""}`;
+          }
+        }
+      }
+
+      const updates = (revs || []).filter(r => r.kind === "update" || r.kind === "moderate");
+      if(!updates.length){
+        historyContent.innerHTML = `<div style="color:var(--muted); font-size:12px; font-style:italic">Правок пока не было</div>`;
+      } else {
+        const listHtml = updates.map(r => {
+          const d = formatDate(r.created_at);
+          const who = sanitizePublicName(r.author_name || "Участник");
+          if(r.kind === "update"){
+            const changed = Object.keys(r.patch || {}).map(k => META_FIELD_NAMES[k] || k).join(", ");
+            const comment = r.comment ? ` · <i>«${escapeHtml(r.comment)}»</i>` : "";
+            const isRej = r.status === "rejected" ? ` <span style="color:#b0413e; font-size:11px">(отклонено)</span>` : "";
+            return `<li class="meta-popover-history-item">${d} · <b>${escapeHtml(who)}</b> · изменил(а): ${escapeHtml(changed || "данные")}${comment}${isRej}</li>`;
+          } else if(r.kind === "moderate"){
+            const action = (r.patch && r.patch.status === "confirmed") ? "подтверждение" : "отклонение";
+            const note = (r.moderator_note || (r.patch && r.patch.note)) ? ` · <i>«${escapeHtml(r.moderator_note || r.patch.note)}»</i>` : "";
+            return `<li class="meta-popover-history-item">${d} · <b>${escapeHtml(who)}</b> · ${action}${note}</li>`;
+          }
+          return "";
+        }).join("");
+        historyContent.innerHTML = `<ul class="meta-popover-history-list">${listHtml}</ul>`;
+      }
+      positionMetaPopover(pop, btn);
+    } catch(e){
+      console.error("Failed to load revision history:", e);
+    }
+  }
+}
+
+function hideMetaPopover(){
+  clearTimeout(metaHideTimer);
+  clearTimeout(metaShowTimer);
+  const pop = document.getElementById("globalMetaPopover");
+  if(pop) pop.style.display = "none";
+  activeMetaBtn = null;
+}
+
+// Глобальные обработчики кликов и наведений для иконки метаданных
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".meta-icon-btn");
+  if(btn){
+    e.stopPropagation();
+    if(activeMetaBtn === btn){
+      hideMetaPopover();
+    } else {
+      showMetaPopover(btn);
+    }
+    return;
+  }
+  const pop = document.getElementById("globalMetaPopover");
+  if(pop && pop.style.display !== "none" && !e.target.closest("#globalMetaPopover")){
+    hideMetaPopover();
+  }
+});
+
+document.addEventListener("mouseover", e => {
+  const btn = e.target.closest(".meta-icon-btn");
+  if(btn){
+    clearTimeout(metaHideTimer);
+    clearTimeout(metaShowTimer);
+    if(activeMetaBtn !== btn){
+      metaShowTimer = setTimeout(() => showMetaPopover(btn), 200);
+    }
+  }
+});
+
+document.addEventListener("mouseout", e => {
+  const btn = e.target.closest(".meta-icon-btn");
+  if(btn){
+    clearTimeout(metaShowTimer);
+    clearTimeout(metaHideTimer);
+    metaHideTimer = setTimeout(hideMetaPopover, 250);
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if(e.key === "Escape") hideMetaPopover();
+});
 
 // текст из Editor.js хранится с инлайн-разметкой (<b>, <i>, <a>...) — просто escapeHtml её сломает,
 // а доверять как есть нельзя (paste может принести произвольный HTML), поэтому чистим DOMPurify

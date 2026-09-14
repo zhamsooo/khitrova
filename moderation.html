@@ -353,7 +353,10 @@ async function loadRevisions(){
       <div class="mod-card" data-rev-id="${r.id}">
         <div class="rev-header">
           <span class="rev-badge ${entityBadgeClass}">${typeBadgeText}</span>
-          <span style="font-size:11.5px; color:var(--muted)">${formatDate(r.created_at)}</span>
+          <div style="display:flex; align-items:center; gap:6px">
+            <span style="font-size:11.5px; color:var(--muted)">${formatDate(r.created_at)}</span>
+            ${typeof renderMetaIcon === "function" ? renderMetaIcon(r.entity_type, r.entity_id, target || r) : ""}
+          </div>
         </div>
         <div>
           <a href="${entityUrl}" target="_blank" class="rev-entity-link">${escapeHtml(entityLabel)} ↗</a>
@@ -459,8 +462,13 @@ async function loadEvents(){
   content.innerHTML = data.map(e => `
     <div class="mod-card" data-id="${e.id}">
       <div class="card-view">
-        <div class="yr">${e.event_year} г.</div>
-        <div class="ti">${escapeHtml(e.title)}</div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px">
+          <div>
+            <div class="yr">${e.event_year} г.</div>
+            <div class="ti">${escapeHtml(e.title)}</div>
+          </div>
+          ${typeof renderMetaIcon === "function" ? renderMetaIcon("event", e.id, e) : ""}
+        </div>
         ${e.description ? `<div class="de">${escapeHtml(e.description)}</div>` : ""}
         <div class="meta">
           Добавил(а): <b>${escapeHtml(e.created_by_name || "неизвестно")}</b> · ${formatDate(e.created_at)}
@@ -627,8 +635,13 @@ async function loadPeople(){
     return `
       <div class="mod-card" data-id="${p.id}">
         <div class="card-view">
-          <div class="yr">${escapeHtml(relLabel)}</div>
-          <div class="ti">${escapeHtml(p.full_name)}</div>
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px">
+            <div>
+              <div class="yr">${escapeHtml(relLabel)}</div>
+              <div class="ti">${escapeHtml(p.full_name)}</div>
+            </div>
+            ${typeof renderMetaIcon === "function" ? renderMetaIcon("person", p.id, p) : ""}
+          </div>
           ${eduItems.length ? `<div class="de" style="font-size:12.5px; margin-bottom:6px"><b>Образование:</b> ${eduItems.map(escapeHtml).join("; ")}</div>` : ""}
           ${p.institution ? `<div class="de"><b>Место работы:</b> ${escapeHtml(p.institution)}</div>` : ""}
           ${p.notes ? `<div class="de">${escapeHtml(p.notes)}</div>` : ""}
@@ -873,11 +886,16 @@ async function loadArticles(){
     return `
     <div class="mod-card" data-id="${a.id}">
       <div class="card-view">
-        <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-          ${catBadge}
-          <div class="yr" style="margin:0">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}${metaYear ? ` (${escapeHtml(metaYear)})` : ''}</div>
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              ${catBadge}
+              <div class="yr" style="margin:0">${escapeHtml(ART_TYPE_LABEL[a.type] || a.type)}${metaYear ? ` (${escapeHtml(metaYear)})` : ''}</div>
+            </div>
+            <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
+          </div>
+          ${typeof renderMetaIcon === "function" ? renderMetaIcon("article", a.id, a) : ""}
         </div>
-        <div class="ti">${escapeHtml(a.title || "Без названия")}</div>
         <button type="button" class="btn-toggle" data-toggle>Показать текст</button>
         <div class="art-preview" style="display:none"></div>
         <div>

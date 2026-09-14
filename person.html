@@ -56,7 +56,7 @@
   }
   .person-badge.st-rejected{color:#b0413e; background:rgba(176,65,62,.08)}
 
-  .person-actions{margin-top:14px}
+  .person-actions{margin-top:14px; display:flex; align-items:center; gap:8px}
   .btn-edit-card{
     background:none; border:1px solid var(--line); color:var(--muted); cursor:pointer;
     font-size:12px; font-family:inherit; padding:5px 13px; border-radius:14px;
@@ -560,21 +560,6 @@ function renderEducation(p){
   `;
 }
 
-function renderMeta(p){
-  const parts = [];
-  if(p.created_by_name) parts.push(`Добавил(а): <b>${escapeHtml(p.created_by_name)}</b>`);
-  if(p.created_at) parts.push(formatDate(p.created_at));
-  if(p.updated_by_name){
-    parts.push(`Последнее изменение: <b>${escapeHtml(p.updated_by_name)}</b> (${formatDate(p.updated_at)})`);
-  }
-  if(p.source){
-    const escaped = escapeHtml(p.source);
-    const linked = escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-    parts.push(`Источник: ${linked}`);
-  }
-  return parts.join(" · ");
-}
-
 function renderPerson(p){
   document.title = `${p.full_name} — Татьяна Ивановна Хитрова`;
   const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
@@ -618,6 +603,7 @@ function renderPerson(p){
           </div>
           <div class="person-actions">
             <button class="btn-edit-card" id="btnOpenEdit">✎ Предложить правку</button>
+            ${typeof renderMetaIcon === "function" ? renderMetaIcon("person", p.id, p) : ""}
           </div>
           <div id="personPendingAlert"></div>
         </div>
@@ -638,8 +624,6 @@ function renderPerson(p){
           <div class="notes-wrap">${formatNotes(p.notes)}</div>
         </div>
       ` : ""}
-
-      <div class="person-meta">${renderMeta(p)}</div>
     </div>
   `;
 

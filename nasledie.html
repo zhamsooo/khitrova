@@ -211,7 +211,10 @@
 <div class="nsl-read" id="nslRead" style="display:none">
   <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px">
     <button class="btn-plain" id="btnBackToList2">← К списку материалов</button>
-    <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:12.5px; border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
+    <div style="display:flex; align-items:center; gap:8px">
+      <span id="readMetaSlot"></span>
+      <button class="btn-plain" id="btnProposeArticle" style="display:none; color:var(--accent); font-weight:700; font-size:12.5px; border:1px solid var(--line); border-radius:14px; padding:4px 12px">✎ Предложить правку</button>
+    </div>
   </div>
   <div class="read-badge-wrap">
     <span class="read-category-badge" id="readCategoryBadge"></span>
@@ -745,6 +748,10 @@ async function openRead(id){
     if(src) byline += ` · Источник: ${escapeHtml(src)}`;
   }
   document.getElementById("readByline").innerHTML = byline;
+  const metaSlot = document.getElementById("readMetaSlot");
+  if(metaSlot && typeof renderMetaIcon === "function"){
+    metaSlot.innerHTML = renderMetaIcon("article", art.id, art);
+  }
   document.getElementById("readBody").innerHTML = renderArticleContent(art.content);
   showView("read");
 }

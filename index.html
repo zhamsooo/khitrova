@@ -83,6 +83,10 @@
 <div class="nav-hint" id="navHint"><span class="hint-text">используйте стрелки на клавиатуре для навигации <span class="arrows">← →</span></span></div>
 
 <div class="ev-tip" id="evTip">
+  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px">
+    <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--muted); letter-spacing:.05em">Верификация</span>
+    <span id="evMetaIconSlot"></span>
+  </div>
   <div id="evTipBody"></div>
   <button class="et-confirm" id="etConfirmBtn" style="display:none">Подтвердить</button>
   <button class="et-propose-btn" id="etProposeBtn" style="display:none">Предложить правку</button>
@@ -281,6 +285,12 @@ function showBadgeTip(badge){
   }
   document.getElementById("evTipBody").innerHTML = html;
 
+  const ev = (allTimelineEvents || []).find(x => x.id === badge.dataset.id);
+  const metaSlot = document.getElementById("evMetaIconSlot");
+  if(metaSlot && ev && typeof renderMetaIcon === "function"){
+    metaSlot.innerHTML = renderMetaIcon("event", ev.id, ev);
+  }
+
   const btn = document.getElementById("etConfirmBtn");
   if(typeof myProfile !== "undefined" && myProfile && myProfile.is_moderator && status !== "confirmed"){
     btn.style.display = "block";
@@ -308,7 +318,11 @@ let tipHideTimer = null;
 function cancelHideTip(){ clearTimeout(tipHideTimer); }
 function scheduleHideTip(){
   clearTimeout(tipHideTimer);
-  tipHideTimer = setTimeout(() => evTip.classList.remove("open"), 180);
+  tipHideTimer = setTimeout(() => {
+    const pop = document.getElementById("globalMetaPopover");
+    if(pop && pop.style.display !== "none") return;
+    evTip.classList.remove("open");
+  }, 180);
 }
 
 document.getElementById("timeline-embed").addEventListener("mouseover", e => {
@@ -327,7 +341,7 @@ document.getElementById("timeline-embed").addEventListener("click", e => {
   if(badge){ e.stopPropagation(); cancelHideTip(); showBadgeTip(badge); }
 });
 document.addEventListener("click", e => {
-  if(!e.target.closest(".ev-tip") && !e.target.closest(".ev-badge")) evTip.classList.remove("open");
+  if(!e.target.closest(".ev-tip") && !e.target.closest(".ev-badge") && !e.target.closest("#globalMetaPopover") && !e.target.closest(".meta-icon-btn")) evTip.classList.remove("open");
 });
 
 document.getElementById("etConfirmBtn").addEventListener("click", async () => {
