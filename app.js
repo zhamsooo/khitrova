@@ -64,24 +64,24 @@ const MODALS_HTML = `
       <button type="button" class="btn filled dialog-bar-action" id="btnAuthBarAction">Код</button>
     </div>
     <div class="modal-body">
-      <div id="stepEmail">
+      <form id="stepEmail" onsubmit="return false;">
         <div class="field">
           <input type="email" id="inEmail" placeholder="you@example.com" autocomplete="email">
           <label class="lbl" for="inEmail">Email</label>
-          <div class="sup">На почту придёт код из 8 цифр</div>
+          <div class="sup">На почту придёт код из 6 цифр</div>
         </div>
         <div class="err" id="errEmail"></div>
         <div class="row-actions">
           <button type="button" class="btn text" data-close>Отмена</button>
-          <button type="button" class="btn filled" id="btnSendCode">Получить код</button>
+          <button type="submit" class="btn filled" id="btnSendCode">Получить код</button>
         </div>
-      </div>
-      <div id="stepCode" style="display:none">
+      </form>
+      <form id="stepCode" style="display:none" onsubmit="return false;">
         <div class="hint" id="codeSentTo" style="margin-bottom:16px"></div>
         <div class="field">
-          <input type="text" id="inCode" inputmode="numeric" maxlength="8" placeholder="12345678">
+          <input type="text" id="inCode" inputmode="numeric" maxlength="6" placeholder="123456" autocomplete="one-time-code">
           <label class="lbl" for="inCode">Код из письма</label>
-          <div class="sup">8 цифр</div>
+          <div class="sup">6 цифр</div>
         </div>
         <div class="err" id="errCode"></div>
         <div class="row-actions split">
@@ -89,10 +89,10 @@ const MODALS_HTML = `
             <button type="button" class="btn text" id="btnChangeEmail" style="padding:0">Другой email</button>
             <button type="button" class="btn text" id="btnResendCode" style="padding:0">Отправить снова</button>
           </span>
-          <button type="button" class="btn filled" id="btnVerifyCode">Подтвердить</button>
+          <button type="submit" class="btn filled" id="btnVerifyCode">Подтвердить</button>
         </div>
-      </div>
-      <div id="stepProfile" style="display:none">
+      </form>
+      <form id="stepProfile" style="display:none" onsubmit="return false;">
         <div class="field">
           <input type="text" id="inName" placeholder="Имя Фамилия">
           <label class="lbl" for="inName">Имя и фамилия</label>
@@ -113,9 +113,9 @@ const MODALS_HTML = `
         <div class="err" id="errProfile"></div>
         <div class="row-actions">
           <button type="button" class="btn text" data-close>Отмена</button>
-          <button type="button" class="btn filled" id="btnSaveProfile">Сохранить</button>
+          <button type="submit" class="btn filled" id="btnSaveProfile">Сохранить</button>
         </div>
-      </div>
+      </form>
     </div>
   </div>
 </div>
@@ -1076,9 +1076,12 @@ function initHeader(){
     document.getElementById("gradYearWrap").style.display = e.target.value === "ученик" ? "block" : "none";
   });
 
-  // только цифры в поле кода
+  // только цифры в поле кода; после 6-й цифры — автопроверка, не ждём Enter/кнопку
   document.getElementById("inCode").addEventListener("input", e => {
-    e.target.value = e.target.value.replace(/\D/g, "");
+    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    if(e.target.value.length === 6){
+      document.getElementById("btnVerifyCode").click();
+    }
   });
 
   let pendingEmail = null;
@@ -1091,7 +1094,8 @@ function initHeader(){
     return true;
   }
 
-  document.getElementById("btnSendCode").addEventListener("click", async () => {
+  document.getElementById("stepEmail").addEventListener("submit", async e => {
+    e.preventDefault();
     const email = document.getElementById("inEmail").value.trim();
     const errEl = document.getElementById("errEmail");
     if(!email || !email.includes("@")){ errEl.textContent = "Введите email"; errEl.style.display = "block"; return; }
@@ -1130,7 +1134,8 @@ function initHeader(){
     document.getElementById("codeSentTo").innerHTML = `Код отправлен повторно на <b>${pendingEmail}</b>`;
   });
 
-  document.getElementById("btnVerifyCode").addEventListener("click", async () => {
+  document.getElementById("stepCode").addEventListener("submit", async e => {
+    e.preventDefault();
     const token = document.getElementById("inCode").value.trim();
     const errEl = document.getElementById("errCode");
     const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: "email" });
@@ -1148,7 +1153,8 @@ function initHeader(){
     }
   });
 
-  document.getElementById("btnSaveProfile").addEventListener("click", async () => {
+  document.getElementById("stepProfile").addEventListener("submit", async e => {
+    e.preventDefault();
     const full_name = document.getElementById("inName").value.trim();
     const relation_type = document.getElementById("inRelation").value;
     const gradRaw = document.getElementById("inGradYear").value;
