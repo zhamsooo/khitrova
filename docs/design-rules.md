@@ -4,22 +4,24 @@
 
 Старые правила (Cormorant/PT Serif, бронза) — в `docs/design-rules-v1-archive.md`, они отменены. Откат всего дизайна: git-тег `v1-design`. Откат к фиолетовой палитре M3: git-тег `v2-m3-purple`.
 
-## 1. Цвет — нейтральная светлая схема M3 (монохром)
+## 1. Цвет — схема M3 Prussian & Denim / Deep Blue (решение владельца 2026-09-14)
 Все цвета только через переменные в `:root` в `style.css`. Ни одного hex в компонентах.
 
+Палитра: Ink Black `#0D1B2A`, Prussian Blue `#1B263B`, Dusk Blue `#415A77`, Dusty Denim `#778DA9`, Alabaster Grey `#E0E1DD`.
+
 ```
---primary:#1A1A1A;  --on-primary:#FFFFFF;  --primary-container:#E3E3E3;  --on-primary-container:#1A1A1A;
---secondary:#5C5C5C; --secondary-container:#E8E8E8; --on-secondary-container:#1A1A1A;
---tertiary:#5C5C5C; --tertiary-container:#F0F0F0; --on-tertiary-container:#3A3A3A;
---error:#B3261E; --on-error:#FFFFFF; --error-container:#F9DEDC; --on-error-container:#410E0B;
---surface:#FFFFFF; --surface-low:#F5F5F5; --surface-mid:#EFEFEF; --surface-high:#E9E9E9; --surface-highest:#E2E2E2;
---on-surface:#1A1A1A; --on-surface-variant:#5C5C5C; --outline:#8A8A8A; --outline-variant:#D6D6D6;
---inverse-surface:#2E2E2E; --inverse-on-surface:#F2F2F2; --inverse-primary:#D0D0D0;
+--primary:#1B263B;  --on-primary:#FFFFFF;  --primary-container:#DBE4EE;  --on-primary-container:#0D1B2A;
+--secondary:#415A77; --secondary-container:#E0E1DD; --on-secondary-container:#0D1B2A;
+--tertiary:#778DA9; --tertiary-container:#E8ECEF; --on-tertiary-container:#1B263B;
+--error:#BA1A1A; --on-error:#FFFFFF; --error-container:#FFDAD6; --on-error-container:#410002;
+--surface:#FFFFFF; --surface-low:#F4F6F8; --surface-mid:#ECEFF2; --surface-high:#E5E9EC; --surface-highest:#E0E1DD;
+--on-surface:#0D1B2A; --on-surface-variant:#415A77; --outline:#778DA9; --outline-variant:#D0D7DE;
+--inverse-surface:#0D1B2A; --inverse-on-surface:#E0E1DD; --inverse-primary:#778DA9;
 ```
 Роли (кому что):
-- Фон страницы `--surface`; карточки и панели `--surface-low` (покой) / `--surface-mid` (hover) / `--surface-high` (поля поиска, выезжающая полоска метаданных); диалоги `--surface-high`.
-- Основной текст `--on-surface`; вторичный и подписи `--on-surface-variant`; рамки `--outline` (поля, outlined-кнопки) и `--outline-variant` (разделители).
-- Главное действие `--primary` (filled-кнопка, активная вкладка, индикатор); tonal-кнопки и активные чипы `--secondary-container`; выбранный chip и активная вкладка — `--primary` (чёрный); tonal-кнопки — `--secondary-container`.
+- Фон страницы `--surface` (#FFFFFF); карточки и панели `--surface-low` (#F4F6F8, покой) / `--surface-mid` (#ECEFF2, hover) / `--surface-high` (#E5E9EC, поля поиска, выезжающая полоска метаданных); диалоги `--surface-high`; высший уровень поверхностей `--surface-highest` (#E0E1DD).
+- Основной текст `--on-surface` (Ink Black `#0D1B2A`); вторичный и подписи `--on-surface-variant` (Dusk Blue `#415A77`); рамки `--outline` (Dusty Denim `#778DA9`: поля, чипы, outlined-кнопки) и `--outline-variant` (`#D0D7DE`, разделители).
+- Главное действие `--primary` (Prussian Blue `#1B263B`: filled-кнопка, активная вкладка с 2px линией, индикатор, выбранный chip); tonal-кнопки и активные чипы в контейнерах `--secondary-container` (Alabaster Grey `#E0E1DD`).
 - Статусы: подтверждено `--primary-container`/`--on-primary-container`; на проверке `--tertiary-container`/`--on-tertiary-container` с иконкой `schedule`; отклонено `--error-container`. Отдельных «зелёных/жёлтых» не заводить.
 - State layers: hover = `--on-surface` 8 %, focus/pressed = 12 % (можно через `color-mix(in srgb, var(--on-surface) 8%, transparent)` поверх фона).
 - Тёмная тема — не в этом объёме; но красить фон и текст только токенами, чтобы её можно было добавить одним блоком.
