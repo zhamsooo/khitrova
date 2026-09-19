@@ -1,0 +1,45 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B · Белые ночи</title>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;800&display=swap" rel="stylesheet">
+<style>
+:root{--night:#1C2740;--dusk:#2D3D63;--mist:#E6EAF2;--text:#F2F4F8;--muted:#AEB8CF;--amber:#F0B45E;--gutter:24px}
+*{box-sizing:border-box}body{margin:0;background:var(--mist);color:var(--night);font:400 17px/1.6 Onest,system-ui,sans-serif}
+.top{background:var(--night);color:var(--text)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 var(--gutter)}
+nav{display:flex;gap:24px;padding:16px 0;font-size:15px;align-items:center}
+nav a{color:var(--muted);text-decoration:none;white-space:nowrap}nav a[aria-current]{color:var(--text);font-weight:500}nav .sp{flex:1}
+nav .add{background:var(--amber);color:var(--night);padding:8px 16px;border-radius:99px;font-weight:500}
+.hero{position:relative;min-height:560px;display:flex;align-items:flex-end}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 25%;filter:grayscale(1) contrast(1.05);opacity:.55;mix-blend-mode:luminosity}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(to top,var(--night) 8%,rgba(28,39,64,.15) 70%)}
+.hero .wrap{position:relative;padding-bottom:48px;width:100%}
+h1{font:800 clamp(44px,8vw,96px)/.98 Onest,sans-serif;letter-spacing:-.02em;margin:0;max-width:11ch}
+.sub{color:var(--muted);max-width:44ch;margin:20px 0 0}
+.prog{padding-top:56px;padding-bottom:24px}
+.prog h2{font:800 32px/1.1 Onest;margin:0 0 24px}
+.row{display:flex;align-items:baseline;gap:8px;padding:12px 0}
+.row .y{font-weight:800;font-size:22px;color:var(--dusk);min-width:3.2ch}
+.row .dots{flex:1;border-bottom:2px dotted #9AA6C2;transform:translateY(-5px)}
+.row .t{font-weight:500;text-align:right;max-width:26ch}
+.group{background:var(--night);color:var(--text);padding:48px 0 64px;margin-top:32px}
+.group h2{font:800 32px/1.1 Onest;margin:0 0 24px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.c{background:var(--dusk);border-radius:6px;padding:20px}.c b{display:block;font-size:19px;font-weight:500}.c small{color:var(--muted);font-size:15px}
+.c em{font-style:normal;color:var(--amber);font-weight:800;display:block;font-size:14px;margin-bottom:6px}
+@media(max-width:700px){.hero{min-height:480px}.cards{grid-template-columns:1fr}nav .add{padding:6px 12px}nav{gap:16px}.row .t{max-width:18ch}}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+</style></head><body>
+<div class="top"><div class="wrap"><nav><a href="#" aria-current="page">Линия жизни</a><a href="#">Люди</a><a href="#">Наследие</a><span class="sp"></span><a class="add" href="#">Добавить</a></nav></div></div>
+<header class="top hero"><img src="../../photo/main.jpg" alt=""><div class="wrap"><h1>Татьяна Ивановна Хитрова</h1>
+<p class="sub">1940–2025. Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской консерватории.</p></div></header>
+<section class="wrap prog"><h2>Программа жизни</h2>
+<div class="row"><span class="y">1940</span><span class="dots"></span><span class="t">Рождение в Ленинграде</span></div>
+<div class="row"><span class="y">1967</span><span class="dots"></span><span class="t">Диплом с отличием</span></div>
+<div class="row"><span class="y">2004</span><span class="dots"></span><span class="t">«Весна в декабре»</span></div>
+<div class="row"><span class="y">2007</span><span class="dots"></span><span class="t">Заслуженный деятель искусств РФ</span></div>
+<div class="row"><span class="y">2025</span><span class="dots"></span><span class="t">Ушла из жизни</span></div></section>
+<section class="group"><div class="wrap"><h2>Класс профессора</h2><div class="cards">
+<div class="c"><em>1974</em><b>Тесленко Г. С.</b><small>Преподаватель Астраханской консерватории</small></div>
+<div class="c"><em>1975</em><b>Семенов Ю. Н.</b><small>Преподаватель Хорового училища им. Глинки</small></div>
+<div class="c"><em>2005</em><b>Калинин Фёдор Дмитриевич</b><small>Хоровое училище, руководитель хора</small></div></div></div></section>
+</body></html>

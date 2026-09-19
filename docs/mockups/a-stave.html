@@ -1,0 +1,49 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A · Нотный стан</title>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F6F7F8;--ink:#1B2030;--soft:#5B6373;--line:#C8CDD6;--claret:#7B1E2E;--gutter:24px}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:400 18px/1.65 Literata,Georgia,serif}
+.wrap{max-width:1040px;margin:0 auto;padding:0 var(--gutter)}
+nav{display:flex;gap:28px;align-items:baseline;padding:18px 0;border-bottom:1px solid var(--line);font-size:16px}
+nav a{color:var(--soft);text-decoration:none;white-space:nowrap}nav a[aria-current]{color:var(--ink);border-bottom:2px solid var(--claret);padding-bottom:4px}
+nav .sp{flex:1}nav .add{color:var(--claret);font-weight:600}
+.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;padding:56px 0 24px;align-items:end}
+h1{font:600 clamp(40px,6vw,72px)/1.05 Literata,serif;margin:0 0 20px;letter-spacing:-.01em}
+.lead{color:var(--soft);max-width:34ch;margin:0}
+.years{margin-top:28px;font-style:italic;color:var(--soft)}
+.stave{height:44px;margin:40px 0 0;background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px 12px);height:49px}
+.portrait{margin:0}.portrait img{width:100%;aspect-ratio:4/5;object-fit:cover;object-position:50% 20%;display:block;filter:grayscale(.15)}
+.portrait figcaption{font-size:14px;color:var(--soft);margin-top:8px}
+h2{font:600 28px/1.2 Literata,serif;margin:64px 0 8px}
+.tl{list-style:none;margin:24px 0 0;padding:0;position:relative}
+.tl li{display:grid;grid-template-columns:96px 28px 1fr;gap:0 12px;padding:18px 0;border-top:1px solid var(--line)}
+.tl .y{font:600 30px/1 Literata,serif;color:var(--claret);font-variant-numeric:lining-nums}
+.tl .n{width:14px;height:10px;border-radius:50%;background:var(--ink);transform:rotate(-20deg);margin-top:12px;position:relative}
+.tl .n::after{content:"";position:absolute;right:0;bottom:4px;width:1.5px;height:34px;background:var(--ink)}
+.tl b{display:block;font-weight:600}.tl span{color:var(--soft);font-size:16px}
+.people{display:grid;grid-template-columns:repeat(3,1fr);gap:0 32px;margin-top:20px}
+.p{padding:16px 0;border-top:1px solid var(--line)}.p b{display:block;font-weight:600}.p small{color:var(--soft);font-size:15px;line-height:1.4;display:block}
+.more{display:inline-block;margin:24px 0 80px;color:var(--claret);font-weight:600}
+@media(max-width:700px){.hero{grid-template-columns:1fr;gap:24px;padding-top:32px}.portrait{order:-1}.people{grid-template-columns:1fr}
+.tl li{grid-template-columns:70px 22px 1fr}.tl .y{font-size:24px}nav{gap:18px;font-size:15px}nav .add{display:none}:root{--gutter:16px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--claret);outline-offset:3px}
+</style></head><body><div class="wrap">
+<nav><a href="#" aria-current="page">Линия жизни</a><a href="#">Люди</a><a href="#">Наследие</a><span class="sp"></span><a class="add" href="#">Добавить</a><a href="#">Войти</a></nav>
+<header class="hero"><div><h1>Татьяна Ивановна Хитрова</h1>
+<p class="lead">Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской консерватории.</p>
+<p class="years">1940 — 2025</p><div class="stave" aria-hidden="true"></div></div>
+<figure class="portrait"><img src="../../photo/main.jpg" alt="Т. И. Хитрова"><figcaption>Татьяна Ивановна Хитрова</figcaption></figure></header>
+<h2>Линия жизни</h2>
+<ol class="tl">
+<li><span class="y">1940</span><i class="n"></i><div><b>Рождение</b><span>Родилась в Ленинграде, 10 февраля.</span></div></li>
+<li><span class="y">1967</span><i class="n"></i><div><b>Диплом с отличием</b><span>Переезд в Ленинград по замужеству.</span></div></li>
+<li><span class="y">2004</span><i class="n"></i><div><b>Публикации в «Весне в декабре»</b><span>Сборник, СПб, «Сударыня».</span></div></li>
+<li><span class="y">2007</span><i class="n"></i><div><b>Заслуженный деятель искусств РФ</b><span>Звание присвоено 17 марта.</span></div></li>
+<li><span class="y">2025</span><i class="n"></i><div><b>Ушла из жизни</b><span>20 февраля.</span></div></li></ol>
+<h2>Ученики</h2>
+<div class="people"><div class="p"><b>Тесленко Г. С.</b><small>Выпуск 1974 · преподаватель Астраханской консерватории</small></div>
+<div class="p"><b>Семенов Ю. Н.</b><small>Выпуск 1975 · преподаватель Хорового училища им. Глинки</small></div>
+<div class="p"><b>Калинин Фёдор Дмитриевич</b><small>Выпуск 2005 · Хоровое училище, руководитель хора</small></div></div>
+<a class="more" href="#">Все ученики: 39</a></div></body></html>
