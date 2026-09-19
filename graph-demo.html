@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Люди, граф (демо) — сайт памяти Т.И. Хитровой</title>
+<link rel="stylesheet" href="fonts/pt-fonts.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
+<link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  .demo-note{
+    margin:0 0 20px; padding:12px 16px; border:1px dashed var(--outline); border-radius:var(--r-s);
+    font:var(--t-body-medium); color:var(--on-surface-variant); max-width:76ch;
+  }
+  .graph-wrap{position:relative; border:1px solid var(--outline-variant); border-radius:var(--r-m); background:var(--surface)}
+  #graph{width:100%; height:min(78vh, 720px); min-height:420px}
+  .graph-hint{margin:10px 0 0; font:var(--t-label-medium); color:var(--on-surface-variant)}
+  .swatch{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:2px; flex:none}
+  .swatch.demo{background:var(--surface) !important; border:2px solid currentColor; width:8px; height:8px}
+  .chip .swatch{border:0}
+  .chip.on{background:var(--secondary-container); color:var(--on-surface); border-color:transparent}
+  .chip.on .chip-count{color:var(--on-surface-variant)}
+  .chip.off{opacity:.55}
+  .chip.off .swatch{filter:grayscale(1)}
+</style>
+</head>
+<body data-page="people">
+
+<main class="page">
+  <h1>Люди: граф</h1>
+  <p class="lead">Татьяна Ивановна в центре. Чем дальше от центра, тем позже выпуск. Точки одного выпуска собраны вокруг общей отметки года.</p>
+  <div class="demo-note">
+    <b>Демонстрация.</b> Заполненные точки без пометки «демо» настоящие, из базы сайта. Пустые кружки сгенерированы для примера, чтобы показать группы (хоровое училище, консерватория, коллеги). Они нигде не сохраняются.
+  </div>
+
+  <div class="toolbar">
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="graph-wrap"><div id="graph"></div></div>
+  <p class="graph-hint">Колесо мыши или щипок: масштаб. Перетащите, чтобы сдвинуть. Наведите на точку, чтобы увидеть связи. Пунктир: человек учился и в училище, и в консерватории.</p>
+</main>
+
+<script src="vendor/supabase-js-2.116.0/supabase.js"></script>
+<script src="vendor/echarts-5.6.0/echarts.min.js"></script>
+<script src="app.js"></script>
+<script>
+// ---------------------------------------------------------------- группы и цвета
+const GROUPS = {
+  choir:  { label: "Хоровое училище",       color: "#1B263B", a0: -172, a1: -98 },   // углы в градусах, 0 = вправо, по часовой
+  spbgk:  { label: "СПбГК",                 color: "#4F7CAC", a0:  -82, a1:  -8  },
+  colleague: { label: "Коллеги",            color: "#C08A3E", a0:   98, a1: 172  },
+  unspec: { label: "Учебное заведение не указано", color: "#8A96A3", a0:   8, a1:  82 }
+};
+const YEAR_MIN = 1974, YEAR_MAX = 2017;
+const TI_ID = "ti";
+
+// ---------------------------------------------------------------- демо-данные (детерминированно)
+function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(20260919);
+const pick = arr => arr[Math.floor(R() * arr.length)];
+const SUR_M = ["Ковалёв","Громов","Васильев","Орлов","Лебедев","Зайцев","Крылов","Морозов","Беляев","Фомин","Тихонов","Киселёв","Жуков","Соловьёв","Дроздов","Николаев","Титов","Сидоров","Гусев","Поляков"];
+const INIT = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
+function demoName(){ const s = pick(SUR_M); const f = R() < .5; return (f ? s + "а" : s) + " " + INIT[Math.floor(R()*INIT.length)] + "."; }
+function span(a, b){ return a + Math.floor(R() * (b - a + 1)); }
+function makeDemo(){
+  const out = []; let n = 0;
+  const add = (group, year, extra) => out.push(Object.assign({ id: "demo" + (++n), name: demoName(), group, year, notable: R() < .12, demo: true }, extra || {}));
+  for(let i = 0; i < 22; i++) add("choir", span(1976, 2016));
+  for(let i = 0; i < 22; i++){
+    const y = span(1978, 2015);
+    add("spbgk", y, R() < .45 ? { choirYear: y - span(4, 6) } : {});   // часть прошла и училище, и консерваторию
+  }
+  for(let i = 0; i < 10; i++) add("colleague", span(1975, 2010));
+  for(let i = 0; i < 6; i++) add("unspec", span(1980, 2012));
+  return out;
+}
+
+// ---------------------------------------------------------------- реальные данные
+async function loadReal(){
+  const { data, error } = await sb.from("people")
+    .select("id, full_name, relation_type, study_end, notable, studied_choir_school, studied_conservatory, choir_school_end, conservatory_end")
+    .eq("status", "confirmed");
+  if(error || !data) return [];
+  return data.map(p => {
+    let group = "unspec";
+    if(p.relation_type === "коллега") group = "colleague";
+    else if(p.studied_conservatory) group = "spbgk";
+    else if(p.studied_choir_school) group = "choir";
+    const year = p.conservatory_end || p.choir_school_end || p.study_end || null;
+    const extra = {};
+    if(group === "spbgk" && p.studied_choir_school && p.choir_school_end) extra.choirYear = p.choir_school_end;
+    return Object.assign({ id: p.id, name: p.full_name, group, year, notable: !!p.notable, demo: false }, extra);
+  });
+}
+
+// ---------------------------------------------------------------- модель: выпуски (когорты)
+function cohortKey(group, year){
+  if(!year) return group + ":none";
+  if(group === "colleague") return group + ":" + Math.floor(year / 10) * 10;   // коллеги: по десятилетиям
+  return group + ":" + year;
+}
+function cohortLabel(group, year){
+  if(!year) return "год не указан";
+  if(group === "colleague") return Math.floor(year / 10) * 10 + "-е";
+  return String(year);
+}
+function buildModel(people){
+  const cohorts = new Map();
+  const ensure = (group, year) => {
+    const key = cohortKey(group, year);
+    if(!cohorts.has(key)) cohorts.set(key, { key, group, year: year ? (group === "colleague" ? Math.floor(year/10)*10 + 5 : year) : null, label: cohortLabel(group, year), members: [] });
+    return cohorts.get(key);
+  };
+  people.forEach(p => {
+    p.cohort = ensure(p.group, p.year);
+    p.cohort.members.push(p);
+    if(p.choirYear) p.cross = ensure("choir", p.choirYear);   // вторая связь: выпуск училища
+  });
+  // угол каждого выпуска: выпуски группы идут по секторам от раннего к позднему
+  Object.keys(GROUPS).forEach(g => {
+    const list = [...cohorts.values()].filter(c => c.group === g).sort((a, b) => (a.year || 0) - (b.year || 0));
+    list.forEach((c, i) => { c.k = (i + .5) / list.length; });
+  });
+  return { people, cohorts: [...cohorts.values()] };
+}
+
+// ---------------------------------------------------------------- координаты
+function rFrac(year){ if(!year) return .2; const t = (Math.min(Math.max(year, YEAR_MIN), YEAR_MAX) - YEAR_MIN) / (YEAR_MAX - YEAR_MIN); return .26 + .68 * t; }
+function polar(cx, cy, maxR, group, k, year){
+  const g = GROUPS[group];
+  const ang = (g.a0 + (g.a1 - g.a0) * k) * Math.PI / 180;
+  const f = rFrac(year);
+  return [cx + maxR.x * f * Math.cos(ang), cy + maxR.y * f * Math.sin(ang)];   // эллипс: используем всю ширину блока
+}
+
+// ---------------------------------------------------------------- отрисовка
+let chart, MODEL;
+const active = { choir: true, spbgk: true, colleague: true, unspec: true, demo: true };
+let onlyNotable = false;
+
+function visiblePerson(p){ return active[p.group] && (active.demo || !p.demo) && (!onlyNotable || p.notable); }
+
+function render(){
+  const el = document.getElementById("graph");
+  const w = el.clientWidth, h = el.clientHeight, cx = w / 2, cy = h / 2, maxR = { x: w / 2 - 60, y: h / 2 - 34 };
+  const vis = MODEL.people.filter(visiblePerson);
+  const shownCohorts = new Set();
+  vis.forEach(p => { shownCohorts.add(p.cohort); if(p.cross) shownCohorts.add(p.cross); });
+
+  const nodes = [{
+    id: TI_ID, name: "Т. И. Хитрова", x: cx, y: cy, symbolSize: 46, fixed: true,
+    itemStyle: { color: "#0D1B2A" }, label: { show: true, position: "bottom", distance: 8, fontWeight: 700, fontSize: 13, color: "#0D1B2A" },
+    tip: "Татьяна Ивановна Хитрова"
+  }];
+  const links = [];
+  // невидимые точки по углам: держат границы графа постоянными, чтобы фильтры не сдвигали и не масштабировали картинку
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
+    id: "anchor" + i, name: "", x: cx + sx * (maxR.x + 20), y: cy + sy * (maxR.y + 10), symbolSize: 0, silent: true, label: { show: false }, tip: ""
+  }));
+
+  shownCohorts.forEach(c => {
+    const [x, y] = polar(cx, cy, maxR, c.group, c.k, c.year);
+    const color = GROUPS[c.group].color;
+    nodes.push({ id: c.key, name: c.label, x, y, symbolSize: 7, symbol: "rect", itemStyle: { color: "#fff", borderColor: color, borderWidth: 1.5 },
+      label: { show: true, position: "top", distance: 2, fontSize: 10, color: "#6B7C8F" }, tip: (c.group === "colleague" ? "Коллеги, " : "Выпуск ") + c.label });
+    links.push({ source: TI_ID, target: c.key, lineStyle: { color: "#C8CDD3", width: 1, opacity: .55, curveness: 0 } });
+  });
+
+  // люди вокруг отметки своего выпуска
+  const byCohort = new Map();
+  vis.forEach(p => { if(!byCohort.has(p.cohort)) byCohort.set(p.cohort, []); byCohort.get(p.cohort).push(p); });
+  const pos = new Map();
+  byCohort.forEach((members, c) => {
+    const [bx, by] = polar(cx, cy, maxR, c.group, c.k, c.year);
+    members.forEach((p, i) => {
+      const n = members.length, rad = 16 + 3 * n, a = (i / n) * Math.PI * 2 + (c.k * 6);
+      const x = bx + (n === 1 ? 12 : rad) * Math.cos(a), y = by + (n === 1 ? 12 : rad) * Math.sin(a);
+      pos.set(p.id, [x, y]);
+      const color = GROUPS[p.group].color;
+      nodes.push({
+        id: p.id, name: p.name, x, y, symbolSize: p.notable ? 15 : 10,
+        itemStyle: p.demo ? { color: "#fff", borderColor: color, borderWidth: 2 } : { color },
+        label: { show: p.notable, position: "right", fontSize: 12, color: "#0D1B2A" },
+        tip: p.name + "<br>" + GROUPS[p.group].label + (p.year ? (p.group === "colleague" ? ", вместе с " + p.year + "-х" : ", выпуск " + p.year) : "") + (p.notable ? "<br>Выдающийся ученик" : "") + (p.demo ? "<br><i>демо-данные</i>" : ""),
+        pid: p.id
+      });
+      links.push({ source: c.key, target: p.id, lineStyle: { color, width: 1, opacity: .5, curveness: .12 } });
+      if(p.cross) links.push({ source: p.cross.key, target: p.id, lineStyle: { color: GROUPS.choir.color, width: 1, type: "dashed", opacity: .3, curveness: .2 } });
+    });
+  });
+
+  chart.setOption({
+    animationDuration: 500,
+    textStyle: { fontFamily: '"PT Sans", sans-serif' },
+    tooltip: { confine: true, formatter: p => p.dataType === "node" ? p.data.tip : "" },
+    series: [{
+      type: "graph", layout: "none", roam: true, scaleLimit: { min: .6, max: 5 },
+      data: nodes, links, draggable: false,
+      emphasis: { focus: "adjacency", lineStyle: { width: 2, opacity: 1 } },
+      blur: { itemStyle: { opacity: .18 }, lineStyle: { opacity: .06 }, label: { opacity: .3 } },
+      labelLayout: { hideOverlap: true },
+      lineStyle: { color: "source" }
+    }]
+  }, true);
+
+  renderChips();
+}
+
+// ---------------------------------------------------------------- фильтры
+function renderChips(){
+  const box = document.getElementById("chips");
+  const counts = {};
+  MODEL.people.forEach(p => { if((active.demo || !p.demo) && (!onlyNotable || p.notable)) counts[p.group] = (counts[p.group] || 0) + 1; });
+  const chip = (id, label, on, count, sw) => `<button type="button" class="chip ${on ? "on" : "off"}" data-id="${id}">${sw || ""}${label}${count != null ? ` <span class="chip-count">· ${count}</span>` : ""}</button>`;
+  box.innerHTML =
+    Object.entries(GROUPS).map(([id, g]) => chip(id, g.label, active[id], counts[id] || 0, `<span class="swatch" style="background:${g.color}"></span>`)).join("") +
+    chip("notable", "Только выдающиеся", onlyNotable, null) +
+    chip("demo", "Показывать демо", active.demo, null);
+}
+document.getElementById("chips").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(!b) return;
+  const id = b.dataset.id;
+  if(id === "notable") onlyNotable = !onlyNotable; else active[id] = !active[id];
+  render();
+});
+
+// ---------------------------------------------------------------- запуск
+(async function init(){
+  chart = echarts.init(document.getElementById("graph"), null, { renderer: "canvas" });
+  const real = await loadReal();
+  MODEL = buildModel([...real, ...makeDemo()]);
+  render();
+  const byId = new Map(MODEL.people.map(p => [p.id, p]));
+  chart.on("click", ev => { const p = ev.data && ev.data.pid && byId.get(ev.data.pid); if(p && !p.demo) location.href = "person.html?id=" + encodeURIComponent(p.id); });
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { chart.resize(); render(); }, 150); });
+})();
+</script>
+</body>
+</html>
