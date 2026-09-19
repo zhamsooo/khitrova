@@ -1,2 +1,5 @@
-/* Nunito Sans 600 (SIL OFL 1.1), для меню. Латиница + кириллица. Хранится у нас. */
+/* Nunito Sans 300/400/600/700 (SIL OFL 1.1). Латиница и кириллица, хранится у нас. */
+@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 300; font-display: swap; src: url(nunito-sans-300.woff2) format('woff2'); }
+@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url(nunito-sans-400.woff2) format('woff2'); }
 @font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url(nunito-sans-600.woff2) format('woff2'); }
+@font-face { font-family: 'Nunito Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url(nunito-sans-700.woff2) format('woff2'); }

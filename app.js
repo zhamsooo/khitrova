@@ -18,10 +18,7 @@ const HEADER_HTML = `
     <div class="appbar-right">
       <button type="button" class="btn tonal appbar-add-btn" id="addBtn"><span class="sym">add</span>Добавить</button>
       <button type="button" class="iconbtn appbar-add-icon" id="addBtnMobile" aria-label="Добавить"><span class="sym">add</span></button>
-      <a class="iconbtn" id="navModBtn" href="moderation.html" aria-label="Модерация" style="display:none">
-        <span class="sym">fact_check</span>
-        <span class="badge-count" id="navModBadge" style="display:none">0</span>
-      </a>
+      <a class="modlink" id="navModBtn" href="moderation.html" style="display:none">Модерация <span class="badge-count" id="navModBadge" style="display:none">0</span></a>
       <button class="btn text" id="btnAuth">Войти</button>
       <div class="who-wrap" id="whoWrap" style="display:none">
         <button class="who-main" id="whoChip" aria-label="Моя карточка">
@@ -394,7 +391,7 @@ function onLoggedIn(profile){
     const modLink = document.getElementById("modLink");
     if(modLink) modLink.style.display = "block";
     const navModBtn = document.getElementById("navModBtn");
-    if(navModBtn) navModBtn.style.display = "grid";
+    if(navModBtn) navModBtn.style.display = "inline-flex";
     updateModBadge();
   }
 
