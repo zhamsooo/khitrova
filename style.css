@@ -1,51 +1,51 @@
 /* ==========================================================================
-   Токены цвета и шрифта, khitrova.org (структура токенов M3 сохранена)
+   Material Design 3, нейтральная монохромная схема, for khitrova.org
    ========================================================================== */
 
 :root {
-  /* ---------- Цвета: тёплый светлый фон и почти чёрный текст (референс satz.framer.website) ---------- */
-  --primary: #0A0A0A;
-  --on-primary: #FAF9F5;
-  --primary-container: #E6E3DC;
-  --on-primary-container: #0A0A0A;
+  /* ---------- Цвета M3: Deep Blue / Prussian & Denim ---------- */
+  --primary: #1B263B;
+  --on-primary: #FFFFFF;
+  --primary-container: #DBE4EE;
+  --on-primary-container: #0D1B2A;
 
-  --secondary: #484848;
-  --secondary-container: #E6E3DC;
-  --on-secondary-container: #0A0A0A;
+  --secondary: #415A77;
+  --secondary-container: #E0E1DD;
+  --on-secondary-container: #0D1B2A;
 
-  --tertiary: #6B6B6B;
-  --tertiary-container: #EFEDE7;
-  --on-tertiary-container: #0A0A0A;
+  --tertiary: #778DA9;
+  --tertiary-container: #E8ECEF;
+  --on-tertiary-container: #1B263B;
 
   --error: #BA1A1A;
   --on-error: #FFFFFF;
   --error-container: #FFDAD6;
   --on-error-container: #410002;
 
-  --surface: #FAF9F5;
-  --surface-low: #F2F0EB;
-  --surface-mid: #ECE9E3;
-  --surface-high: #E6E3DC;
-  --surface-highest: #DCD9D1;
+  --surface: #FFFFFF;
+  --surface-low: #F4F6F8;
+  --surface-mid: #ECEFF2;
+  --surface-high: #E5E9EC;
+  --surface-highest: #E0E1DD;
 
-  --on-surface: #0A0A0A;
-  --on-surface-variant: #484848;
-  --outline: #9A9A9A;
-  --outline-variant: #C8C8C8;
+  --on-surface: #0D1B2A;
+  --on-surface-variant: #415A77;
+  --outline: #778DA9;
+  --outline-variant: #D0D7DE;
 
-  --inverse-surface: #0A0A0A;
-  --inverse-on-surface: #FAF9F5;
-  --inverse-primary: #9A9A9A;
+  --inverse-surface: #0D1B2A;
+  --inverse-on-surface: #E0E1DD;
+  --inverse-primary: #778DA9;
 
-  /* ---------- Типографика (Inter Tight, хранится у нас) ---------- */
-  --t-display-small: 400 36px/44px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-headline-small: 400 24px/32px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-title-large: 400 22px/28px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-title-medium: 500 16px/24px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-body-large: 400 16px/24px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-body-medium: 400 14px/20px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-label-large: 500 14px/20px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
-  --t-label-medium: 500 12px/16px "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
+  /* ---------- Типографика: шрифты по умолчанию у TimelineJS (PT Sans, PT Sans Narrow) ---------- */
+  --t-display-small: 700 36px/44px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
+  --t-headline-small: 700 24px/32px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
+  --t-title-large: 700 22px/28px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
+  --t-title-medium: 500 16px/24px "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --t-body-large: 400 16px/24px "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --t-body-medium: 400 14px/20px "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --t-label-large: 500 14px/20px "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --t-label-medium: 500 12px/16px "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
 
   /* ---------- Радиусы скругления ---------- */
   --r-xs: 4px;
@@ -93,7 +93,7 @@ html, body {
   min-height: 100%;
   background: var(--surface);
   color: var(--on-surface);
-  font-family: "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif;
+  font-family: "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -152,9 +152,10 @@ h1 {
   margin: 0 0 24px;
 }
 
-/* ---------- Top App Bar: одна полоса 64px, фон на тон темнее страницы, без линии ---------- */
+/* ---------- Top App Bar: одна полоса 64px ---------- */
 .appbar {
-  background: var(--surface-low);
+  background: var(--surface);
+  border-bottom: 1px solid var(--outline-variant);
   position: sticky;
   top: 0;
   z-index: 20;
@@ -305,11 +306,10 @@ h1 {
   position: relative;
   padding: 0 2px;
   font: var(--t-label-large);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--on-surface-variant);
-  letter-spacing: .04em;
-  text-transform: uppercase;
+  letter-spacing: .1px;
   text-decoration: none;
   cursor: pointer;
   display: inline-flex;
@@ -1461,9 +1461,7 @@ h1 {
   font-weight: 600;
 }
 
-/* ---------- TimelineJS: родной вид библиотеки, переопределяем только шрифт ----------
-   #timeline-embed сильнее любых правил библиотеки; иконки (класс со словом icon) не трогаем, у них свой шрифт tl-icons. */
-#timeline-embed :not([class*="icon"]){ font-family: "Inter Tight", -apple-system, "Segoe UI", Arial, sans-serif !important; }
+/* ---------- TimelineJS: полностью родной вид, шрифты в том числе ---------- */
 .tl-message-full{ display:none; } /* английская подсказка про свайп */
 
 /* ---------- Доступность и фокус ---------- */
