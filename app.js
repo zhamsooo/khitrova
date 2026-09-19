@@ -512,6 +512,44 @@ function showToast(msg){
 }
 window.showToast = showToast;
 
+// Диалог «подтвердите и, если хотите, напишите причину». Возвращает строку (может быть пустой)
+// или null, если человек отказался. Используется при снятии с публикации и запросе на удаление.
+function askReason({ title, text, confirmLabel, placeholder, danger }){
+  return new Promise(resolve => {
+    const ov = document.createElement("div");
+    ov.className = "overlay open";
+    ov.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true" style="max-width:480px">
+        <div class="modal-body">
+          <h2 class="dialog-title" style="margin:0 0 8px">${escapeHtml(title)}</h2>
+          <p style="margin:0 0 16px; color:var(--on-surface-variant)">${escapeHtml(text || "")}</p>
+          <div class="field">
+            <textarea id="askReasonInput" placeholder="${escapeAttr(placeholder || "Например, дубликат или ошибка")}"></textarea>
+            <label class="lbl" for="askReasonInput">Причина</label>
+            <div class="sup">Необязательно</div>
+          </div>
+          <div class="row-actions">
+            <button type="button" class="btn text" data-act="cancel">Отмена</button>
+            <button type="button" class="btn ${danger ? "filled" : "tonal"}" data-act="ok">${escapeHtml(confirmLabel || "Подтвердить")}</button>
+          </div>
+        </div>
+      </div>`;
+    const done = value => { document.removeEventListener("keydown", onKey); ov.remove(); resolve(value); };
+    const onKey = e => { if(e.key === "Escape") done(null); };
+    ov.addEventListener("click", e => {
+      if(e.target === ov) return done(null);
+      const act = e.target.closest("[data-act]");
+      if(!act) return;
+      if(act.dataset.act === "cancel") return done(null);
+      done(ov.querySelector("#askReasonInput").value.trim());
+    });
+    document.addEventListener("keydown", onKey);
+    document.body.appendChild(ov);
+    ov.querySelector("#askReasonInput").focus();
+  });
+}
+window.askReason = askReason;
+
 // ---------- Логика единого окна «+ Добавить» ----------
 const ART_TYPES_BY_CAT = {
   community: [

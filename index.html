@@ -35,7 +35,7 @@ function escapeHtml(s){
 async function loadTimeline(){
   let list = [];
   try {
-    const { data, error } = await sb.from("events").select("*").order("event_year");
+    const { data, error } = await sb.from("events").select("*").neq("status", "archived").order("event_year");
     if(!error && data) list = data;
   } catch(e){
     console.warn("Не удалось загрузить события:", e);

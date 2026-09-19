@@ -187,6 +187,9 @@
     <div style="display:flex; align-items:center; gap:8px">
       <span id="readMetaSlot"></span>
       <button type="button" class="btn tonal" id="btnProposeArticle" style="display:none"><span class="sym">edit</span> Предложить правку</button>
+      <button type="button" class="btn text" id="btnArchiveArticle" style="display:none"><span class="sym">visibility_off</span> Снять с публикации</button>
+      <button type="button" class="btn text" id="btnRemoveRequestArticle" style="display:none"><span class="sym">delete</span> Предложить удаление</button>
+      <button type="button" class="btn tonal" id="btnRestoreArticle" style="display:none"><span class="sym">undo</span> Вернуть на сайт</button>
     </div>
   </div>
   <div class="read-badge-wrap">
@@ -435,7 +438,7 @@ function openArticleAddModal(presetCat){
 async function loadList(){
   elList.innerHTML = `<div class="nsl-state">Загрузка…</div>`;
   let q = sb.from("articles").select("*").order("created_at", { ascending:false });
-  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
+  q = currentUser ? q.or(`status.eq.confirmed,and(created_by.eq.${currentUser.id},status.neq.archived)`) : q.eq("status", "confirmed");
   const { data, error } = await q;
   if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
 
@@ -879,6 +882,49 @@ async function openRead(id){
       proposeBtn.style.display = "none";
     }
   }
+  const isMod = !!(myProfile && myProfile.is_moderator);
+  const show = (id, on) => { const b = document.getElementById(id); if(b) b.style.display = on ? "inline-flex" : "none"; };
+  show("btnArchiveArticle", isMod && art.status === "confirmed");
+  show("btnRemoveRequestArticle", !!currentUser && !isMod && art.status === "confirmed");
+  show("btnRestoreArticle", isMod && art.status === "archived");
+
+  document.getElementById("btnArchiveArticle").onclick = async () => {
+    const reason = await askReason({
+      title: "Снять с публикации?",
+      text: `Материал \u00ab${art.title}\u00bb пропадёт с сайта. Вернуть его можно в модерации, в разделе \u00abАрхив\u00bb.`,
+      confirmLabel: "Снять с публикации", danger: true
+    });
+    if(reason === null) return;
+    const { error } = await sb.rpc("archive_entry", { p_type: "article", p_id: art.id, p_note: reason || null });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Снято с публикации");
+    location.hash = "#list";
+  };
+  document.getElementById("btnRestoreArticle").onclick = async () => {
+    const { error } = await sb.rpc("restore_entry", { p_type: "article", p_id: art.id });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Возвращено на сайт");
+    openRead(art.id);
+  };
+  document.getElementById("btnRemoveRequestArticle").onclick = async () => {
+    const reason = await askReason({
+      title: "Предложить удаление?",
+      text: "Модератор решит, снимать ли материал с сайта. Если он согласится, вам придёт письмо.",
+      confirmLabel: "Отправить предложение", placeholder: "Почему его нужно убрать?"
+    });
+    if(reason === null) return;
+    const { error } = await sb.from("revisions").insert({
+      entity_type: "article", entity_id: art.id, kind: "update",
+      patch: { _archive: true, reason: reason || null },
+      status: "pending", author_id: currentUser.id,
+      author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
+      comment: reason || null
+    });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Предложение отправлено модератору");
+    if(typeof updateModBadge === "function") updateModBadge();
+  };
+
   document.getElementById("readBody").innerHTML = renderArticleContent(art.content);
   showView("read");
 }

@@ -160,6 +160,17 @@
     background:var(--primary-container); padding:2px 8px; border-radius:var(--r-xs); margin-left:6px;
   }
 
+  /* кнопки в строках «Опубликованное» и «Архив» */
+  .member-row button{
+    min-height:36px; border-radius:var(--r-full); padding:0 16px; font-family:inherit;
+    font-size:var(--fs-label-large); font-weight:500; cursor:pointer; border:none; white-space:nowrap;
+  }
+  .member-row .btn-confirm{background:var(--primary); color:var(--on-primary)}
+  .member-row .btn-reject{background:transparent; border:1px solid var(--error); color:var(--error)}
+  .member-row .btn-reject:hover{background:var(--error-container); color:var(--on-error-container); border-color:transparent}
+  .member-row button:disabled{opacity:.5; cursor:default}
+  @media (max-width:600px){ .member-row{flex-direction:column; align-items:flex-start} }
+
   .m3-switch{ position:relative; display:inline-flex; align-items:center; width:52px; height:32px; flex:none; cursor:pointer; }
   .m3-switch input{ position:absolute; inset:0; opacity:0; margin:0; cursor:pointer; }
   .m3-switch input:disabled{ cursor:not-allowed; }
@@ -210,6 +221,23 @@
     </div>
     <div id="modArticles"><div class="mod-state">Загрузка…</div></div>
 
+    <div class="mod-section-title">
+      <span>Опубликованное</span>
+      <span class="mod-section-count" id="countPublished">0</span>
+    </div>
+    <div class="sub" style="margin-bottom:12px">Всё, что видно на сайте. Кнопка «Снять с публикации» прячет запись с сайта, но не стирает: её можно вернуть из архива.</div>
+    <div class="field" style="margin-bottom:8px">
+      <input type="search" id="publishedFilter" placeholder="Название, имя или год">
+      <label class="lbl" for="publishedFilter">Найти среди опубликованного</label>
+    </div>
+    <div id="modPublished"><div class="mod-state">Загрузка…</div></div>
+
+    <div class="mod-section-title">
+      <span>Архив</span>
+      <span class="mod-section-count" id="countArchive">0</span>
+    </div>
+    <div id="modArchive"><div class="mod-state">Загрузка…</div></div>
+
     <div class="mod-section-title" id="participantsSectionTitle" style="display:none">
       <span>Участники</span>
       <span class="mod-section-count" id="countMembers">0</span>
@@ -251,6 +279,8 @@ async function initModeration(){
   loadEvents();
   loadPeople();
   loadArticles();
+  loadPublished();
+  loadArchive();
 
   if(myProfile.is_admin){
     document.getElementById("participantsSectionTitle").style.display = "flex";
@@ -388,7 +418,10 @@ async function loadRevisions(){
     let diffRows = "";
     let hasArticleContent = false;
 
-    if(!patchKeys.length){
+    const isRemoval = patch._archive === true;
+    if(isRemoval){
+      diffRows = `<tr><td colspan="3"><b>Автор просит снять запись с публикации.</b>${patch.reason ? " Причина: " + escapeHtml(patch.reason) : " Причина не указана."}</td></tr>`;
+    } else if(!patchKeys.length){
       diffRows = `<tr><td colspan="3" style="text-align:center; color:var(--on-surface-variant)">Нет изменённых полей</td></tr>`;
     } else {
       diffRows = patchKeys.map(k => {
@@ -408,7 +441,7 @@ async function loadRevisions(){
     return `
       <div class="mod-card" data-rev-id="${r.id}">
         <div class="rev-header">
-          <span class="rev-badge ${entityBadgeClass}">${typeBadgeText}</span>
+          <span class="rev-badge ${entityBadgeClass}">${typeBadgeText}${isRemoval ? " \u00b7 снятие" : ""}</span>
           <div style="display:flex; align-items:center; gap:6px">
             <span style="font-size:var(--fs-label-medium); color:var(--on-surface-variant)">${formatDate(r.created_at)}</span>
             ${typeof renderMetaIcon === "function" ? renderMetaIcon(r.entity_type, r.entity_id, target || r) : ""}
@@ -444,8 +477,8 @@ async function loadRevisions(){
 
         <textarea class="mod-note" placeholder="Заметка автору (необязательно) — сохранится в истории ревизии"></textarea>
         <div class="row">
-          <button type="button" class="btn-confirm btn-apply-rev">Применить правку</button>
-          <button type="button" class="btn-reject btn-reject-rev">Отклонить</button>
+          <button type="button" class="btn-confirm btn-apply-rev">${isRemoval ? "Снять с публикации" : "Применить правку"}</button>
+          <button type="button" class="btn-reject btn-reject-rev">${isRemoval ? "Оставить" : "Отклонить"}</button>
         </div>
         <div class="err"></div>
       </div>
@@ -502,6 +535,133 @@ async function loadRevisions(){
     btnApply.addEventListener("click", () => handleAction("apply"));
     btnReject.addEventListener("click", () => handleAction("reject"));
   });
+}
+
+
+// -------------------- ОПУБЛИКОВАННОЕ И АРХИВ --------------------
+const ENTRY_KINDS = [
+  { type: "event",   table: "events",   badge: "Событие",  badgeClass: "rev-badge-event",
+    cols: "id, event_year, title, created_by_name, moderated_by_name, moderated_at, moderator_note",
+    label: r => `${r.event_year} г. \u2014 ${r.title}`, url: () => "index.html" },
+  { type: "person",  table: "people",   badge: "Человек",  badgeClass: "rev-badge-person",
+    cols: "id, full_name, created_by_name, moderated_by_name, moderated_at, moderator_note",
+    label: r => r.full_name, url: r => `person.html?id=${encodeURIComponent(r.id)}` },
+  { type: "article", table: "articles", badge: "Материал", badgeClass: "rev-badge-article",
+    cols: "id, title, created_by_name, moderated_by_name, moderated_at, moderator_note",
+    label: r => r.title, url: r => `nasledie.html#read/${encodeURIComponent(r.id)}` }
+];
+
+async function fetchEntriesByStatus(status){
+  const parts = await Promise.all(ENTRY_KINDS.map(async k => {
+    const { data, error } = await sb.from(k.table).select(k.cols).eq("status", status);
+    if(error) throw new Error(error.message);
+    return (data || []).map(r => ({ kind: k, row: r }));
+  }));
+  return parts.flat();
+}
+
+function entryRowHtml(e, buttons){
+  const r = e.row;
+  return `
+    <div class="member-row" data-type="${e.kind.type}" data-id="${escapeAttr(r.id)}" data-search="${escapeAttr(e.kind.label(r).toLowerCase())}">
+      <div style="min-width:0">
+        <div class="member-name">
+          <span class="rev-badge ${e.kind.badgeClass}" style="margin-right:8px">${e.kind.badge}</span>
+          <a href="${e.kind.url(r)}" target="_blank" rel="noopener" class="rev-entity-link">${escapeHtml(e.kind.label(r))}</a>
+        </div>
+        <div class="member-sub">${e.meta || ""}</div>
+      </div>
+      <div style="display:flex; gap:8px; flex:none">${buttons}</div>
+    </div>`;
+}
+
+async function loadPublished(){
+  const box = document.getElementById("modPublished");
+  const countEl = document.getElementById("countPublished");
+  let items;
+  try { items = await fetchEntriesByStatus("confirmed"); }
+  catch(err){ box.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(err.message)}</div>`; return; }
+
+  items.sort((a, b) => a.kind.label(a.row).localeCompare(b.kind.label(b.row), "ru"));
+  countEl.textContent = items.length;
+  if(!items.length){ box.innerHTML = `<div class="mod-state">Опубликованного пока нет.</div>`; return; }
+
+  box.innerHTML = items.map(e => {
+    e.meta = e.row.created_by_name ? `Добавил(а): ${escapeHtml(e.row.created_by_name)}` : "Добавлено модератором или импортом";
+    return entryRowHtml(e, `<button type="button" class="btn-reject" data-act="archive">Снять с публикации</button>`);
+  }).join("");
+
+  applyPublishedFilter();
+  box.querySelectorAll('[data-act="archive"]').forEach(btn => btn.addEventListener("click", async () => {
+    const row = btn.closest(".member-row");
+    const title = row.querySelector(".rev-entity-link").textContent;
+    const reason = await askReason({
+      title: "Снять с публикации?",
+      text: `\u00ab${title}\u00bb пропадёт с сайта. Её можно будет вернуть из раздела \u00abАрхив\u00bb.`,
+      confirmLabel: "Снять с публикации",
+      danger: true
+    });
+    if(reason === null) return;
+    btn.disabled = true;
+    const { error } = await sb.rpc("archive_entry", { p_type: row.dataset.type, p_id: row.dataset.id, p_note: reason || null });
+    if(error){ btn.disabled = false; showToast("Не получилось: " + error.message); return; }
+    showToast("Снято с публикации. Найти можно в разделе \u00abАрхив\u00bb");
+    loadPublished(); loadArchive();
+  }));
+}
+
+function applyPublishedFilter(){
+  const q = (document.getElementById("publishedFilter").value || "").trim().toLowerCase();
+  document.querySelectorAll("#modPublished .member-row").forEach(row => {
+    row.style.display = !q || row.dataset.search.includes(q) ? "" : "none";
+  });
+}
+document.getElementById("publishedFilter").addEventListener("input", applyPublishedFilter);
+
+async function loadArchive(){
+  const box = document.getElementById("modArchive");
+  const countEl = document.getElementById("countArchive");
+  let items;
+  try { items = await fetchEntriesByStatus("archived"); }
+  catch(err){ box.innerHTML = `<div class="mod-state">Ошибка загрузки: ${escapeHtml(err.message)}</div>`; return; }
+
+  countEl.textContent = items.length;
+  if(!items.length){ box.innerHTML = `<div class="mod-state">Архив пуст. Сюда попадает всё, что сняли с публикации.</div>`; return; }
+
+  items.sort((a, b) => new Date(b.row.moderated_at || 0) - new Date(a.row.moderated_at || 0));
+  box.innerHTML = items.map(e => {
+    const r = e.row;
+    e.meta = `Снято${r.moderated_by_name ? ": " + escapeHtml(r.moderated_by_name) : ""}${r.moderated_at ? ", " + formatDate(r.moderated_at) : ""}` +
+             (r.moderator_note ? `; причина: ${escapeHtml(r.moderator_note)}` : "");
+    const forever = myProfile.is_admin ? `<button type="button" class="btn-reject" data-act="forever">Удалить навсегда</button>` : "";
+    return entryRowHtml(e, `<button type="button" class="btn-confirm" data-act="restore">Вернуть</button>${forever}`);
+  }).join("");
+
+  box.querySelectorAll('[data-act="restore"]').forEach(btn => btn.addEventListener("click", async () => {
+    const row = btn.closest(".member-row");
+    btn.disabled = true;
+    const { error } = await sb.rpc("restore_entry", { p_type: row.dataset.type, p_id: row.dataset.id });
+    if(error){ btn.disabled = false; showToast("Не получилось: " + error.message); return; }
+    showToast("Возвращено на сайт");
+    loadPublished(); loadArchive();
+  }));
+
+  box.querySelectorAll('[data-act="forever"]').forEach(btn => btn.addEventListener("click", async () => {
+    const row = btn.closest(".member-row");
+    const title = row.querySelector(".rev-entity-link").textContent;
+    const ok = await askReason({
+      title: "Удалить навсегда?",
+      text: `\u00ab${title}\u00bb и вся её история будут стёрты без возможности вернуть. Если сомневаетесь, оставьте в архиве.`,
+      confirmLabel: "Удалить навсегда",
+      danger: true
+    });
+    if(ok === null) return;
+    btn.disabled = true;
+    const { error } = await sb.rpc("delete_entry_forever", { p_type: row.dataset.type, p_id: row.dataset.id });
+    if(error){ btn.disabled = false; showToast("Не получилось: " + error.message); return; }
+    showToast("Удалено навсегда");
+    loadArchive();
+  }));
 }
 
 // -------------------- 1. СОБЫТИЯ --------------------

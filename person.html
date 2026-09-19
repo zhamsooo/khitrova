@@ -546,10 +546,13 @@ function renderPerson(p){
           <h1 class="person-name">${escapeHtml(p.full_name)}</h1>
           <div class="person-role-line">
             <span class="person-role">${escapeHtml(roleText)}</span>
-            ${isUnconfirmed ? `<span class="badge b-wait">${p.status === "rejected" ? "Отклонено" : "На проверке"}</span>` : ""}
+            ${isUnconfirmed ? `<span class="badge b-wait">${p.status === "rejected" ? "Отклонено" : p.status === "archived" ? "Снято с публикации" : "На проверке"}</span>` : ""}
           </div>
           <div class="person-actions">
             <button class="btn tonal" id="btnOpenEdit"><span class="sym">edit</span>Предложить правку</button>
+            ${p.status === "confirmed" && myProfile && myProfile.is_moderator ? `<button class="btn text" id="btnArchive"><span class="sym">visibility_off</span>Снять с публикации</button>` : ""}
+            ${p.status === "confirmed" && myProfile && !myProfile.is_moderator ? `<button class="btn text" id="btnRequestRemoval"><span class="sym">delete</span>Предложить удаление</button>` : ""}
+            ${p.status === "archived" && myProfile && myProfile.is_moderator ? `<button class="btn tonal" id="btnRestore"><span class="sym">undo</span>Вернуть на сайт</button>` : ""}
             ${typeof renderMetaIcon === "function" ? renderMetaIcon("people", p.id, p) : ""}
           </div>
           ${(isUnconfirmed && p.moderator_note) ? `
@@ -582,6 +585,46 @@ function renderPerson(p){
   document.getElementById("personContent").innerHTML = html;
 
   updatePendingBanner(p.id);
+
+  document.getElementById("btnArchive")?.addEventListener("click", async () => {
+    const reason = await askReason({
+      title: "Снять с публикации?",
+      text: `Карточка \u00ab${p.full_name}\u00bb пропадёт с сайта. Вернуть её можно в модерации, в разделе \u00abАрхив\u00bb.`,
+      confirmLabel: "Снять с публикации", danger: true
+    });
+    if(reason === null) return;
+    const { error } = await sb.rpc("archive_entry", { p_type: "person", p_id: p.id, p_note: reason || null });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Снято с публикации");
+    location.href = "people.html";
+  });
+
+  document.getElementById("btnRestore")?.addEventListener("click", async () => {
+    const { error } = await sb.rpc("restore_entry", { p_type: "person", p_id: p.id });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Возвращено на сайт");
+    location.reload();
+  });
+
+  document.getElementById("btnRequestRemoval")?.addEventListener("click", async () => {
+    if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+    const reason = await askReason({
+      title: "Предложить удаление?",
+      text: "Модератор решит, снимать ли карточку с сайта. Если он согласится, вам придёт письмо.",
+      confirmLabel: "Отправить предложение", placeholder: "Почему её нужно убрать?"
+    });
+    if(reason === null) return;
+    const { error } = await sb.from("revisions").insert({
+      entity_type: "person", entity_id: p.id, kind: "update",
+      patch: { _archive: true, reason: reason || null },
+      status: "pending", author_id: currentUser.id,
+      author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
+      comment: reason || null
+    });
+    if(error){ showToast("Не получилось: " + error.message); return; }
+    showToast("Предложение отправлено модератору");
+    if(typeof updateModBadge === "function") updateModBadge();
+  });
 
   document.getElementById("btnOpenEdit").addEventListener("click", () => {
     if(!currentUser){

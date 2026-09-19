@@ -191,7 +191,7 @@ function render(){
 async function loadPeople(){
   if(!sb) return;
   let q = sb.from("people").select("*");
-  q = currentUser ? q.or(`status.eq.confirmed,created_by.eq.${currentUser.id}`) : q.eq("status", "confirmed");
+  q = currentUser ? q.or(`status.eq.confirmed,and(created_by.eq.${currentUser.id},status.neq.archived)`) : q.eq("status", "confirmed");
   const { data, error } = await q;
   if(error){
     document.getElementById("pplList").innerHTML = `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--error); max-width:480px; margin:24px auto;">Ошибка загрузки: ${escapeHtml(error.message)}</div>`;
