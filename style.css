@@ -37,6 +37,9 @@
   --inverse-on-surface: #E0E1DD;
   --inverse-primary: #778DA9;
 
+  /* Меню: Nunito Sans (близкий свободный аналог Avenir с кириллицей), заглавные, лёгкая разрядка */
+  --font-menu: "Nunito Sans", "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+
   /* ---------- Типографика: шрифты по умолчанию у TimelineJS (PT Sans, PT Sans Narrow) ---------- */
   --t-display-small: 700 36px/44px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
   --t-headline-small: 700 24px/32px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
@@ -1477,3 +1480,21 @@ h1 {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Меню: заглавные буквы, небольшая разрядка, Nunito Sans ---------- */
+.appbar .tab,
+.appbar .btn,
+.navbar .nav-item {
+  font-family: var(--font-menu);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+}
+.appbar .who-name {
+  font-family: var(--font-menu);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+.navbar .nav-item { letter-spacing: .06em; }
