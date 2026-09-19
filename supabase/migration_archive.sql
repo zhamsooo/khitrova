@@ -414,7 +414,7 @@ begin
 
   perform public.notify_email(
     author_email,
-    'Ваша запись снята с публикации: сайт памяти Т.И. Хитровой',
+    'Ваша запись снята с публикации — сайт памяти Т.И. Хитровой',
     format('Ваша запись «%s» снята с публикации. Причина: %s', coalesce(title, 'без названия'), coalesce(new.moderator_note, 'не указана'))
   );
   return new;
@@ -467,17 +467,17 @@ begin
   end;
 
   if new.status = 'applied' and is_removal then
-    subject := 'Запись снята с публикации: сайт памяти Т.И. Хитровой';
+    subject := 'Запись снята с публикации — сайт памяти Т.И. Хитровой';
     body := format('По вашей просьбе запись (%s) снята с публикации.', entity_label);
   elsif new.status = 'rejected' and is_removal then
-    subject := 'Запись оставлена: сайт памяти Т.И. Хитровой';
+    subject := 'Запись оставлена — сайт памяти Т.И. Хитровой';
     body := format('Просьба снять запись (%s) с публикации не выполнена. Заметка модератора: %s', entity_label, coalesce(new.moderator_note, 'не указана'));
   elsif new.status = 'applied' then
-    subject := 'Ваша правка опубликована: сайт памяти Т.И. Хитровой';
+    subject := 'Ваша правка опубликована — сайт памяти Т.И. Хитровой';
     body := format('Ваша правка к записи (%s) применена.<br>Открыть: <a href="%s/moderation.html">%s/moderation.html</a>', entity_label, url, url);
   elsif new.status = 'rejected' then
-    subject := 'Ваша правка отклонена: сайт памяти Т.И. Хитровой';
-    body := format('Ваша правка к записи (%s) отклонена. Заметка модератора: %s', entity_label, coalesce(new.moderator_note, 'не указана'));
+    subject := 'Ваша правка отклонена — сайт памяти Т.И. Хитровой';
+    body := format('Ваша правка к записи (%s) отклонена. Заметка модератора: %s', entity_label, coalesce(new.moderator_note, '—'));
   else
     return new;
   end if;
