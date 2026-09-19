@@ -38,7 +38,7 @@
   --inverse-primary: #778DA9;
 
   /* Меню: Nunito Sans (близкий свободный аналог Avenir с кириллицей), заглавные, лёгкая разрядка */
-  --font-menu: "Nunito Sans", "PT Sans", -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-menu: "PT Sans Narrow", "PT Sans", "Arial Narrow", sans-serif;   /* тот же, что у заголовков */
 
   /* ---------- Типографика: шрифты по умолчанию у TimelineJS (PT Sans, PT Sans Narrow) ---------- */
   --t-display-small: 700 36px/44px "PT Sans Narrow", "PT Sans", Arial Narrow, sans-serif;
@@ -67,6 +67,11 @@
   /* ---------- Сетка и контейнер ---------- */
   --container: 1040px;
   --gutter: 24px;
+  /* Левый отступ меню и страниц. По умолчанию как в контейнере 1040px; на главной пересчитывается
+     по левому краю фото таймлайна и запоминается (app.js, setNavLeft), дальше его берут все страницы. */
+  --nav-left: max(var(--gutter), calc((100vw - var(--container)) / 2 + var(--gutter)));
+  --pad-x: min(var(--nav-left), 16vw);   /* защита, если отступ запомнен в более широком окне */
+  --pad-r: 32px;   /* правый край шапки: почти у края экрана */
 
   /* ---------- Шкала размеров шрифтов M3 (соответствует --t-*) ---------- */
   --fs-display-small: 36px;
@@ -82,6 +87,8 @@
 @media (max-width: 600px) {
   :root {
     --gutter: 16px;
+    --pad-x: 16px;
+    --pad-r: 16px;
   }
 }
 
@@ -123,9 +130,9 @@ html, body {
 
 /* ---------- Единый контейнер страницы ---------- */
 .page {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 32px var(--gutter) 48px;
+  max-width: none;
+  margin: 0;
+  padding: 32px var(--pad-x) 48px;
   width: 100%;
 }
 
@@ -165,9 +172,9 @@ h1 {
 }
 
 .appbar .row {
-  max-width: var(--container);
-  margin: 0 auto;
-  padding: 0 var(--gutter);
+  max-width: none;
+  margin: 0;
+  padding: 0 var(--pad-r) 0 var(--pad-x);
   height: 64px;
   display: flex;
   align-items: stretch;
@@ -1491,21 +1498,21 @@ h1 {
 .appbar .tab,
 .navbar .nav-item {
   font-family: var(--font-menu);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
 .appbar .tab { padding: 0; }
 .appbar .tab.on::after, .appbar .tab.active::after { bottom: 14px; right: .1em; height: 2px; }
-.navbar .nav-item { letter-spacing: .06em; }
+.navbar .nav-item { letter-spacing: .06em; font-size: 13px; }
 
 /* Справа три обычных пункта меню, без рамок и заливок: Модерация, Добавить, Войти */
 .appbar-right { gap: 24px; }
 .appbar .btn {
   font-family: var(--font-menu);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
@@ -1521,13 +1528,13 @@ h1 {
 .appbar .btn.appbar-add-btn:hover, .appbar #btnAuth:hover { background: none; text-decoration: underline; text-underline-offset: 6px; }
 .appbar .btn.appbar-add-btn .sym { font-size: 16px; }
 .appbar .who-wrap { margin-right: -8px; }
-.appbar .who-name { font-family: var(--font-menu); font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+.appbar .who-name { font-family: var(--font-menu); font-size: 15px; font-weight: 700; letter-spacing: .04em; }
 
 .modlink {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 600 12px/16px var(--font-menu);
+  font: 700 15px/16px var(--font-menu);
   letter-spacing: .1em;
   text-transform: uppercase;
   text-decoration: none;
@@ -1545,7 +1552,10 @@ h1 {
   border-radius: 9px;
   background: var(--on-surface);
   color: var(--surface);
-  font: 600 11px/1 var(--font-menu);
+  font: 700 12px/1 var(--font-menu);
   letter-spacing: 0;
 }
 @media (max-width: 600px) { .appbar-right { gap: 16px; } }
+
+/* Главная: вкладки не показываем, пока не посчитан отступ по фото (или пока его нет в кэше) */
+html:not(.nav-ready) body[data-page="index"] .appbar-tabs { visibility: hidden; }

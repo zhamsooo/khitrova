@@ -8,7 +8,6 @@
 <link title="timeline-styles" rel="stylesheet" href="vendor/timeline-3.4.2/css/timeline.css">
 <script src="vendor/timeline-3.4.2/js/timeline.js"></script>
 <link rel="stylesheet" href="fonts/pt-fonts.css">
-<link rel="stylesheet" href="fonts/nunito-sans.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -65,6 +64,7 @@ async function loadTimeline(){
     }]
   };
 
+  watchPhoto();
   window.timeline = new TL.Timeline("timeline-embed", data, {
     language: "ru",
     font: "default",
@@ -72,6 +72,37 @@ async function loadTimeline(){
     script_path: new URL("vendor/timeline-3.4.2/js/", location.href).href
   });
 }
+
+// Отступ слева = левый край фото таймлайна. Считаем, когда фото появилось, загрузилось, после шрифтов и при ресайзе.
+function alignNavToPhoto(){
+  if(window.innerWidth <= 600) return;
+  const photo = document.querySelector("#timeline-embed img");
+  if(!photo) return;
+  const r = photo.getBoundingClientRect();
+  if(r.width < 10 || r.left <= 0) return;   // фото ещё без размеров
+  setNavLeft(Math.round(r.left));
+}
+function watchPhoto(){
+  const box = document.getElementById("timeline-embed");
+  const hook = photo => {
+    photo.addEventListener("load", alignNavToPhoto);
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(alignNavToPhoto);
+    alignNavToPhoto();
+    [250, 700, 1500].forEach(t => setTimeout(alignNavToPhoto, t));   // TimelineJS раскладывает слайд не сразу
+  };
+  const existing = box.querySelector("img");
+  if(existing){ hook(existing); }
+  else {
+    const mo = new MutationObserver(() => {
+      const photo = box.querySelector("img");
+      if(photo){ mo.disconnect(); hook(photo); }
+    });
+    mo.observe(box, { childList: true, subtree: true });
+  }
+  // страховка: если фото не загрузилось, не держим вкладки скрытыми
+  setTimeout(() => document.documentElement.classList.add("nav-ready"), 2500);
+}
+window.addEventListener("resize", alignNavToPhoto);
 
 loadTimeline();
 </script>

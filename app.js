@@ -7,6 +7,27 @@ const sb = (window.supabase && window.supabase.createClient) ? window.supabase.c
 
 const CONTACT_EMAIL = "post@khitrova.org";
 
+// Левый отступ меню и всех страниц = левый край фото таймлайна на главной.
+// Главная считает его (index.html) и вызывает setNavLeft; здесь он запоминается и подхватывается на любой странице сразу.
+function setNavLeft(px){
+  document.documentElement.style.setProperty("--nav-left", px + "px");
+  document.documentElement.classList.add("nav-ready");
+  try { localStorage.setItem("navLeftPx", String(px)); } catch(e){}
+}
+window.setNavLeft = setNavLeft;
+(function restoreNavLeft(){
+  try {
+    const v = parseInt(localStorage.getItem("navLeftPx"), 10);
+    if(v > 0){
+      document.documentElement.style.setProperty("--nav-left", v + "px");
+      document.documentElement.classList.add("nav-ready");
+    } else if(document.body && document.body.dataset.page !== "index"){
+      document.documentElement.classList.add("nav-ready");
+    }
+  } catch(e){}
+  if(document.body && document.body.dataset.page !== "index") document.documentElement.classList.add("nav-ready");
+})();
+
 const HEADER_HTML = `
 <header class="appbar">
   <div class="row">
