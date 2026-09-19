@@ -4,149 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Татьяна Ивановна Хитрова — сайт памяти</title>
-<link title="timeline-styles" rel="stylesheet" href="https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
-<script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;0,700;1,400&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
+<!-- TimelineJS 3.4.2, исходная сборка без изменений (vendor/timeline-3.4.2). Обновлять только осознанно. -->
+<link title="timeline-styles" rel="stylesheet" href="vendor/timeline-3.4.2/css/timeline.css">
+<script src="vendor/timeline-3.4.2/js/timeline.js"></script>
+<link rel="stylesheet" href="fonts/inter-tight.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
-  html,body{height:100%; overflow-x:hidden}
-  #timeline-embed{width:100%; height:calc(100dvh - 52px)}
-
-  @media (max-width:640px){
-    #timeline-embed{height:calc(100dvh - 52px - 80px)} /* минус нижний navigation bar */
-    .nav-hint{display:none} /* на мобильном полоса теперь не про "пролистать слайды", подсказка не нужна */
-  }
-
-  /* ---------- галочка подтверждения на событии + всплывающая карточка ---------- */
-  .ev-badge{
-    position:relative;
-    display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
-    margin-left:8px; cursor:pointer; vertical-align:middle;
-    border:1px solid var(--outline); color:var(--on-surface-variant);
-    background:var(--surface-low); font-size:13px; line-height:1; transition:all .15s;
-  }
-  .ev-badge::before{
-    content:""; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    min-width:44px; min-height:44px;
-  }
-  .ev-badge.confirmed{
-    border-color:transparent; color:var(--on-primary-container); background:var(--primary-container);
-  }
-  .ev-badge.rejected{
-    border-color:transparent; color:var(--on-error-container); background:var(--error-container);
-  }
-  .ev-badge:hover{
-    filter:brightness(.95);
-  }
-
-  .ev-tip{
-    display:none; position:fixed; z-index:70;
-    background:var(--surface-high); border:1px solid var(--outline-variant); border-radius:var(--r-m);
-    box-shadow:var(--elev-2); padding:16px; width:260px;
-    font:var(--t-body-medium); font-size:13px; line-height:18px; color:var(--on-surface);
-  }
-  .ev-tip.open{display:block}
-  .ev-tip-badge{
-    font:var(--t-label-medium); font-size:11px; text-transform:uppercase; letter-spacing:.04em;
-    padding:3px 8px; border-radius:var(--r-xs); background:var(--surface-mid); color:var(--on-surface-variant);
-  }
-  .ev-tip-badge.confirmed{ background:var(--primary-container); color:var(--on-primary-container); }
-  .ev-tip-badge.rejected{ background:var(--error-container); color:var(--on-error-container); }
-  .ev-tip .et-row{margin-bottom:6px; color:var(--on-surface-variant)}
-  .ev-tip .et-row:last-child{margin-bottom:0}
-  .ev-tip .et-row b{color:var(--on-surface); font-weight:600}
-  .ev-tip .et-row a{color:var(--primary); text-decoration:underline}
-
-  /* Подсказка навигации - M3 plain tooltip */
-  .nav-hint{
-    position:fixed; right:24px; bottom:22%;
-    background:var(--inverse-surface); color:var(--inverse-on-surface);
-    font:var(--t-body-small); font-size:12px; line-height:16px;
-    padding:8px 14px; border-radius:var(--r-xs); z-index:15; opacity:1;
-    box-shadow:var(--elev-2); transition:opacity .8s ease; pointer-events:none;
-  }
-  .nav-hint.hide{opacity:0}
-  .nav-hint .hint-text{
-    display:inline-block; animation:navHintPulse 2.6s ease-in-out infinite;
-  }
-  .nav-hint .arrows{
-    font-weight:700; color:var(--inverse-primary); margin-left:4px;
-  }
-  @keyframes navHintPulse{
-    0%, 100% { opacity:.45; }
-    50% { opacity:1; }
+  html, body { height: 100%; overflow-x: hidden; }
+  #timeline-embed { width: 100%; height: calc(100dvh - 64px); }
+  @media (max-width: 600px) {
+    #timeline-embed { height: calc(100dvh - 64px - 80px); } /* минус нижняя панель навигации */
   }
 </style>
 </head>
 <body data-page="index">
 
 <div id="timeline-embed"></div>
-<div class="nav-hint" id="navHint"><span class="hint-text">используйте стрелки на клавиатуре для навигации <span class="arrows">← →</span></span></div>
 
-<div class="ev-tip" id="evTip">
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px">
-    <span class="ev-tip-badge" id="evTipStatusBadge">Подтверждено</span>
-    <span id="evMetaIconSlot"></span>
-  </div>
-  <div id="evTipBody"></div>
-  <button type="button" class="btn filled" id="etConfirmBtn" style="display:none; width:100%; margin-top:12px">Подтвердить</button>
-  <button type="button" class="btn tonal" id="etProposeBtn" style="display:none; width:100%; margin-top:8px"><span class="sym">edit</span> Предложить правку</button>
-</div>
-
-<!-- Модалка предложения правки события -->
-<div class="overlay" id="editEventOverlay">
-  <div class="modal modal-unified-add">
-    <div class="modal-header dialog-appbar">
-      <button type="button" class="dialog-close-btn" data-close aria-label="Закрыть"><span class="sym">close</span></button>
-      <h2 class="dialog-title">Предложить правку</h2>
-      <button type="button" class="btn filled dialog-bar-action" id="btnEditEventBarAction">Отправить</button>
-    </div>
-    <div class="modal-body">
-      <form id="formEditEvent" onsubmit="return false;">
-        <div class="field">
-          <input type="number" id="editEvYear" placeholder="например, 1962" min="1940" max="2026" required>
-          <label class="lbl" for="editEvYear">Год события</label>
-        </div>
-
-        <div class="field">
-          <input type="text" id="editEvTitle" placeholder="Короткое название события" required>
-          <label class="lbl" for="editEvTitle">Что произошло</label>
-        </div>
-
-        <div class="field">
-          <textarea id="editEvDesc" placeholder="Пара предложений — что было, откуда вам это известно"></textarea>
-          <label class="lbl" for="editEvDesc">Подробности</label>
-          <div class="sup">Необязательно</div>
-        </div>
-
-        <div class="field">
-          <input type="text" id="editEvSource" placeholder="Фото афиши, ссылка на статью, чьи слова и т.п.">
-          <label class="lbl" for="editEvSource">Источник / ссылка</label>
-          <div class="sup">Необязательно</div>
-        </div>
-
-        <div class="field">
-          <input type="text" id="editEvComment" placeholder="Пояснение для модератора: что исправили и почему">
-          <label class="lbl" for="editEvComment">Комментарий к правке</label>
-          <div class="sup">Необязательно</div>
-        </div>
-
-        <div class="err" id="errEditEvent"></div>
-        <div class="hint">Правка будет проверена модератором перед обновлением на таймлайне.</div>
-
-        <div class="row-actions">
-          <button type="button" class="btn text" data-close>Отмена</button>
-          <button type="button" class="btn filled" id="btnSubmitEditEvent">Отправить правку</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="vendor/supabase-js-2.116.0/supabase.js"></script>
 <script src="app.js"></script>
 <script>
 function escapeHtml(s){
@@ -154,45 +31,25 @@ function escapeHtml(s){
   d.textContent = s || "";
   return d.innerHTML;
 }
-function escapeAttr(s){
-  return String(s || "").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
-function formatDate(iso){
-  if(!iso) return "";
-  return new Date(iso).toLocaleDateString("ru-RU", { day:"numeric", month:"long", year:"numeric" });
-}
-function badgeHtml(e){
-  if(e.verification_hidden) return ""; // для очевидных фактов (дата рождения и т.п.) — галочку можно скрыть вручную в базе
-  const icon = e.status === "rejected" ? "close" : "check";
-  return `<span class="ev-badge ${escapeAttr(e.status)}"` +
-    ` data-id="${escapeAttr(e.id)}" data-status="${escapeAttr(e.status)}"` +
-    ` data-created-name="${escapeAttr(e.created_by_name || "")}" data-created-at="${escapeAttr(formatDate(e.created_at))}"` +
-    ` data-moderated-name="${escapeAttr(e.moderated_by_name || "")}" data-moderated-at="${escapeAttr(formatDate(e.moderated_at))}"` +
-    ` data-note="${escapeAttr(e.moderator_note || "")}"` +
-    ` data-source="${escapeAttr(e.source || "")}"><span class="sym" style="font-size:14px">${icon}</span></span>`;
-}
 
 async function loadTimeline(){
   let list = [];
   try {
-    const { data: events, error } = await sb.from("events").select("*").order("event_year");
-    if(!error && events) list = events;
+    const { data, error } = await sb.from("events").select("*").order("event_year");
+    if(!error && data) list = data;
   } catch(e){
-    console.warn("Failed to load events:", e);
+    console.warn("Не удалось загрузить события:", e);
   }
 
-  allTimelineEvents = list;
-  const isMobile = window.innerWidth <= 640;
-
-  const tlEvents = list.map(e => ({
+  const events = list.map(e => ({
     start_date: { year: String(e.event_year) },
     text: {
-      headline: escapeHtml(e.title) + (e.status === "confirmed" ? "" : " · не подтверждено"),
-      text: "<p>" + escapeHtml(e.description) + badgeHtml(e) + "</p>"
+      headline: escapeHtml(e.title) + (e.status === "confirmed" ? "" : " (ждёт проверки)"),
+      text: "<p>" + escapeHtml(e.description) + "</p>"
     }
   }));
 
-  const timelineData = {
+  const data = {
     title: {
       media: { url: "photo/main.jpg", caption: "Татьяна Ивановна Хитрова", credit: "" },
       text: {
@@ -200,244 +57,15 @@ async function loadTimeline(){
         text: "<p>Заслуженный деятель искусств РФ, профессор кафедры хорового дирижирования Санкт-Петербургской государственной консерватории им. Н.А. Римского-Корсакова</p>"
       }
     },
-    events: tlEvents.length ? tlEvents : [{
+    events: events.length ? events : [{
       start_date: { year: "1940" },
       text: { headline: "Пока пусто", text: "<p>События появятся здесь, как только кто-то добавит первую запись.</p>" }
     }]
   };
 
-  document.getElementById("timeline-embed").innerHTML = "";
-  window.timeline = new TL.Timeline("timeline-embed", timelineData, {
-    language: "ru",
-    start_at_end: false,
-    timenav_height_percentage: isMobile ? undefined : 20,
-    // на мобильном библиотека использует отдельную timenav_mobile_height_percentage (по умолчанию 40%!)
-    // вместо обычного процента — без неё timenav_height_min не работает вообще
-    timenav_mobile_height_percentage: isMobile ? 5 : undefined,
-    timenav_height_min: isMobile ? 90 : undefined
-  });
-
-  let firstChange = true;
-  window.timeline.on("change", function(){
-    if(firstChange){ firstChange = false; return; }
-    document.getElementById("navHint").classList.add("hide");
-  });
+  window.timeline = new TL.Timeline("timeline-embed", data, { language: "ru" });
 }
 
-// ---- галочка подтверждения: подсказка + действие модератора ----
-const evTip = document.getElementById("evTip");
-
-function showBadgeTip(badge){
-  const status = badge.dataset.status;
-  const createdName = badge.dataset.createdName;
-  const createdAt = badge.dataset.createdAt;
-  const modName = badge.dataset.moderatedName;
-  const modAt = badge.dataset.moderatedAt;
-  const note = badge.dataset.note;
-  const source = badge.dataset.source;
-
-  const statusBadge = document.getElementById("evTipStatusBadge");
-  if(statusBadge){
-    if(status === "confirmed"){
-      statusBadge.textContent = "Подтверждено";
-      statusBadge.className = "ev-tip-badge confirmed";
-    } else if(status === "rejected"){
-      statusBadge.textContent = "Отклонено";
-      statusBadge.className = "ev-tip-badge rejected";
-    } else {
-      statusBadge.textContent = "На проверке";
-      statusBadge.className = "ev-tip-badge";
-    }
-  }
-
-  let html = `<div class="et-row">${createdName ? `Добавил(а): <b>${createdName}</b>` : "Добавлено модератором"}${createdAt ? " · " + createdAt : ""}</div>`;
-  if(status === "confirmed"){
-    html += `<div class="et-row">Подтвердил(а): <b>${modName || "модератор"}</b>${modAt ? " · " + modAt : ""}</div>`;
-  } else if(status === "rejected"){
-    html += `<div class="et-row" style="color:var(--error)">Отклонено${modName ? " — " + modName : ""}${modAt ? " · " + modAt : ""}</div>`;
-  } else {
-    html += `<div class="et-row" style="color:var(--on-surface-variant)">Ждёт подтверждения</div>`;
-  }
-  if(note){
-    html += `<div class="et-row">Заметка модератора: ${escapeHtml(note)}</div>`;
-  }
-  if(source){
-    const isUrl = /^https?:\/\//.test(source);
-    html += `<div class="et-row">Источник: ${isUrl ? `<a href="${source}" target="_blank" rel="noopener">ссылка</a>` : source}</div>`;
-  }
-  document.getElementById("evTipBody").innerHTML = html;
-
-  const ev = (allTimelineEvents || []).find(x => x.id === badge.dataset.id);
-  const metaSlot = document.getElementById("evMetaIconSlot");
-  if(metaSlot && ev && typeof renderMetaIcon === "function"){
-    metaSlot.innerHTML = renderMetaIcon("event", ev.id, ev);
-  }
-
-  const btn = document.getElementById("etConfirmBtn");
-  if(typeof myProfile !== "undefined" && myProfile && myProfile.is_moderator && status !== "confirmed"){
-    btn.style.display = "block";
-    btn.dataset.id = badge.dataset.id;
-  } else {
-    btn.style.display = "none";
-  }
-
-  const proposeBtn = document.getElementById("etProposeBtn");
-  if(currentUser){
-    proposeBtn.style.display = "block";
-    proposeBtn.dataset.id = badge.dataset.id;
-  } else {
-    proposeBtn.style.display = "none";
-  }
-
-  const r = badge.getBoundingClientRect();
-  const left = Math.min(Math.max(8, r.left), window.innerWidth - 246);
-  evTip.style.left = left + "px";
-  evTip.style.top = (r.bottom + 8) + "px";
-  evTip.classList.add("open");
-}
-
-let tipHideTimer = null;
-function cancelHideTip(){ clearTimeout(tipHideTimer); }
-function scheduleHideTip(){
-  clearTimeout(tipHideTimer);
-  tipHideTimer = setTimeout(() => {
-    const pop = document.getElementById("globalMetaPopover");
-    if(pop && pop.style.display !== "none") return;
-    evTip.classList.remove("open");
-  }, 180);
-}
-
-document.getElementById("timeline-embed").addEventListener("mouseover", e => {
-  const badge = e.target.closest(".ev-badge");
-  if(badge){ cancelHideTip(); showBadgeTip(badge); }
-});
-document.getElementById("timeline-embed").addEventListener("mouseout", e => {
-  const badge = e.target.closest(".ev-badge");
-  if(badge) scheduleHideTip();
-});
-evTip.addEventListener("mouseover", cancelHideTip);
-evTip.addEventListener("mouseout", scheduleHideTip);
-
-document.getElementById("timeline-embed").addEventListener("click", e => {
-  const badge = e.target.closest(".ev-badge");
-  if(badge){ e.stopPropagation(); cancelHideTip(); showBadgeTip(badge); }
-});
-document.addEventListener("click", e => {
-  if(!e.target.closest(".ev-tip") && !e.target.closest(".ev-badge") && !e.target.closest("#globalMetaPopover") && !e.target.closest(".meta-icon-btn")) evTip.classList.remove("open");
-});
-
-document.getElementById("etConfirmBtn").addEventListener("click", async () => {
-  const id = document.getElementById("etConfirmBtn").dataset.id;
-  const { error } = await sb.from("events").update({
-    status: "confirmed",
-    moderated_by: currentUser.id,
-    moderated_by_name: myProfile.full_name,
-    moderated_at: new Date().toISOString()
-  }).eq("id", id);
-  if(error){ alert("Не получилось подтвердить: " + error.message); return; }
-  evTip.classList.remove("open");
-  loadTimeline();
-});
-
-let allTimelineEvents = [];
-let currentEditingEvent = null;
-
-document.getElementById("etProposeBtn").addEventListener("click", () => {
-  evTip.classList.remove("open");
-  const id = document.getElementById("etProposeBtn").dataset.id;
-  if(!id) return;
-  if(!currentUser){
-    resetAuthModal();
-    open_("authOverlay");
-    return;
-  }
-  openEditEventModal(id);
-});
-
-function openEditEventModal(id){
-  currentEditingEvent = allTimelineEvents.find(ev => String(ev.id) === String(id));
-  if(!currentEditingEvent) return;
-
-  document.getElementById("editEvYear").value = currentEditingEvent.event_year || "";
-  document.getElementById("editEvTitle").value = currentEditingEvent.title || "";
-  document.getElementById("editEvDesc").value = currentEditingEvent.description || "";
-  document.getElementById("editEvSource").value = currentEditingEvent.source || "";
-  document.getElementById("editEvComment").value = "";
-  document.getElementById("errEditEvent").style.display = "none";
-
-  const submitBtn = document.getElementById("btnSubmitEditEvent");
-  submitBtn.disabled = false;
-  submitBtn.textContent = "Отправить правку";
-
-  open_("editEventOverlay");
-}
-
-document.getElementById("btnSubmitEditEvent").addEventListener("click", async () => {
-  if(!currentEditingEvent) return;
-  const errEl = document.getElementById("errEditEvent");
-  errEl.style.display = "none";
-
-  const yearRaw = document.getElementById("editEvYear").value.trim();
-  const event_year = parseInt(yearRaw, 10);
-  const title = document.getElementById("editEvTitle").value.trim();
-  const description = document.getElementById("editEvDesc").value.trim() || null;
-  const source = document.getElementById("editEvSource").value.trim() || null;
-  const comment = document.getElementById("editEvComment").value.trim() || null;
-
-  if(!event_year || !title){
-    errEl.textContent = "Заполните год и название";
-    errEl.style.display = "block";
-    return;
-  }
-
-  const patch = {};
-  if(event_year !== currentEditingEvent.event_year) patch.event_year = event_year;
-  if(title !== (currentEditingEvent.title || "").trim()) patch.title = title;
-  if((description || null) !== (currentEditingEvent.description || null)) patch.description = description;
-  if((source || null) !== (currentEditingEvent.source || null)) patch.source = source;
-
-  if(Object.keys(patch).length === 0){
-    errEl.textContent = "Вы не внесли никаких изменений";
-    errEl.style.display = "block";
-    return;
-  }
-
-  const submitBtn = document.getElementById("btnSubmitEditEvent");
-  submitBtn.disabled = true;
-  submitBtn.textContent = "Отправка…";
-
-  try {
-    const { error: revErr } = await sb.from("revisions").insert({
-      entity_type: "event",
-      entity_id: currentEditingEvent.id,
-      kind: "update",
-      patch,
-      status: "pending",
-      author_id: currentUser.id,
-      author_name: (myProfile && myProfile.full_name) || currentUser.email || "Участник",
-      comment
-    });
-
-    if(revErr) throw new Error(revErr.message);
-
-    close_("editEventOverlay");
-    if(typeof showToast === "function") showToast("Правка отправлена на проверку");
-    if(typeof updateModBadge === "function") updateModBadge();
-  } catch(e){
-    errEl.textContent = e.message || "Ошибка при отправке";
-    errEl.style.display = "block";
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "Отправить правку";
-  }
-});
-
-const btnEditEventBarAction = document.getElementById("btnEditEventBarAction");
-if(btnEditEventBarAction){
-  btnEditEventBarAction.addEventListener("click", () => document.getElementById("btnSubmitEditEvent").click());
-}
-
-window.onEventAdded = loadTimeline;
 loadTimeline();
 </script>
 </body>
