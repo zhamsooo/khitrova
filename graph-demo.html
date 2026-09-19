@@ -10,75 +10,66 @@
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
-  .demo-note{
-    margin:0 0 20px; padding:12px 16px; border:1px dashed var(--outline); border-radius:var(--r-s);
-    font:var(--t-body-medium); color:var(--on-surface-variant); max-width:76ch;
+  /* страница целиком занята графом, без прокрутки страницы */
+  html, body { height: 100%; overflow: hidden; }
+  .graph-stage { position: fixed; left: 0; right: 0; top: 52px; bottom: 0; background: var(--surface); }
+  #graph { position: absolute; inset: 0; }
+  .graph-tools { position: absolute; top: 12px; right: var(--pad-r); display: flex; gap: 8px; z-index: 2; }
+  .graph-tools .chip { background: var(--surface); }
+  .graph-tools .chip.on { background: var(--secondary-container); color: var(--on-surface); border-color: transparent; }
+  .graph-hint {
+    position: absolute; left: var(--pad-x); bottom: 14px; margin: 0; max-width: 62ch; z-index: 2; pointer-events: none;
+    font: var(--t-label-medium); color: var(--on-surface-variant);
   }
-  .graph-wrap{position:relative; border:1px solid var(--outline-variant); border-radius:var(--r-m); background:var(--surface)}
-  #graph{width:100%; height:min(78vh, 720px); min-height:420px}
-  .graph-hint{margin:10px 0 0; font:var(--t-label-medium); color:var(--on-surface-variant)}
-  .swatch{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:2px; flex:none}
-  .swatch.demo{background:var(--surface) !important; border:2px solid currentColor; width:8px; height:8px}
-  .chip .swatch{border:0}
-  .chip.on{background:var(--secondary-container); color:var(--on-surface); border-color:transparent}
-  .chip.on .chip-count{color:var(--on-surface-variant)}
-  .chip.off{opacity:.55}
-  .chip.off .swatch{filter:grayscale(1)}
+  @media (max-width: 600px) {
+    .graph-stage { bottom: 80px; }   /* нижняя навигация */
+    .graph-tools { top: 62px; left: 12px; right: auto; }
+    .graph-hint { bottom: 8px; left: 12px; }
+  }
 </style>
 </head>
 <body data-page="people">
 
-<main class="page">
-  <h1>Люди: граф</h1>
-  <p class="lead">Татьяна Ивановна в центре. Чем дальше от центра, тем позже выпуск. Точки одного выпуска собраны вокруг общей отметки года.</p>
-  <div class="demo-note">
-    <b>Демонстрация.</b> Заполненные точки без пометки «демо» настоящие, из базы сайта. Пустые кружки сгенерированы для примера, чтобы показать группы (хоровое училище, консерватория, коллеги). Они нигде не сохраняются.
-  </div>
-
-  <div class="toolbar">
-    <div class="chips" id="chips"></div>
-  </div>
-
-  <div class="graph-wrap"><div id="graph"></div></div>
-  <p class="graph-hint">Колесо мыши или щипок: масштаб. Перетащите, чтобы сдвинуть. Наведите на точку, чтобы увидеть связи. Пунктир: человек учился и в училище, и в консерватории.</p>
-</main>
+<div class="graph-stage">
+  <div id="graph"></div>
+  <div class="graph-tools" id="tools"></div>
+  <p class="graph-hint">Наведите на точку: подсветятся те, кто мог учиться в те же годы (выпуск плюс-минус 5 лет). Пустые кружки: демо-данные для примера.</p>
+</div>
 
 <script src="vendor/supabase-js-2.116.0/supabase.js"></script>
 <script src="vendor/echarts-5.6.0/echarts.min.js"></script>
 <script src="app.js"></script>
 <script>
-// ---------------------------------------------------------------- группы и цвета
+// ---------------------------------------------------------------- группы (категории графа)
 const GROUPS = {
-  choir:  { label: "Хоровое училище",       color: "#1B263B", a0: -172, a1: -98 },   // углы в градусах, 0 = вправо, по часовой
-  spbgk:  { label: "СПбГК",                 color: "#4F7CAC", a0:  -82, a1:  -8  },
-  colleague: { label: "Коллеги",            color: "#C08A3E", a0:   98, a1: 172  },
-  unspec: { label: "Учебное заведение не указано", color: "#8A96A3", a0:   8, a1:  82 }
+  choir:     { name: "Хоровое училище",              color: "#1B263B" },
+  spbgk:     { name: "СПбГК",                        color: "#4F7CAC" },
+  colleague: { name: "Коллеги",                      color: "#C08A3E" },
+  unspec:    { name: "Не указано",                    color: "#8A96A3" }
 };
-const YEAR_MIN = 1974, YEAR_MAX = 2017;
-const TI_ID = "ti";
+const ORDER = ["choir", "spbgk", "colleague", "unspec"];
+const YEAR_MIN = 1974, YEAR_MAX = 2017, WINDOW = 5;
+const FONT = '"PT Sans", sans-serif';
 
 // ---------------------------------------------------------------- демо-данные (детерминированно)
 function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const R = rng(20260919);
 const pick = arr => arr[Math.floor(R() * arr.length)];
-const SUR_M = ["Ковалёв","Громов","Васильев","Орлов","Лебедев","Зайцев","Крылов","Морозов","Беляев","Фомин","Тихонов","Киселёв","Жуков","Соловьёв","Дроздов","Николаев","Титов","Сидоров","Гусев","Поляков"];
+const SUR = ["Ковалёв","Громов","Васильев","Орлов","Лебедев","Зайцев","Крылов","Морозов","Беляев","Фомин","Тихонов","Киселёв","Жуков","Соловьёв","Дроздов","Николаев","Титов","Сидоров","Гусев","Поляков"];
 const INIT = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
-function demoName(){ const s = pick(SUR_M); const f = R() < .5; return (f ? s + "а" : s) + " " + INIT[Math.floor(R()*INIT.length)] + "."; }
-function span(a, b){ return a + Math.floor(R() * (b - a + 1)); }
+const demoName = () => (R() < .5 ? pick(SUR) + "а" : pick(SUR)) + " " + INIT[Math.floor(R() * INIT.length)] + ".";
+const span = (a, b) => a + Math.floor(R() * (b - a + 1));
 function makeDemo(){
   const out = []; let n = 0;
-  const add = (group, year, extra) => out.push(Object.assign({ id: "demo" + (++n), name: demoName(), group, year, notable: R() < .12, demo: true }, extra || {}));
+  const add = (group, year) => out.push({ id: "demo" + (++n), name: demoName(), group, year, notable: R() < .12, demo: true });
   for(let i = 0; i < 22; i++) add("choir", span(1976, 2016));
-  for(let i = 0; i < 22; i++){
-    const y = span(1978, 2015);
-    add("spbgk", y, R() < .45 ? { choirYear: y - span(4, 6) } : {});   // часть прошла и училище, и консерваторию
-  }
+  for(let i = 0; i < 22; i++) add("spbgk", span(1978, 2015));
   for(let i = 0; i < 10; i++) add("colleague", span(1975, 2010));
   for(let i = 0; i < 6; i++) add("unspec", span(1980, 2012));
   return out;
 }
 
-// ---------------------------------------------------------------- реальные данные
+// ---------------------------------------------------------------- настоящие данные
 async function loadReal(){
   const { data, error } = await sb.from("people")
     .select("id, full_name, relation_type, study_end, notable, studied_choir_school, studied_conservatory, choir_school_end, conservatory_end")
@@ -90,151 +81,130 @@ async function loadReal(){
     else if(p.studied_conservatory) group = "spbgk";
     else if(p.studied_choir_school) group = "choir";
     const year = p.conservatory_end || p.choir_school_end || p.study_end || null;
-    const extra = {};
-    if(group === "spbgk" && p.studied_choir_school && p.choir_school_end) extra.choirYear = p.choir_school_end;
-    return Object.assign({ id: p.id, name: p.full_name, group, year, notable: !!p.notable, demo: false }, extra);
+    return { id: p.id, name: p.full_name, group, year, notable: !!p.notable, demo: false };
   });
 }
 
-// ---------------------------------------------------------------- модель: выпуски (когорты)
-function cohortKey(group, year){
-  if(!year) return group + ":none";
-  if(group === "colleague") return group + ":" + Math.floor(year / 10) * 10;   // коллеги: по десятилетиям
-  return group + ":" + year;
-}
-function cohortLabel(group, year){
-  if(!year) return "год не указан";
-  if(group === "colleague") return Math.floor(year / 10) * 10 + "-е";
-  return String(year);
-}
-function buildModel(people){
-  const cohorts = new Map();
-  const ensure = (group, year) => {
-    const key = cohortKey(group, year);
-    if(!cohorts.has(key)) cohorts.set(key, { key, group, year: year ? (group === "colleague" ? Math.floor(year/10)*10 + 5 : year) : null, label: cohortLabel(group, year), members: [] });
-    return cohorts.get(key);
-  };
-  people.forEach(p => {
-    p.cohort = ensure(p.group, p.year);
-    p.cohort.members.push(p);
-    if(p.choirYear) p.cross = ensure("choir", p.choirYear);   // вторая связь: выпуск училища
+// ---------------------------------------------------------------- раскладка: сектор на группу, по спирали: позже выпуск, дальше от центра
+function layout(people){
+  const GAP = 12, avail = 360 - GAP * ORDER.length;
+  const byGroup = {}; ORDER.forEach(g => byGroup[g] = people.filter(p => p.group === g).sort((a, b) => (a.year || 0) - (b.year || 0)));
+  const weights = ORDER.map(g => byGroup[g].length + 4), sum = weights.reduce((a, b) => a + b, 0);
+  let start = -180 + GAP / 2;
+  ORDER.forEach((g, gi) => {
+    const list = byGroup[g], sector = avail * weights[gi] / sum;
+    list.forEach((p, i) => {
+      p.ang = (start + sector * (i + .5) / list.length) * Math.PI / 180;
+      const t = p.year ? (Math.min(Math.max(p.year, YEAR_MIN), YEAR_MAX) - YEAR_MIN) / (YEAR_MAX - YEAR_MIN) : 0;
+      p.rf = .24 + .72 * t + [-.035, 0, .035][i % 3];   // три «дорожки» по радиусу, чтобы соседи одного выпуска не слипались; без года: у центра
+    });
+    start += sector + GAP;
   });
-  // угол каждого выпуска: выпуски группы идут по секторам от раннего к позднему
-  Object.keys(GROUPS).forEach(g => {
-    const list = [...cohorts.values()].filter(c => c.group === g).sort((a, b) => (a.year || 0) - (b.year || 0));
-    list.forEach((c, i) => { c.k = (i + .5) / list.length; });
-  });
-  return { people, cohorts: [...cohorts.values()] };
-}
-
-// ---------------------------------------------------------------- координаты
-function rFrac(year){ if(!year) return .2; const t = (Math.min(Math.max(year, YEAR_MIN), YEAR_MAX) - YEAR_MIN) / (YEAR_MAX - YEAR_MIN); return .26 + .68 * t; }
-function polar(cx, cy, maxR, group, k, year){
-  const g = GROUPS[group];
-  const ang = (g.a0 + (g.a1 - g.a0) * k) * Math.PI / 180;
-  const f = rFrac(year);
-  return [cx + maxR.x * f * Math.cos(ang), cy + maxR.y * f * Math.sin(ang)];   // эллипс: используем всю ширину блока
 }
 
 // ---------------------------------------------------------------- отрисовка
-let chart, MODEL;
-const active = { choir: true, spbgk: true, colleague: true, unspec: true, demo: true };
-let onlyNotable = false;
+let chart, PEOPLE, byId;
+const chipState = { demo: true, notable: false };
+let legendSelected = {};
+const isFinePointer = window.matchMedia("(hover: hover)").matches;
 
-function visiblePerson(p){ return active[p.group] && (active.demo || !p.demo) && (!onlyNotable || p.notable); }
+function visible(p){ return (chipState.demo || !p.demo) && (!chipState.notable || p.notable); }
 
 function render(){
   const el = document.getElementById("graph");
-  const w = el.clientWidth, h = el.clientHeight, cx = w / 2, cy = h / 2, maxR = { x: w / 2 - 60, y: h / 2 - 34 };
-  const vis = MODEL.people.filter(visiblePerson);
-  const shownCohorts = new Set();
-  vis.forEach(p => { shownCohorts.add(p.cohort); if(p.cross) shownCohorts.add(p.cross); });
+  const w = el.clientWidth, h = el.clientHeight;
+  const top = window.innerWidth <= 600 ? 132 : 56, bottom = 46, cx = w / 2, cy = top + (h - top - bottom) / 2;
+  const rx = w / 2 - 70, ry = (h - top - bottom) / 2 - 8;
+  const vis = PEOPLE.filter(visible);
 
-  const nodes = [{
-    id: TI_ID, name: "Т. И. Хитрова", x: cx, y: cy, symbolSize: 46, fixed: true,
-    itemStyle: { color: "#0D1B2A" }, label: { show: true, position: "bottom", distance: 8, fontWeight: 700, fontSize: 13, color: "#0D1B2A" },
-    tip: "Татьяна Ивановна Хитрова"
-  }];
-  const links = [];
-  // невидимые точки по углам: держат границы графа постоянными, чтобы фильтры не сдвигали и не масштабировали картинку
+  // связи: могли учиться вместе (выпуск ±5 лет). Рисуются только при наведении.
+  const links = [], degree = new Map(vis.map(p => [p.id, 0]));
+  const withYear = vis.filter(p => p.year);
+  for(let i = 0; i < withYear.length; i++){
+    for(let j = i + 1; j < withYear.length; j++){
+      if(Math.abs(withYear[i].year - withYear[j].year) <= WINDOW){
+        links.push({ source: withYear[i].id, target: withYear[j].id });
+        degree.set(withYear[i].id, degree.get(withYear[i].id) + 1); degree.set(withYear[j].id, degree.get(withYear[j].id) + 1);
+      }
+    }
+  }
+
+  const categories = ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
+  categories.push({ name: "Центр", itemStyle: { color: "#0D1B2A" } });
+  const nodes = vis.map(p => ({
+    id: p.id, name: p.name, category: ORDER.indexOf(p.group),
+    x: cx + rx * p.rf * Math.cos(p.ang), y: cy + ry * p.rf * Math.sin(p.ang),
+    symbolSize: p.notable ? 14 : 10,
+    itemStyle: p.demo ? { color: "#fff", borderColor: GROUPS[p.group].color, borderWidth: 2 } : { color: GROUPS[p.group].color },
+    label: { show: false },   // подписи только при наведении: иначе выдающиеся налезают друг на друга
+    tip: p.name + "<br>" + GROUPS[p.group].name + (p.year ? (p.group === "colleague" ? ", вместе с " + p.year + "-х" : ", выпуск " + p.year) : ", год не указан")
+       + (p.notable ? "<br>Выдающийся ученик" : "")
+       + (p.year ? "<br>Могли учиться вместе: " + degree.get(p.id) + " чел." : "")
+       + (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : ""))
+  }));
+  // Т. И. в центре, без связей
+  nodes.push({ id: "ti", name: "Т. И. Хитрова", category: 4, x: cx, y: cy, symbolSize: 34, itemStyle: { color: "#0D1B2A" },
+    label: { show: true, position: "bottom", distance: 8, fontWeight: 700, fontSize: 13, color: "#0D1B2A" }, tip: "Татьяна Ивановна Хитрова", silent: true });
+  // невидимые точки по углам держат границы постоянными: фильтры не сдвигают картинку
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
-    id: "anchor" + i, name: "", x: cx + sx * (maxR.x + 20), y: cy + sy * (maxR.y + 10), symbolSize: 0, silent: true, label: { show: false }, tip: ""
+    id: "anchor" + i, name: "", category: 4, x: cx + sx * (rx + 40), y: cy + sy * (ry + 20), symbolSize: 0, silent: true, label: { show: false }, tip: ""
   }));
 
-  shownCohorts.forEach(c => {
-    const [x, y] = polar(cx, cy, maxR, c.group, c.k, c.year);
-    const color = GROUPS[c.group].color;
-    nodes.push({ id: c.key, name: c.label, x, y, symbolSize: 7, symbol: "rect", itemStyle: { color: "#fff", borderColor: color, borderWidth: 1.5 },
-      label: { show: true, position: "top", distance: 2, fontSize: 10, color: "#6B7C8F" }, tip: (c.group === "colleague" ? "Коллеги, " : "Выпуск ") + c.label });
-    links.push({ source: TI_ID, target: c.key, lineStyle: { color: "#C8CDD3", width: 1, opacity: .55, curveness: 0 } });
-  });
-
-  // люди вокруг отметки своего выпуска
-  const byCohort = new Map();
-  vis.forEach(p => { if(!byCohort.has(p.cohort)) byCohort.set(p.cohort, []); byCohort.get(p.cohort).push(p); });
-  const pos = new Map();
-  byCohort.forEach((members, c) => {
-    const [bx, by] = polar(cx, cy, maxR, c.group, c.k, c.year);
-    members.forEach((p, i) => {
-      const n = members.length, rad = 16 + 3 * n, a = (i / n) * Math.PI * 2 + (c.k * 6);
-      const x = bx + (n === 1 ? 12 : rad) * Math.cos(a), y = by + (n === 1 ? 12 : rad) * Math.sin(a);
-      pos.set(p.id, [x, y]);
-      const color = GROUPS[p.group].color;
-      nodes.push({
-        id: p.id, name: p.name, x, y, symbolSize: p.notable ? 15 : 10,
-        itemStyle: p.demo ? { color: "#fff", borderColor: color, borderWidth: 2 } : { color },
-        label: { show: p.notable, position: "right", fontSize: 12, color: "#0D1B2A" },
-        tip: p.name + "<br>" + GROUPS[p.group].label + (p.year ? (p.group === "colleague" ? ", вместе с " + p.year + "-х" : ", выпуск " + p.year) : "") + (p.notable ? "<br>Выдающийся ученик" : "") + (p.demo ? "<br><i>демо-данные</i>" : ""),
-        pid: p.id
-      });
-      links.push({ source: c.key, target: p.id, lineStyle: { color, width: 1, opacity: .5, curveness: .12 } });
-      if(p.cross) links.push({ source: p.cross.key, target: p.id, lineStyle: { color: GROUPS.choir.color, width: 1, type: "dashed", opacity: .3, curveness: .2 } });
-    });
-  });
-
   chart.setOption({
-    animationDuration: 500,
-    textStyle: { fontFamily: '"PT Sans", sans-serif' },
-    tooltip: { confine: true, formatter: p => p.dataType === "node" ? p.data.tip : "" },
+    textStyle: { fontFamily: FONT },
+    animationDuration: 600, animationEasingUpdate: "quinticInOut",
+    tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
+    legend: [{
+      data: ORDER.map(g => GROUPS[g].name), selected: legendSelected,
+      top: 12, left: "center", width: Math.min(w - 24, 720), icon: "circle", itemWidth: 10, itemHeight: 10, itemGap: 22,
+      textStyle: { fontFamily: FONT, fontSize: 14, color: "#0D1B2A" },
+      inactiveColor: "#C3CAD2"
+    }],
     series: [{
-      type: "graph", layout: "none", roam: true, scaleLimit: { min: .6, max: 5 },
-      data: nodes, links, draggable: false,
-      emphasis: { focus: "adjacency", lineStyle: { width: 2, opacity: 1 } },
-      blur: { itemStyle: { opacity: .18 }, lineStyle: { opacity: .06 }, label: { opacity: .3 } },
-      labelLayout: { hideOverlap: true },
-      lineStyle: { color: "source" }
+      name: "Люди", type: "graph", layout: "none", roam: true, scaleLimit: { min: .7, max: 6 },
+      left: 0, right: 0, top: 0, bottom: 0,
+      data: nodes, links, categories,
+      label: { position: "right", formatter: "{b}", fontSize: 12, color: "#0D1B2A" },
+      // в покое связи почти невидимы (0 нельзя: такие линии не рисуются и при наведении); при наведении на точку проявляются её связи
+      lineStyle: { color: "rgba(65,90,119,0.035)", width: 1, curveness: .25 },
+      emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { color: "rgba(65,90,119,0.7)", width: 1.6 } },
+      blur: { itemStyle: { opacity: .15 }, label: { opacity: .25 } },
+      labelLayout: { hideOverlap: true }
     }]
   }, true);
-
-  renderChips();
+  renderTools();
 }
 
-// ---------------------------------------------------------------- фильтры
-function renderChips(){
-  const box = document.getElementById("chips");
-  const counts = {};
-  MODEL.people.forEach(p => { if((active.demo || !p.demo) && (!onlyNotable || p.notable)) counts[p.group] = (counts[p.group] || 0) + 1; });
-  const chip = (id, label, on, count, sw) => `<button type="button" class="chip ${on ? "on" : "off"}" data-id="${id}">${sw || ""}${label}${count != null ? ` <span class="chip-count">· ${count}</span>` : ""}</button>`;
-  box.innerHTML =
-    Object.entries(GROUPS).map(([id, g]) => chip(id, g.label, active[id], counts[id] || 0, `<span class="swatch" style="background:${g.color}"></span>`)).join("") +
-    chip("notable", "Только выдающиеся", onlyNotable, null) +
-    chip("demo", "Показывать демо", active.demo, null);
+function renderTools(){
+  const box = document.getElementById("tools");
+  const chip = (id, label, on) => `<button type="button" class="chip ${on ? "on" : ""}" data-id="${id}">${on ? '<span class="sym">check</span>' : ""}${label}</button>`;
+  box.innerHTML = chip("notable", "Только выдающиеся", chipState.notable) + chip("demo", "Показывать демо", chipState.demo);
 }
-document.getElementById("chips").addEventListener("click", e => {
+document.getElementById("tools").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if(!b) return;
-  const id = b.dataset.id;
-  if(id === "notable") onlyNotable = !onlyNotable; else active[id] = !active[id];
+  chipState[b.dataset.id] = !chipState[b.dataset.id];
   render();
 });
 
 // ---------------------------------------------------------------- запуск
 (async function init(){
   chart = echarts.init(document.getElementById("graph"), null, { renderer: "canvas" });
-  const real = await loadReal();
-  MODEL = buildModel([...real, ...makeDemo()]);
+  PEOPLE = [...await loadReal(), ...makeDemo()];
+  layout(PEOPLE);
+  byId = new Map(PEOPLE.map(p => [p.id, p]));
   render();
-  const byId = new Map(MODEL.people.map(p => [p.id, p]));
-  chart.on("click", ev => { const p = ev.data && ev.data.pid && byId.get(ev.data.pid); if(p && !p.demo) location.href = "person.html?id=" + encodeURIComponent(p.id); });
+
+  chart.on("legendselectchanged", ev => { legendSelected = ev.selected; });
+  // мышь: клик открывает карточку. Тач: первое касание подсвечивает, второе по той же точке открывает.
+  let lastTap = null;
+  chart.on("click", ev => {
+    const p = ev.data && byId.get(ev.data.id);
+    if(!p || p.demo) return;
+    if(isFinePointer || lastTap === p.id) location.href = "person.html?id=" + encodeURIComponent(p.id);
+    else lastTap = p.id;
+  });
+  chart.getZr().on("click", e => { if(!e.target) lastTap = null; });
+
   let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { chart.resize(); render(); }, 150); });
 })();
 </script>
