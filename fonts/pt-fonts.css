@@ -1,4 +1,8 @@
-/* PT Serif (SIL OFL 1.1): текст на всём сайте и в таймлайне. Кириллица есть, хранится у нас. */
+/* Шрифты по умолчанию у TimelineJS (PT Sans, PT Sans Narrow, PT Serif), SIL OFL 1.1. Хранятся у нас, кириллица есть. */
+@font-face { font-family: 'PT Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url(pt-sans-400.woff2) format('woff2'); }
+@font-face { font-family: 'PT Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url(pt-sans-700.woff2) format('woff2'); }
+@font-face { font-family: 'PT Sans Narrow'; font-style: normal; font-weight: 400; font-display: swap; src: url(pt-sans-narrow-400.woff2) format('woff2'); }
+@font-face { font-family: 'PT Sans Narrow'; font-style: normal; font-weight: 700; font-display: swap; src: url(pt-sans-narrow-700.woff2) format('woff2'); }
 @font-face { font-family: 'PT Serif'; font-style: italic; font-weight: 400; font-display: swap; src: url(pt-serif-400-italic.woff2) format('woff2'); }
 @font-face { font-family: 'PT Serif'; font-style: normal; font-weight: 400; font-display: swap; src: url(pt-serif-400.woff2) format('woff2'); }
 @font-face { font-family: 'PT Serif'; font-style: normal; font-weight: 700; font-display: swap; src: url(pt-serif-700.woff2) format('woff2'); }
