@@ -1499,12 +1499,12 @@ h1 {
 .navbar .nav-item {
   font-family: var(--font-menu);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
 .appbar .tab { padding: 0; }
-.appbar .tab.on::after, .appbar .tab.active::after { bottom: 14px; right: .1em; height: 2px; }
+.appbar .tab.on::after, .appbar .tab.active::after { bottom: 10px; right: .1em; height: 2px; }
 .navbar .nav-item { letter-spacing: .06em; font-size: 13px; }
 
 /* Справа три обычных пункта меню, без рамок и заливок: Модерация, Добавить, Войти */
@@ -1512,11 +1512,21 @@ h1 {
 .appbar .btn {
   font-family: var(--font-menu);
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 400;
   text-transform: uppercase;
   letter-spacing: .1em;
 }
-.appbar .btn.appbar-add-btn,
+.appbar .btn.appbar-add-btn {
+  height: 34px;
+  padding: 0 18px 0 14px;
+  gap: 6px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  box-shadow: none;
+}
+.appbar .btn.appbar-add-btn .sym { font-size: 18px; }
+.appbar .btn.appbar-add-btn:hover { background: color-mix(in srgb, var(--primary) 82%, var(--surface)); box-shadow: none; text-decoration: none; }
 .appbar #btnAuth {
   height: 32px;
   padding: 0;
@@ -1525,16 +1535,15 @@ h1 {
   color: var(--on-surface);
   box-shadow: none;
 }
-.appbar .btn.appbar-add-btn:hover, .appbar #btnAuth:hover { background: none; text-decoration: underline; text-underline-offset: 6px; }
-.appbar .btn.appbar-add-btn .sym { font-size: 16px; }
+.appbar #btnAuth:hover { background: none; opacity: .6; text-decoration: none; }
 .appbar .who-wrap { margin-right: -8px; }
-.appbar .who-name { font-family: var(--font-menu); font-size: 15px; font-weight: 700; letter-spacing: .04em; }
+.appbar .who-name { font-family: var(--font-menu); font-size: 15px; font-weight: 400; letter-spacing: .04em; }
 
 .modlink {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font: 700 15px/16px var(--font-menu);
+  font: 400 15px/16px var(--font-menu);
   letter-spacing: .1em;
   text-transform: uppercase;
   text-decoration: none;
