@@ -56,7 +56,7 @@
       background: var(--surface);
       border-radius: 12px;
       border: 1px solid var(--outline-variant, #E0E3E8);
-      padding: 18px 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       overflow-y: auto;
@@ -71,7 +71,7 @@
     }
   }
 
-  /* Шапка страницы и компактные элементы управления */
+  /* Шапка страницы и компактный поиск */
   .people-header {
     display: flex;
     justify-content: space-between;
@@ -93,52 +93,12 @@
     line-height: 1.45;
     color: var(--on-surface-variant);
   }
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-  .chip-notable {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    height: 36px;
-    padding: 0 14px;
-    border-radius: 18px;
-    border: 1px solid var(--outline-variant, #D0D7DE);
-    background: var(--surface, #FFFFFF);
-    color: var(--on-surface-variant, #57606A);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .2s ease;
-    user-select: none;
-  }
-  .chip-notable .sym {
-    font-size: 17px;
-    color: #C08A3E;
-  }
-  .chip-notable:hover {
-    background: var(--surface-variant, #F4F6F8);
-    color: var(--on-surface);
-  }
-  .chip-notable.on {
-    background: #FFF8E7;
-    border-color: #D4A017;
-    color: #8C6200;
-    font-weight: 700;
-  }
-  .chip-notable.on .sym {
-    color: #D4A017;
-    font-variation-settings: 'FILL' 1;
-  }
   .compact-search {
     position: relative;
     display: flex;
     align-items: center;
     width: 250px;
+    flex-shrink: 0;
   }
   .compact-search-input {
     width: 100%;
@@ -200,13 +160,6 @@
     display: inline-block;
     box-shadow: 0 0 0 2px rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.15);
   }
-  .peer-dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-block;
-  }
   .dot-split {
     background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%) !important;
   }
@@ -243,30 +196,22 @@
   .card-edu-time { font-size: 11.5px; color: var(--on-surface-variant); line-height: 1.3; }
   .card-bio-block {
     font-size: 13px; line-height: 1.45; color: var(--on-surface);
-    background: #FFFFFF; border: 1px solid var(--outline-variant, #E0E3E8); padding: 10px 12px; border-radius: 8px; word-break: break-word;
+    background: #FFFFFF; border: 1px solid var(--outline-variant, #E0E3E8); padding: 12px 14px; border-radius: 8px; word-break: break-word;
   }
   .card-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--on-surface-variant); margin-bottom: 4px; }
-  .card-actions { display: flex; align-items: center; gap: 8px; }
-  .card-btn-edit {
-    font-size: 13px; height: 32px; padding: 0 12px; display: inline-flex; align-items: center; gap: 4px;
+  .card-source {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--on-surface-variant);
+    word-break: break-word;
   }
-  .card-btn-edit .sym { font-size: 16px; }
   .panel-pin-btn {
     background: none; border: 1px solid var(--outline-variant, #D0D7DE); border-radius: 6px;
-    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
     cursor: pointer; color: var(--on-surface-variant); transition: all .15s; padding: 0; flex-shrink: 0;
   }
   .panel-pin-btn:hover { background: var(--surface-variant, #F4F6F8); color: var(--on-surface); }
-  .panel-pin-btn .sym { font-size: 16px; }
-  .panel-peers { margin-top: 2px; }
-  .panel-peers-head { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--on-surface-variant); margin-bottom: 6px; }
-  .peer-item {
-    display: flex; align-items: center; gap: 8px; padding: 5px 8px;
-    border-radius: 6px; cursor: pointer; text-decoration: none; color: inherit; transition: background .15s;
-  }
-  .peer-item:hover { background: var(--surface-variant, #F4F6F8); }
-  .peer-name { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .peer-year { font-size: 11.5px; color: var(--on-surface-variant); flex-shrink: 0; }
+  .panel-pin-btn .sym { font-size: 17px; }
 
   @media (max-width: 860px) {
     .people-header {
@@ -274,12 +219,8 @@
       align-items: stretch;
       gap: 12px;
     }
-    .header-actions {
-      width: 100%;
-      justify-content: space-between;
-    }
     .compact-search {
-      flex: 1;
+      width: 100%;
     }
     .graph-layout {
       flex-direction: column;
@@ -332,15 +273,10 @@
       <h1>Люди</h1>
       <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
     </div>
-    <div class="header-actions">
-      <button type="button" class="chip-notable" id="btnToggleNotable" title="Показать только выдающихся учеников">
-        <span class="sym">star</span><span>Выдающиеся</span>
-      </button>
-      <div class="compact-search">
-        <span class="sym search-icon">search</span>
-        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
-        <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
-      </div>
+    <div class="compact-search">
+      <span class="sym search-icon">search</span>
+      <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
+      <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
     </div>
   </div>
 
@@ -471,7 +407,7 @@
           </div>
 
           <label class="study-check-row">
-            <input type="checkbox" id="editNotable"> Выдающийся ученик (известный дирижёр, звания, лауреат)
+            <input type="checkbox" id="editNotable"> Известный ученик (руководитель, звания, лауреат, упоминания в СМИ)
           </label>
 
           <div class="field">
@@ -506,7 +442,6 @@
 <script>
 let allPeople = [];
 let currentEditingPerson = null;
-let onlyNotable = false;
 
 function studyYearsLabel(start, end){
   if(!end) return "";
@@ -579,7 +514,10 @@ const G_ORDER = ["choir", "spbgk", "colleague", "close", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
-let chart = null, legendSelected = {}, pinnedPersonId = null;
+let chart = null, legendSelected = {}, pinnedPersonId = null, eventsInited = false;
+
+// По умолчанию фильтр «Известные» выключен (показываются все)
+legendSelected["Известные"] = false;
 
 // SVG-символы для двухцветных точек (Хоровое училище + Консерватория)
 const SPLIT_SYMBOL_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent(
@@ -613,7 +551,7 @@ const ringR = i => .2 + .8 * (i + 1) / RINGS.length;
 function layoutGraph(people, isMobile, activeGroups){
   const groups = (activeGroups && activeGroups.length) ? activeGroups : G_ORDER;
   const GAP = isMobile ? 12 : 8;
-  const ARC_SPAN = isMobile ? 360 : 168; // десктоп: амфитеатр 168°, мобильный: 360°
+  const ARC_SPAN = isMobile ? 360 : 168;
   const avail = ARC_SPAN - GAP * groups.length;
   const weights = groups.map(g => people.filter(p => p._g === g).length + 4);
   const sum = weights.reduce((a, b) => a + b, 0);
@@ -637,21 +575,67 @@ function layoutGraph(people, isMobile, activeGroups){
   });
 }
 
+function initGraphEvents(){
+  if(eventsInited || !chart) return;
+  eventsInited = true;
+
+  chart.on("legendselectchanged", ev => {
+    legendSelected = ev.selected;
+    renderGraph();
+  });
+
+  // Наведение: быстрый просмотр в панели (если не зафиксировано кликом)
+  chart.on("mouseover", ev => {
+    if(pinnedPersonId) return;
+    const id = ev.data && ev.data.id;
+    if(!id || String(id).startsWith("anchor")) return;
+    if(id === "ti") updateGraphPanel({ id: "ti" }, false);
+    else {
+      const p = allPeople.find(o => String(o.id) === String(id));
+      if(p) updateGraphPanel(p, false);
+    }
+  });
+
+  chart.on("mouseout", () => {
+    if(!pinnedPersonId) updateGraphPanel(null);
+  });
+
+  // Клик: фиксация карточки в панели
+  chart.on("click", ev => {
+    const id = ev.data && ev.data.id;
+    if(!id || String(id).startsWith("anchor")) return;
+    window.selectGraphPeer(id);
+  });
+
+  // Клик по пустому полю: сброс фиксации
+  chart.getZr().on("click", e => {
+    if(!e.target && pinnedPersonId) {
+      window.unpinGraphPerson();
+    }
+  });
+
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(renderGraph, 150); });
+}
+
 function renderGraph(){
   const el = document.getElementById("pplGraph");
-  if(!chart) chart = echarts.init(el, null, { renderer: "canvas" });
+  if(!chart){
+    chart = echarts.init(el, null, { renderer: "canvas" });
+    initGraphEvents();
+  }
   chart.resize();
   allPeople.forEach(p => { p._g = graphGroup(p); p._y = graphYear(p); });
 
   const w = el.clientWidth, h = el.clientHeight;
   const isMobile = w <= 600;
 
-  // Динамическая фильтрация: при поиске и фильтрах несовпадающие люди удаляются из графа
+  // Динамическая фильтрация: при поиске и группе «Известные» несовпадающие люди удаляются из графа
   const rawQ = (document.getElementById("pplSearch")?.value || "").trim();
   const hasSearch = rawQ.length > 0;
+  const onlyKnown = (legendSelected["Известные"] === true);
 
   const vis = allPeople.filter(p => {
-    if(onlyNotable && !p.notable) return false;
+    if(onlyKnown && !p.notable) return false;
     if(hasSearch && !personMatchesQuery(p, rawQ)) return false;
     if(legendSelected[GROUPS[p._g]?.name] === false) return false;
     return true;
@@ -684,8 +668,19 @@ function renderGraph(){
     }
   }
 
+  // Все категории + группа «Известные» в едином ряду фильтров легенды
   const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
+  categories.push({ name: "Известные", itemStyle: { color: "#D4A017" } });
   categories.push({ name: "Центр", itemStyle: { color: "#6B3074" } });
+
+  const legendItems = [
+    { name: "Хоровое училище", icon: "circle" },
+    { name: "СПбГК", icon: "circle" },
+    { name: "Коллеги", icon: "circle" },
+    { name: "Близкие", icon: "circle" },
+    { name: "Не указано", icon: "circle" },
+    { name: "Известные", icon: "circle" }
+  ];
 
   const baseNodeSize = isMobile ? 8 : 10;
   const notableNodeSize = isMobile ? 12 : 14;
@@ -699,7 +694,6 @@ function renderGraph(){
     }
 
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
-    // При активном поиске узлы чуть крупнее, чтобы их было легче разглядеть
     const finalSize = hasSearch ? nodeSize + 2 : nodeSize;
 
     return {
@@ -716,7 +710,7 @@ function renderGraph(){
         borderWidth: (!isDual && p.notable) ? 2.5 : 0,
         opacity: 1
       },
-      // При поиске имена отображаются прямо над точками без наложений, так как лишние точки скрыты
+      // При поиске имена отображаются прямо над точками без наложений
       label: {
         show: hasSearch && vis.length <= 18,
         position: "top",
@@ -728,9 +722,9 @@ function renderGraph(){
       tip: escapeHtml(p.full_name) + "<br>" +
            (isDual ? "Хоровое училище и СПбГК" : GROUPS[p._g].name) +
            (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан") +
-           (p.notable ? "<br>★ Выдающийся" : "") +
-           (p._y ? "<br>Могли учиться вместе: " + degree.get(p.id) + " чел." : "") +
-           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : ""))
+           (p.notable ? "<br>★ Известный" : "") +
+           (p._y ? "<br>Учились в те же годы (±5 лет): " + degree.get(p.id) + " чел." : "") +
+           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы зафиксировать карточку" : ""))
     };
   });
 
@@ -785,9 +779,17 @@ function renderGraph(){
     animationDuration: 400, animationEasingUpdate: "quinticInOut",
     tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
     legend: [{
-      data: G_ORDER.map(g => GROUPS[g].name), selected: legendSelected,
-      top: 8, left: "center", width: Math.min(w - 24, 720), icon: "circle", itemWidth: isMobile ? 8 : 10, itemHeight: isMobile ? 8 : 10, itemGap: isMobile ? 10 : 18,
-      textStyle: { fontFamily: FONT, fontSize: isMobile ? 12 : 14, color: "#0D1B2A" }, inactiveColor: "#C3CAD2"
+      data: legendItems,
+      selected: legendSelected,
+      top: 8,
+      left: "center",
+      width: Math.min(w - 24, 760),
+      icon: "circle",
+      itemWidth: isMobile ? 8 : 10,
+      itemHeight: isMobile ? 8 : 10,
+      itemGap: isMobile ? 8 : 16,
+      textStyle: { fontFamily: FONT, fontSize: isMobile ? 11.5 : 13.5, color: "#0D1B2A" },
+      inactiveColor: "#B0B8C1"
     }],
     series: [{
       name: "Люди", type: "graph", layout: "none", roam: false,
@@ -918,7 +920,7 @@ function updateGraphPanel(p, isPinned){
         <div class="card-section-label">Основатель традиции</div>
         <div class="card-bio-text">
           Заслуженный деятель искусств РФ. Выдающийся хоровой дирижёр и педагог Хорового училища им. М.И. Глинки и Ленинградской / Санкт-Петербургской консерватории.<br><br>
-          В центре амфитеатра — основатель традиции; вокруг — поколения её учеников и коллег, сгруппированные по десятилетиям выпусков.
+          В центре амфитеатра — основатель традиции; вокруг — поколения её учеников и коллег, сгруппированные по десятилетиям выпусков. При наведении на любого человека сокурсники подсвечиваются прямо в амфитеатре.
         </div>
       </div>
     `;
@@ -931,39 +933,10 @@ function updateGraphPanel(p, isPinned){
     : `<span class="card-dot" style="background:${dot.color};" title="${dot.label}"></span>`;
 
   const subLine = personSubLine(p);
-  const notableStar = p.notable ? '<span class="sym person-notable-star" title="Выдающийся" style="color:#D4A017; font-variation-settings:\'FILL\' 1;\">star</span>' : '';
+  const notableStar = p.notable ? '<span class="sym person-notable-star" title="Известный" style="color:#D4A017; font-variation-settings:\'FILL\' 1;\">star</span>' : '';
   const milestonesHtml = renderPersonMilestones(p);
   const bioText = (p.notes || "").trim();
   const bioHtml = bioText ? escapeHtml(bioText).replace(/\n\n+/g, "<br><br>").replace(/\n/g, "<br>") : "";
-
-  let peers = [];
-  if(p._y){
-    peers = allPeople.filter(o => o.id !== p.id && o._y && Math.abs(o._y - p._y) <= WINDOW).sort((a,b) => (a._y || 0) - (b._y || 0));
-  } else {
-    peers = allPeople.filter(o => o.id !== p.id && o._g === p._g).slice(0, 15);
-  }
-
-  let peersHtml = "";
-  if(peers.length){
-    peersHtml = `
-      <div class="panel-peers">
-        <div class="panel-peers-head">${p._y ? "Учились в те же годы (±5 лет) · " + peers.length : "Та же группа · " + peers.length}</div>
-        <div style="display:flex; flex-direction:column; gap:2px;">
-          ${peers.slice(0, 25).map(pr => {
-            const pDot = getPersonDotInfo(pr);
-            return `
-              <div class="peer-item" onclick="window.selectGraphPeer('${pr.id}')">
-                <span class="peer-dot ${pDot.isSplit ? 'dot-split' : ''}" style="${pDot.isSplit ? '' : `background:${pDot.color};`}"></span>
-                <span class="peer-name">${escapeHtml(pr.full_name)}</span>
-                <span class="peer-year">${pr._y || ""}</span>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      </div>
-    `;
-  }
-
   const isDemo = String(p.id).startsWith("demo_");
 
   content.innerHTML = `
@@ -983,15 +956,9 @@ function updateGraphPanel(p, isPinned){
 
     ${milestonesHtml}
 
-    <div class="card-actions" style="margin-top:2px;">
-      <button type="button" class="btn tonal card-btn-edit" onclick="window.openEditPersonModal('${p.id}')">
-        <span class="sym">edit</span>Редактировать
-      </button>
-    </div>
-
     ${bioHtml ? `<div class="card-bio-block"><div class="card-section-label">О человеке</div><div class="card-bio-text">${bioHtml}</div></div>` : ''}
 
-    ${peersHtml}
+    ${p.source ? `<div class="card-source"><span class="card-section-label">Источник информации</span><div style="color:var(--on-surface-variant); font-size:12px;">${escapeHtml(p.source)}</div></div>` : ''}
   `;
 }
 
@@ -1011,42 +978,6 @@ window.unpinGraphPerson = function(){
   updateGraphPanel(null);
   if(chart) chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
 };
-
-function initGraphEvents(){
-  chart.on("legendselectchanged", ev => {
-    legendSelected = ev.selected;
-    renderGraph();
-  });
-
-  chart.on("mouseover", ev => {
-    if(pinnedPersonId) return;
-    const id = ev.data && ev.data.id;
-    if(!id || String(id).startsWith("anchor")) return;
-    if(id === "ti") updateGraphPanel({ id: "ti" }, false);
-    else {
-      const p = allPeople.find(o => String(o.id) === String(id));
-      if(p) updateGraphPanel(p, false);
-    }
-  });
-
-  chart.on("mouseout", () => {
-    if(!pinnedPersonId) updateGraphPanel(null);
-  });
-
-  chart.on("click", ev => {
-    const id = ev.data && ev.data.id;
-    if(!id || String(id).startsWith("anchor")) return;
-    window.selectGraphPeer(id);
-  });
-
-  chart.getZr().on("click", e => {
-    if(!e.target && pinnedPersonId) {
-      window.unpinGraphPerson();
-    }
-  });
-
-  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(renderGraph, 150); });
-}
 
 function makeDemo200(){
   const out = [];
@@ -1098,17 +1029,6 @@ async function loadPeople(){
     allPeople = makeDemo200();
   }
   renderGraph();
-  if(!chart) initGraphEvents();
-}
-
-// Управление кнопкой «Выдающиеся»
-const btnToggleNotable = document.getElementById("btnToggleNotable");
-if(btnToggleNotable){
-  btnToggleNotable.addEventListener("click", () => {
-    onlyNotable = !onlyNotable;
-    btnToggleNotable.classList.toggle("on", onlyNotable);
-    renderGraph();
-  });
 }
 
 // Управление строкой поиска
