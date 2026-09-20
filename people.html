@@ -201,7 +201,6 @@
     gap: 8px;
   }
   .toolbar-row .compact-search { flex: 0 1 280px; min-width: 0; width: auto; }
-  .toolbar-row .known-switch-btn { margin-left: auto; }
   .graph-filters {
     display: flex;
     flex-wrap: wrap;
@@ -839,7 +838,7 @@ const GRAPH_ORDER = ["choir", "dual", "spbgk", "colleague", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
-let chart = null, legendSelected = {}, pinnedPersonId = null, eventsInited = false, onlyKnown = false;
+let chart = null, legendSelected = {}, pinnedPersonId = null, eventsInited = false, onlyKnown = false, autoShownFromSearch = false;
 
 // SVG-символы для двухцветных точек (Хоровое училище + Консерватория)
 const SPLIT_SYMBOL_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent(
@@ -1294,6 +1293,11 @@ function renderGraph(){
 
   if(hasSearch && vis.length === 1 && !pinnedPersonId){
     updateGraphPanel(vis[0], false);
+    autoShownFromSearch = true;
+  } else if(autoShownFromSearch && !pinnedPersonId){
+    // единственный результат поиска пропал (текст стёрт или сменились фильтры) — убираем карточку
+    updateGraphPanel(null);
+    autoShownFromSearch = false;
   }
 }
 
