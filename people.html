@@ -98,41 +98,30 @@
     max-width: 60ch;
     margin: 0;
   }
-  .people-header-actions {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    margin-bottom: 2px;
-  }
-  .btn-add-person {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 38px;
-    padding: 0 16px 0 12px;
-    border-radius: 19px;
-    border: 1px solid var(--outline-variant, #D0D7DE);
-    background: var(--surface, #FFFFFF);
+  .lead-add {
     color: var(--primary, #0D1B2A);
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 500;
+    font-weight: 700;
     text-decoration: none;
+    border-bottom: 1.5px dashed currentColor;
     cursor: pointer;
-    white-space: nowrap;
-    box-shadow: 0 1px 3px rgba(13, 27, 42, 0.05);
-    transition: all .18s ease;
+    transition: background .18s ease;
   }
-  .btn-add-person .sym {
-    font-size: 20px;
+  .lead-add:hover { background: rgba(13, 27, 42, 0.06); }
+  .add-arrow {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 900;
     color: var(--primary, #0D1B2A);
+    overflow: visible;
   }
-  .btn-add-person:hover {
-    background: var(--surface-variant, #F0F4F8);
-    border-color: var(--primary, #0D1B2A);
-    box-shadow: 0 2px 6px rgba(13, 27, 42, 0.09);
-    color: var(--primary, #0D1B2A);
+  #addArrowPath {
+    opacity: 0;
+    transition: opacity .2s ease;
   }
+  #addArrowPath.show { opacity: .85; }
 
   /* Единая панель управления графиком */
   .graph-controls-panel {
@@ -146,20 +135,19 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 10px 16px 8px;
+    padding: 12px 16px 12px;
   }
   .compact-search {
     position: relative;
     display: flex;
     align-items: center;
-    width: 280px;
-    max-width: 100%;
+    width: 100%;
   }
   .compact-search-input {
     width: 100%;
-    height: 32px;
+    height: 30px;
     padding: 0 28px 0 32px;
-    border-radius: 16px;
+    border-radius: 15px;
     border: 1px solid var(--outline-variant, #D0D7DE);
     background: var(--surface-variant, #F4F6F8);
     color: var(--on-surface, #0D1B2A);
@@ -208,28 +196,26 @@
 
   /* Фильтры и модификатор */
   .graph-filters {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     width: 100%;
   }
-  .flt-row {
-    display: flex;
-    align-items: center;
-    gap: 6px 8px;
+  .graph-filters .flt-chip,
+  .graph-filters .known-switch-btn {
     width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
   }
-  #fltRow2 .known-switch-btn {
-    margin-left: auto;
-  }
+  .graph-filters .known-switch-btn .known-box { margin-left: auto; }
 
   .flt-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 28px;
+    height: 30px;
     padding: 0 10px 0 8px;
-    border-radius: 14px;
+    border-radius: 15px;
     border: 1px solid var(--outline-variant, #D0D7DE);
     background: var(--surface-low, #F6F8FA);
     font-family: inherit;
@@ -281,9 +267,10 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    height: 28px;
+    height: 30px;
+    flex-shrink: 0;
     padding: 0 10px 0 8px;
-    border-radius: 14px;
+    border-radius: 15px;
     border: 1px solid var(--outline-variant, #D0D7DE);
     background: var(--surface, #FFFFFF);
     color: var(--on-surface-variant, #526375);
@@ -482,28 +469,12 @@
       gap: 12px;
       margin-bottom: 12px;
     }
-    .people-header-actions {
-      width: 100%;
-      margin: 0;
-    }
-    .btn-add-person {
-      width: 100%;
-      justify-content: center;
-    }
     .graph-controls-toolbar {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 10px;
       padding: 10px 12px;
+      gap: 8px;
     }
-    .compact-search {
-      width: 100%;
-    }
-    .graph-filters {
-      width: 100%;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .add-arrow { display: none; }
+    .graph-filters { grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .flt-chip {
       height: 26px;
       font-size: 12px;
@@ -585,15 +556,10 @@
   <div class="people-header">
     <div class="people-header-text">
       <h1>Люди</h1>
-      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
-    </div>
-    <div class="people-header-actions">
-      <a href="#" class="btn-add-person" id="linkAddPerson" role="button">
-        <span class="sym">add</span>
-        <span>Добавить человека</span>
-      </a>
+      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, <a href="#" class="lead-add" id="linkAddPerson" role="button">дополняйте его</a>.</p>
     </div>
   </div>
+  <svg class="add-arrow" id="addArrow" aria-hidden="true"><defs><marker id="addArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path id="addArrowPath" d="" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" marker-end="url(#addArrowHead)"/></svg>
 
   <div id="pplGraphWrap">
     <div class="graph-layout">
@@ -606,14 +572,11 @@
               <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
             </div>
             <div class="graph-filters" id="graphFilters">
-              <div class="flt-row" id="fltRow1"></div>
-              <div class="flt-row" id="fltRow2">
-                <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
-                  <span class="sym known-star">star</span>
-                  <span class="known-label">Только известные</span>
-                  <span class="sym known-box">check_box_outline_blank</span>
-                </button>
-              </div>
+              <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
+                <span class="sym known-star">star</span>
+                <span class="known-label">Только известные</span>
+                <span class="sym known-box">check_box_outline_blank</span>
+              </button>
             </div>
           </div>
           <div class="cohort-status-strip">
@@ -993,11 +956,9 @@ function toggleGroupFilter(name){
 
 function initFilterChips(){
   const box = document.getElementById("graphFilters");
-  const row1 = document.getElementById("fltRow1");
-  const row2 = document.getElementById("fltRow2");
   const known = document.getElementById("btnToggleKnown");
   if(!box || box.querySelector(".flt-chip[data-g]")) return;
-  G_ORDER.forEach((g, gi) => {
+  G_ORDER.forEach(g => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "flt-chip";
@@ -1005,7 +966,7 @@ function initFilterChips(){
     b.setAttribute("aria-pressed", "true");
     b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].name}</span> <span class="flt-n">0</span>`;
     b.addEventListener("click", () => toggleGroupFilter(GROUPS[g].name));
-    if(gi < 3) row1.appendChild(b); else row2.insertBefore(b, known);
+    box.insertBefore(b, known);
   });
 }
 
@@ -1878,6 +1839,37 @@ document.getElementById("linkAddPerson")?.addEventListener("click", e => {
   e.preventDefault();
   openAddModal("person");
 });
+
+// Извилистая стрелка от «дополняйте его» к кнопке «Добавить» в шапке (только при наведении мышью)
+(function(){
+  const link = document.getElementById("linkAddPerson");
+  const path = document.getElementById("addArrowPath");
+  if(!link || !path) return;
+  function target(){
+    const b = document.getElementById("addBtn");
+    return b && b.offsetParent ? b : null;
+  }
+  function draw(){
+    const t = target();
+    if(!t) return false;
+    const a = link.getBoundingClientRect(), b = t.getBoundingClientRect();
+    const x1 = a.right + 6, y1 = a.top + a.height / 2 + 2;
+    const x2 = b.left + b.width / 2, y2 = b.bottom + 8;
+    const dx = x2 - x1, dy = y2 - y1;
+    path.setAttribute("d", `M${x1} ${y1} C ${x1 + dx * 0.22} ${y1 + 26}, ${x1 + dx * 0.34} ${y1 + 6}, ${x1 + dx * 0.5} ${y1 + dy * 0.4} S ${x2 - dx * 0.12} ${y2 + 60}, ${x2} ${y2}`);
+    const len = path.getTotalLength();
+    path.style.transition = "none";
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+    path.getBoundingClientRect();
+    path.style.transition = "stroke-dashoffset .55s ease, opacity .2s ease";
+    path.style.strokeDashoffset = 0;
+    return true;
+  }
+  link.addEventListener("mouseenter", () => { if(draw()) path.classList.add("show"); });
+  link.addEventListener("mouseleave", () => path.classList.remove("show"));
+  link.addEventListener("click", () => path.classList.remove("show"));
+})();
 
 window.onPersonAdded = loadPeople;
 window.addEventListener("authReady", loadPeople, { once: true });
