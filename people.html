@@ -103,52 +103,70 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 4px;
+    margin-top: 14px;
     flex-shrink: 0;
   }
+  .add-link { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+  .add-link:hover { color: var(--secondary); }
   .graph-overlay-stack {
     position: absolute;
-    top: 58px; /* под легендой в две строки */
+    top: 8px;
     left: 0; right: 0;
     z-index: 5;
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
-    gap: 6px 10px;
     padding: 0 12px;
     pointer-events: none;
   }
   .graph-overlay-stack > * { pointer-events: auto; }
-  @media (max-width: 600px) { .graph-overlay-stack { top: 82px; } }
-  .known-check {
+
+  /* Фильтры-группы над графиком (HTML, чтобы ряд не зависел от табло) */
+  .graph-filters {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px 8px;
+    padding: 10px 12px 0;
+  }
+  .flt-chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     height: 30px;
-    padding: 0 12px 0 6px;
-    border: 0;
+    padding: 0 12px 0 10px;
     border-radius: 15px;
-    background: none;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    background: var(--surface-low, #F4F6F8);
     font-family: inherit;
     font-size: 13.5px;
-    color: var(--on-surface-variant, #657A91);
+    color: var(--on-surface, #0D1B2A);
     cursor: pointer;
     user-select: none;
-    transition: background .2s ease, color .2s ease;
+    transition: background .2s ease, color .2s ease, border-color .2s ease;
   }
-  .known-check { border: 1px solid var(--outline-variant, #D0D7DE); background: var(--surface); height: 32px; }
-  .known-check:hover { background: var(--surface-low, #F4F6F8); color: var(--on-surface, #0D1B2A); }
+  .flt-chip:hover { background: #E9EEF3; }
+  .flt-chip[aria-pressed="false"] { background: transparent; color: #8A96A3; border-style: dashed; }
+  .flt-chip[aria-pressed="false"] .flt-dot { background: #C5CCD3; }
+  .flt-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
+  .flt-dot.split { background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%); }
+  .flt-n { font-weight: 700; font-size: 12.5px; color: var(--on-surface-variant, #657A91); }
+  .flt-chip[aria-pressed="false"] .flt-n { color: #A9B2BC; }
+  .flt-sep { width: 1px; height: 20px; background: var(--outline-variant, #D0D7DE); margin: 0 4px; }
+
+  /* «Известные» — отдельный переключатель, не группа */
+  .known-check { padding-left: 6px; background: var(--surface); }
   .known-check .sym { font-size: 19px; }
   .known-check .known-star { color: #B0B8C1; margin-left: -2px; }
-  .known-check.active { color: #8D6E00; font-weight: 600; background: #FFF8E1; }
+  .known-check.active { background: #FFF8E1; border-color: #D4A017; color: #8D6E00; font-weight: 600; }
   .known-check.active .sym { color: #D4A017; font-variation-settings: 'FILL' 1; }
   .compact-search {
     position: relative;
     display: flex;
     align-items: center;
-    width: 250px;
+    width: 320px;
+    max-width: 100%;
     flex-shrink: 0;
   }
   .compact-search-input {
@@ -393,6 +411,9 @@
       display: flex;
       flex-direction: column;
     }
+    .flt-chip { height: 28px; font-size: 12px; padding: 0 9px 0 8px; gap: 5px; }
+    .flt-sep { display: none; }
+    .compact-search { width: 100%; }
     .graph-hint {
       margin-top: 6px;
       font-size: 12px;
@@ -408,8 +429,7 @@
   <div class="people-header">
     <div class="people-header-text">
       <h1>Люди</h1>
-      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
-    </div>
+      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, <a href="#" class="add-link" id="linkAddPerson">добавьте человека</a>.</p>
     <div class="people-header-actions">
       <div class="compact-search">
         <span class="sym search-icon">search</span>
@@ -417,28 +437,32 @@
         <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
       </div>
     </div>
+    </div>
   </div>
 
   <div id="pplGraphWrap">
     <div class="graph-layout">
       <div class="graph-area">
-        <div class="graph-canvas-wrap">
-          <div id="pplGraph"></div>
-          <div class="graph-overlay-stack">
-          <div class="cohort-status-bar" id="cohortStatusBar">
-            <div class="cohort-status-info">
-              <span class="sym" id="cohortStatusIcon" style="font-size:18px; color:var(--primary);">groups</span>
-              <span id="cohortStatusText"></span>
-            </div>
-            <button type="button" class="cohort-status-reset" id="cohortStatusReset" style="display:none;" onclick="window.resetGraphView()" title="Показать всех (Esc)">
-              <span class="sym" style="font-size:15px;">close</span> Все люди
-            </button>
-          </div>
-          <button type="button" class="known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
+        <div class="graph-filters" id="graphFilters">
+          <span class="flt-sep" id="fltSep"></span>
+          <button type="button" class="flt-chip known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
             <span class="sym known-box">check_box_outline_blank</span>
             <span class="sym known-star">star</span>
             <span>Известные</span>
           </button>
+        </div>
+        <div class="graph-canvas-wrap">
+          <div id="pplGraph"></div>
+          <div class="graph-overlay-stack">
+            <div class="cohort-status-bar" id="cohortStatusBar">
+              <div class="cohort-status-info">
+                <span class="sym" id="cohortStatusIcon" style="font-size:18px; color:var(--primary);">groups</span>
+                <span id="cohortStatusText"></span>
+              </div>
+              <button type="button" class="cohort-status-reset" id="cohortStatusReset" style="display:none;" onclick="window.resetGraphView()" title="Показать всех (Esc)">
+                <span class="sym" style="font-size:15px;">close</span> Все люди
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -784,25 +808,41 @@ function layoutGraph(people, isMobile, activeGroups){
   });
 }
 
+// Клик по группе: если показаны все — остаётся только она; иначе группа добавляется/убирается.
+// Если убрали последнюю — снова показываем всех.
+function toggleGroupFilter(name){
+  const allOn = G_ORDER.every(g => legendSelected[GROUPS[g].name] !== false);
+  const next = {};
+  if(allOn){
+    G_ORDER.forEach(g => { next[GROUPS[g].name] = (GROUPS[g].name === name); });
+  } else {
+    G_ORDER.forEach(g => { next[GROUPS[g].name] = legendSelected[GROUPS[g].name] !== false; });
+    next[name] = !next[name];
+    if(G_ORDER.every(g => !next[GROUPS[g].name])) G_ORDER.forEach(g => { next[GROUPS[g].name] = true; });
+  }
+  legendSelected = next;
+  renderGraph();
+}
+
+function initFilterChips(){
+  const box = document.getElementById("graphFilters");
+  const sep = document.getElementById("fltSep");
+  if(!box || box.querySelector(".flt-chip[data-g]")) return;
+  G_ORDER.forEach(g => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "flt-chip";
+    b.dataset.g = g;
+    b.setAttribute("aria-pressed", "true");
+    b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].name}</span> <span class="flt-n">0</span>`;
+    b.addEventListener("click", () => toggleGroupFilter(GROUPS[g].name));
+    box.insertBefore(b, sep);
+  });
+}
+
 function initGraphEvents(){
   if(eventsInited || !chart) return;
   eventsInited = true;
-
-  // Клик по группе: если показаны все — остаётся только она; иначе группа добавляется/убирается.
-  // Если убрали последнюю — снова показываем всех.
-  chart.on("legendselectchanged", ev => {
-    const allOn = G_ORDER.every(g => legendSelected[GROUPS[g].name] !== false);
-    const next = {};
-    if(allOn){
-      G_ORDER.forEach(g => { next[GROUPS[g].name] = (GROUPS[g].name === ev.name); });
-    } else {
-      G_ORDER.forEach(g => { next[GROUPS[g].name] = legendSelected[GROUPS[g].name] !== false; });
-      next[ev.name] = !next[ev.name];
-      if(G_ORDER.every(g => !next[GROUPS[g].name])) G_ORDER.forEach(g => { next[GROUPS[g].name] = true; });
-    }
-    legendSelected = next;
-    renderGraph();
-  });
 
   // Наведение: быстрый просмотр в панели (если не зафиксировано кликом)
   chart.on("mouseover", ev => {
@@ -839,6 +879,7 @@ function initGraphEvents(){
 
 function renderGraph(){
   const el = document.getElementById("pplGraph");
+  initFilterChips();
   if(!chart){
     chart = echarts.init(el, null, { renderer: "canvas" });
     initGraphEvents();
@@ -858,6 +899,8 @@ function renderGraph(){
     : null;
   // Сокурсники — только для учеников/студентов; у коллег и «не указано» карточка просто открывается
   const isCohortMode = !!pinnedPerson && STUDENT_GROUPS.includes(pinnedPerson._g);
+  // У коллег и «не указано» без пересборки по годам: просто остаётся только их группа
+  const focusGroup = (pinnedPerson && !isCohortMode) ? pinnedPerson._g : null;
 
   let base = allPeople.filter(p => {
     if(onlyKnown && !p.notable) return false;
@@ -872,11 +915,20 @@ function renderGraph(){
     if(insts.length === 1) base.forEach(p => { p._y = instYear(p, insts[0]) || p._y; }); // кольца по году этого заведения
   }
 
+  if(focusGroup) base = base.filter(p => p._g === focusGroup);
+
   // Числа в легенде: сколько человек в группе при текущих фильтрах (поиск, «Известные», сокурсники)
   const groupCounts = {};
   base.forEach(p => { groupCounts[p._g] = (groupCounts[p._g] || 0) + 1; });
 
   let vis = base.filter(p => legendSelected[GROUPS[p._g]?.name] !== false);
+
+  // Состояние и числа на чипах-фильтрах
+  document.querySelectorAll("#graphFilters .flt-chip[data-g]").forEach(btn => {
+    const g = btn.dataset.g;
+    btn.setAttribute("aria-pressed", legendSelected[GROUPS[g].name] !== false ? "true" : "false");
+    btn.querySelector(".flt-n").textContent = groupCounts[g] || 0;
+  });
 
   // Табло: коротко и понятно объясняет, что сейчас показано на графике
   const cohortBar = document.getElementById("cohortStatusBar");
@@ -897,6 +949,8 @@ function renderGraph(){
     const yr = (insts.length === 1 && pinnedPerson._y) ? ` (${pinnedPerson._y - WINDOW}–${pinnedPerson._y + WINDOW} гг.)` : "";
     const together = (pinnedPerson._y || insts.length > 1) ? `в те же годы${yr}` : "(год выпуска не указан)";
     boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> и все, кто учился ${where} ${together} · ${shownCount} чел.`;
+  } else if(focusGroup){
+    boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> ${focusGroup === "colleague" ? "и все коллеги Т.И." : "и другие люди, знакомые с Т.И."} · ${shownCount} чел.`;
   } else if(hasSearch){
     boardIcon = "search";
     boardHtml = shownCount
@@ -924,10 +978,10 @@ function renderGraph(){
   if(cohortText){
     cohortText.innerHTML = boardHtml;
     if(cohortIcon) cohortIcon.textContent = boardIcon;
-    if(cohortReset) cohortReset.style.display = (isCohortMode || (selectedGroups.length < G_ORDER.length)) ? "" : "none";
+    if(cohortReset) cohortReset.style.display = (isCohortMode || focusGroup || (selectedGroups.length < G_ORDER.length)) ? "" : "none";
   }
   if(graphHint){
-    graphHint.innerHTML = isCohortMode
+    graphHint.innerHTML = (isCohortMode || focusGroup)
       ? `Нажмите <b>Esc</b> или «Все люди», чтобы вернуться ко всем. Нажатие на другую точку переключит на этого человека.`
       : `Кольца — десятилетия выпусков. Нажмите на группу — останутся только её люди (можно добавить ещё). Нажмите на ученика или студента — останутся те, кто учился в те же годы.`;
   }
@@ -938,7 +992,7 @@ function renderGraph(){
 
   let cx, cy, rx, ry, R;
   if(isMobile){
-    const top = 176, bottom = 12;
+    const top = 64, bottom = 12;
     const availH = Math.max(80, h - top - bottom);
     const availW = Math.max(80, w - 32);
     cx = w / 2; cy = top + availH / 2;
@@ -946,7 +1000,7 @@ function renderGraph(){
     rx = R; ry = R;
   } else {
     cx = w / 2; cy = Math.max(100, h - 36);
-    R = Math.max(40, Math.min(Math.max(100, w / 2 - 40), Math.max(100, (h - 176) / 1.12)));
+    R = Math.max(40, Math.min(Math.max(100, w / 2 - 40), Math.max(100, (h - 100) / 1.12)));
     rx = R; ry = R;
   }
 
@@ -963,17 +1017,9 @@ function renderGraph(){
   const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
   categories.push({ name: "Центр", itemStyle: { color: "#6B3074" } });
 
-  const legendItems = [
-    { name: "Хоровое училище", icon: "circle" },
-    { name: "СПбГК", icon: "circle" },
-    { name: "Училище и СПбГК", icon: SPLIT_SYMBOL_SVG },
-    { name: "Коллеги", icon: "circle" },
-    { name: "Не указано", icon: "circle" }
-  ];
-
   const baseNodeSize = isMobile ? 8 : 10;
   const notableNodeSize = isMobile ? 13 : 15;
-  const showLabels = (hasSearch && vis.length <= 18) || isCohortMode;
+  const showLabels = (hasSearch && vis.length <= 18) || isCohortMode || (!!focusGroup && vis.length <= 60);
 
   const nodes = vis.map(p => {
     const isDual = !!p.studied_choir_school && (!!p.studied_conservatory || !!p.studied_assistantship);
@@ -1031,7 +1077,7 @@ function renderGraph(){
            (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан") +
            (p.notable ? "<br>★ Известный" : "") +
            (p._y && STUDENT_GROUPS.includes(p._g) ? "<br>Учились в те же годы (±5 лет): " + degree.get(p.id) + " чел." : "") +
-           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? (!STUDENT_GROUPS.includes(p._g) ? "<br>Нажмите, чтобы закрепить карточку" : isCohortMode ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы показать сокурсников") : ""))
+           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? (!STUDENT_GROUPS.includes(p._g) ? (pinnedPerson ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы оставить только эту группу") : pinnedPerson ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы показать сокурсников") : ""))
     };
   });
 
@@ -1090,23 +1136,6 @@ function renderGraph(){
     animationDurationUpdate: 1500,
     animationEasingUpdate: "quinticInOut",
     tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
-    legend: [{
-      data: legendItems,
-      selected: legendSelected,
-      top: 8,
-      left: "center",
-      width: Math.min(w - 24, 760),
-      icon: "circle",
-      itemWidth: isMobile ? 8 : 10,
-      itemHeight: isMobile ? 8 : 10,
-      itemGap: isMobile ? 8 : 16,
-      formatter: name => {
-        const g = G_ORDER.find(k => GROUPS[k].name === name);
-        return `${name} {n|${groupCounts[g] || 0}}`;
-      },
-      textStyle: { fontFamily: FONT, fontSize: isMobile ? 11.5 : 13.5, color: "#0D1B2A", rich: { n: { color: "#657A91", fontWeight: "bold" } } },
-      inactiveColor: "#B0B8C1"
-    }],
     series: [{
       name: "Люди", type: "graph", layout: "none", roam: false,
       left: seriesLeft, top: seriesTop, width: seriesW, height: seriesH, data: nodes, links, categories,
@@ -1674,6 +1703,11 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
 
 document.getElementById("btnEditPersonBarAction")?.addEventListener("click", () => {
   document.getElementById("btnSavePersonEdit")?.click();
+});
+
+document.getElementById("linkAddPerson")?.addEventListener("click", e => {
+  e.preventDefault();
+  openAddModal("person");
 });
 
 window.onPersonAdded = loadPeople;

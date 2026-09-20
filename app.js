@@ -163,6 +163,12 @@ const MODALS_HTML = `
       <button type="button" class="add-tab-btn" data-tab="article" role="tab">Материал</button>
     </div>
 
+    <div class="add-auth-note" id="addAuthNote" style="display:none">
+      <span class="sym">lock</span>
+      <span>Добавлять можно после входа. Заполните форму — при отправке попросим войти, и всё сохранится.</span>
+      <button type="button" class="btn text" id="btnAddAuthNote">Войти</button>
+    </div>
+
     <div class="modal-body">
       <!-- Таб 1: Событие -->
       <div class="tab-pane active" id="tabPaneEvent">
@@ -360,6 +366,7 @@ const MODALS_HTML = `
 let currentUser = null;
 let myProfile = null;
 let ownCardFlow = false;
+let reopenAddTab = null; // вкладка формы «Добавить», к которой вернуться после входа
 
 function open_(id){ document.getElementById(id).classList.add("open"); }
 function close_(id){
@@ -402,6 +409,11 @@ const relLabel = { "ученик": "Ученик(ца)", "коллега": "Ко
 
 function onLoggedIn(profile){
   myProfile = profile;
+  if(reopenAddTab){
+    const t = reopenAddTab;
+    reopenAddTab = null;
+    setTimeout(() => openAddModal(t), 0); // после того как currentUser и профиль выставлены
+  }
   const btnAuth = document.getElementById("btnAuth");
   if(btnAuth) btnAuth.style.display = "none";
   const whoWrap = document.getElementById("whoWrap");
@@ -622,12 +634,17 @@ function switchAddTab(tab){
 }
 window.switchAddTab = switchAddTab;
 
+// Гость нажал «Отправить»: прячем форму (данные остаются), просим войти и после входа возвращаем форму
+function requireAuthFromAdd(){
+  reopenAddTab = document.querySelector(".add-tab-btn.active")?.dataset.tab || "event";
+  close_("unifiedAddOverlay");
+  resetAuthModal();
+  open_("authOverlay");
+}
+
 function openAddModal(tab){
-  if(!currentUser){
-    resetAuthModal();
-    open_("authOverlay");
-    return;
-  }
+  const note = document.getElementById("addAuthNote");
+  if(note) note.style.display = currentUser ? "none" : "flex";
   ownCardFlow = false;
   const hint = document.getElementById("uPOwnCardHint");
   if(hint) hint.style.display = "none";
@@ -645,7 +662,7 @@ window.openAddModal = openAddModal;
 
 // Функция отправки события из таба «Событие»
 async function submitEventForm(){
-  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  if(!currentUser){ requireAuthFromAdd(); return; }
   const yearInput = document.getElementById("uEvYear");
   const titleInput = document.getElementById("uEvTitle");
   const descInput = document.getElementById("uEvDesc");
@@ -708,7 +725,7 @@ window.submitEventForm = submitEventForm;
 
 // Функция отправки человека из таба «Человек»
 async function submitPersonForm(){
-  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  if(!currentUser){ requireAuthFromAdd(); return; }
   const lastNameInput = document.getElementById("uPLastName");
   const firstNameInput = document.getElementById("uPFirstName");
   const patronymicInput = document.getElementById("uPPatronymic");
@@ -861,7 +878,7 @@ window.submitPersonForm = submitPersonForm;
 
 // Функция создания черновика из таба «Материал»
 async function submitArticleDraft(){
-  if(!currentUser){ resetAuthModal(); open_("authOverlay"); return; }
+  if(!currentUser){ requireAuthFromAdd(); return; }
   const titleInput = document.getElementById("uArtTitle");
   const catSelect = document.getElementById("uArtCategory");
   const typeSelect = document.getElementById("uArtType");
@@ -949,8 +966,9 @@ function initHeader(){
 
   const btnAuth = document.getElementById("btnAuth");
   if(btnAuth){
-    btnAuth.addEventListener("click", () => { resetAuthModal(); open_("authOverlay"); });
+    btnAuth.addEventListener("click", () => { reopenAddTab = null; resetAuthModal(); open_("authOverlay"); });
   }
+  document.getElementById("btnAddAuthNote")?.addEventListener("click", requireAuthFromAdd);
 
   const addBtn = document.getElementById("addBtn");
   if(addBtn){

@@ -1608,3 +1608,20 @@ html.preloading::before, html.preloading::after {
 .appbar { view-transition-name: appbar; }
 .navbar { view-transition-name: navbar; }
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: .25s; }
+
+/* Плашка для гостей в окне «Добавить на сайт» */
+.add-auth-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 24px 0;
+  padding: 10px 12px 10px 14px;
+  border-radius: 12px;
+  background: var(--primary-container);
+  color: var(--on-primary-container);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+.add-auth-note .sym { font-size: 20px; flex-shrink: 0; }
+.add-auth-note span:nth-child(2) { flex: 1; }
+.add-auth-note .btn { flex-shrink: 0; }
