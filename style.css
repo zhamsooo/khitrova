@@ -1578,9 +1578,9 @@ html::before, html::after {
   pointer-events: none;
   transition: opacity .4s ease, visibility 0s .4s;
 }
-html::before { inset: 0; background: var(--surface); z-index: 9998; }
+html::before { inset: 64px 0 0 0; background: var(--surface); z-index: 9998; }
 html::after {
-  top: 50%; left: 50%;
+  top: calc(50% + 32px); left: 50%;
   width: 34px; height: 34px; margin: -17px 0 0 -17px;
   border: 3px solid var(--primary-container);
   border-top-color: var(--primary);
@@ -1596,3 +1596,15 @@ html.preloading::before, html.preloading::after {
   html::before, html::after { transition: none; }
   html::after { animation-duration: 2.4s; }
 }
+
+/* Меню остаётся на месте: под шапкой и нижней панелью прелоадер не рисуется */
+@media (max-width: 600px) {
+  html::before { bottom: 80px; }
+  html::after { top: calc(50% - 8px); }
+}
+
+/* Переход между страницами: шапка и нижняя панель неподвижны, меняется только содержимое */
+@view-transition { navigation: auto; }
+.appbar { view-transition-name: appbar; }
+.navbar { view-transition-name: navbar; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .25s; }
