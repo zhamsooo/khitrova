@@ -201,7 +201,17 @@ function layoutGraph(people){
     const sector = avail * weights[gi] / sum;
     RINGS.forEach((_, ri) => {
       const list = people.filter(p => p._g === g && ringOf(p) === ri).sort((a, b) => (a._y || 0) - (b._y || 0));
-      list.forEach((p, i) => { p._ang = (start + sector * (i + .5) / list.length) * Math.PI / 180; p._rf = ringR(ri); });
+      const isLastRing = (ri === RINGS.length - 1);
+      // Многорядные кольца: группы до 2 человек остаются на центральной оси кольца,
+      // для 3+ человек распределяем по 3 концентрическим дорожкам внутри полосы десятилетия
+      const trackOffsets = list.length <= 2 
+        ? [0] 
+        : (isLastRing ? [-0.035, -0.018, 0] : [-0.028, 0, 0.028]);
+      list.forEach((p, i) => {
+        p._ang = (start + sector * (i + .5) / list.length) * Math.PI / 180;
+        const offset = trackOffsets[i % trackOffsets.length];
+        p._rf = ringR(ri) + offset;
+      });
     });
     start += sector + GAP;
   });
@@ -215,8 +225,9 @@ function renderGraph(){
   layoutGraph(allPeople);
 
   const w = el.clientWidth, h = el.clientHeight;
-  const top = 48, bottom = 12, cx = w / 2, cy = top + (h - top - bottom) / 2;
-  const R = Math.min(w / 2 - 30, (h - top - bottom) / 2 - 8), rx = R, ry = R;
+  const isMobile = w <= 600;
+  const top = isMobile ? 64 : 48, bottom = 12, cx = w / 2, cy = top + (h - top - bottom) / 2;
+  const R = Math.min(w / 2 - (isMobile ? 16 : 30), (h - top - bottom) / 2 - 8), rx = R, ry = R;
   const vis = allPeople.filter(p => !onlyNotable || p.notable);
 
   const links = [], degree = new Map(vis.map(p => [p.id, 0]));
@@ -230,16 +241,18 @@ function renderGraph(){
 
   const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
   categories.push({ name: "Центр", itemStyle: { color: "#0D1B2A" } });
+  const baseNodeSize = isMobile ? 8 : 10;
+  const notableNodeSize = isMobile ? 12 : 14;
   const nodes = vis.map(p => ({
     id: p.id, name: p.full_name, category: G_ORDER.indexOf(p._g),
     x: cx + rx * p._rf * Math.cos(p._ang), y: cy + ry * p._rf * Math.sin(p._ang),
-    symbolSize: p.notable ? 14 : 10, itemStyle: { color: GROUPS[p._g].color }, label: { show: false },
+    symbolSize: p.notable ? notableNodeSize : baseNodeSize, itemStyle: { color: GROUPS[p._g].color }, label: { show: false },
     tip: escapeHtml(p.full_name) + "<br>" + GROUPS[p._g].name + (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан")
        + (p.notable ? "<br>Выдающийся" : "") + (p._y ? "<br>Могли учиться вместе: " + degree.get(p.id) + " чел." : "")
-       + (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : "")
+       + (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : ""))
   }));
-  nodes.push({ id: "ti", name: "Т. И. Хитрова", category: G_ORDER.length, x: cx, y: cy, symbolSize: 34, itemStyle: { color: "#0D1B2A" },
-    label: { show: true, position: "bottom", distance: 8, fontWeight: 700, fontSize: 13, color: "#0D1B2A" }, tip: "Татьяна Ивановна Хитрова", silent: true });
+  nodes.push({ id: "ti", name: "Т. И. Хитрова", category: G_ORDER.length, x: cx, y: cy, symbolSize: isMobile ? 28 : 34, itemStyle: { color: "#0D1B2A" },
+    label: { show: true, position: "bottom", distance: 6, fontWeight: 700, fontSize: isMobile ? 11 : 13, color: "#0D1B2A" }, tip: "Татьяна Ивановна Хитрова", silent: true });
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
     id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + 10), y: cy + sy * (ry + 10), symbolSize: 0, silent: true, label: { show: false }, tip: ""
   }));
@@ -248,14 +261,14 @@ function renderGraph(){
     textStyle: { fontFamily: FONT },
     graphic: RINGS.flatMap((label, i) => [
       { type: "circle", silent: true, z: 0, shape: { cx, cy, r: ringR(i) * Math.min(rx, ry) }, style: { fill: "none", stroke: "rgba(65,90,119,0.22)", lineWidth: 1, lineDash: i === RINGS.length - 1 ? [4, 4] : null } },
-      { type: "text", silent: true, z: 0, x: cx - 20, y: cy - ringR(i) * Math.min(rx, ry) - 14, style: { text: label, fill: "#657A91", font: '11px "PT Sans"' } }
+      { type: "text", silent: true, z: 0, x: cx - 20, y: cy - ringR(i) * Math.min(rx, ry) - 14, style: { text: label, fill: "#657A91", font: (isMobile ? '9px ' : '11px ') + '"PT Sans"' } }
     ]),
     animationDuration: 600, animationEasingUpdate: "quinticInOut",
     tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
     legend: [{
       data: G_ORDER.map(g => GROUPS[g].name), selected: legendSelected,
-      top: 8, left: "center", width: Math.min(w - 24, 720), icon: "circle", itemWidth: 10, itemHeight: 10, itemGap: 18,
-      textStyle: { fontFamily: FONT, fontSize: 14, color: "#0D1B2A" }, inactiveColor: "#C3CAD2"
+      top: 8, left: "center", width: Math.min(w - 24, 720), icon: "circle", itemWidth: isMobile ? 8 : 10, itemHeight: isMobile ? 8 : 10, itemGap: isMobile ? 10 : 18,
+      textStyle: { fontFamily: FONT, fontSize: isMobile ? 12 : 14, color: "#0D1B2A" }, inactiveColor: "#C3CAD2"
     }],
     series: [{
       name: "Люди", type: "graph", layout: "none", roam: false,
@@ -274,7 +287,7 @@ function initGraphEvents(){
   // мышь: клик открывает карточку. Тач: первое касание подсвечивает, второе по той же точке открывает.
   chart.on("click", ev => {
     const id = ev.data && ev.data.id;
-    if(!id || id === "ti" || String(id).startsWith("anchor")) return;
+    if(!id || id === "ti" || String(id).startsWith("anchor") || String(id).startsWith("demo_")) return;
     if(isFinePointer || lastTap === id) location.href = "person.html?id=" + encodeURIComponent(id);
     else lastTap = id;
   });
@@ -355,6 +368,24 @@ function render(){
   elList.innerHTML = html;
 }
 
+function makeDemo200(){
+  const out = [];
+  const SURNAMES = ["Ковалёв","Громов","Васильев","Орлов","Лебедев","Зайцев","Крылов","Морозов","Беляев","Фомин","Тихонов","Киселёв","Жуков","Соловьёв","Дроздов","Николаев","Титов","Сидоров","Гусев","Поляков","Смирнов","Кузнецов","Попов","Петров","Соколов"];
+  const INITS = "АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЭЮЯ";
+  let seed = 42;
+  function rnd(){ seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+  function span(a, b){ return a + Math.floor(rnd() * (b - a + 1)); }
+  function name(i){ return SURNAMES[i % SURNAMES.length] + (rnd() < .5 ? "а " : " ") + INITS[Math.floor(rnd() * INITS.length)] + "."; }
+  let n = 0;
+  function add(fields){ out.push(Object.assign({ id: "demo_" + (++n), full_name: name(n), notable: rnd() < .1, demo: true, status: "confirmed" }, fields)); }
+  for(let i = 0; i < 70; i++) add({ relation_type: "ученик", studied_choir_school: true, choir_school_end: rnd() < .1 ? null : span(1974, 2016) });
+  for(let i = 0; i < 75; i++) add({ relation_type: "ученик", studied_conservatory: true, conservatory_end: rnd() < .1 ? null : span(1978, 2017) });
+  for(let i = 0; i < 25; i++) add({ relation_type: "коллега", study_end: rnd() < .2 ? null : span(1975, 2012) });
+  for(let i = 0; i < 15; i++) add({ relation_type: "другое", study_end: null });
+  for(let i = 0; i < 15; i++) add({ relation_type: "ученик", study_end: rnd() < .5 ? span(1980, 2005) : null });
+  return out;
+}
+
 async function loadPeople(){
   if(!sb) return;
   let q = sb.from("people").select("*");
@@ -365,6 +396,10 @@ async function loadPeople(){
     return;
   }
   allPeople = data || [];
+  const demoParam = new URLSearchParams(location.search).get("demo");
+  if(demoParam === "200" || demoParam === "1" || demoParam === "true"){
+    allPeople = makeDemo200();
+  }
   updateChipCounts();
   const saved = new URLSearchParams(location.search).get("view") || (function(){ try { return localStorage.getItem("peopleView"); } catch(e) { return null; } })();
   setView(saved === "graph" ? "graph" : "list");
