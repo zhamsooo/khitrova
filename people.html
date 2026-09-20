@@ -711,29 +711,31 @@ function layoutGraph(people, isMobile, activeGroups){
   const sum = weights.reduce((a, b) => a + b, 0) || 1;
   let start = isMobile ? (-180 + GAP / 2) : (-180 + (180 - ARC_SPAN) / 2);
 
-  const minSector = (presentGroups.length > 1)
-    ? Math.min(24, (avail / presentGroups.length) * 0.7)
-    : avail;
-  const remAvail = Math.max(0, avail - presentGroups.length * minSector);
+  // Каждая группа получает сектор пропорционально количеству людей в ней.
+  // Для групп с 1 человеком выделяем компактный сектор (~10°), отдавая всё остальное пространство многолюдным когортам.
+  const counts = presentGroups.map(g => people.filter(p => p._g === g).length);
+  const totalCount = counts.reduce((a, b) => a + b, 0) || 1;
+  const minSectorPerGroup = (presentGroups.length > 1) ? Math.min(10, avail / presentGroups.length) : avail;
+  const remAvail = Math.max(0, avail - presentGroups.length * minSectorPerGroup);
 
   presentGroups.forEach((g, gi) => {
     const sector = (presentGroups.length === 1)
       ? avail
-      : (minSector + remAvail * (weights[gi] / sum));
+      : (minSectorPerGroup + remAvail * (counts[gi] / totalCount));
 
     RINGS.forEach((_, ri) => {
       const list = people.filter(p => p._g === g && ringOf(p) === ri).sort((a, b) => (a._y || 0) - (b._y || 0));
       if(!list.length) return;
 
-      // 4 чередующихся радиальных эшелона (внутренний - внешний - внутренний - внешний)
+      // 4 выраженных чередующихся радиальных эшелона (внутренний - внешний - внутренний - внешний)
       const offsets = (list.length <= 1) ? [0]
-        : (list.length === 2) ? [-0.05, 0.05]
-        : (list.length === 3) ? [-0.06, 0.06, -0.03]
-        : [-0.07, 0.06, -0.04, 0.08];
+        : (list.length === 2) ? [-0.08, 0.08]
+        : (list.length === 3) ? [-0.09, 0.09, -0.04]
+        : [-0.10, 0.09, -0.05, 0.11];
 
-      // Широкий угловой разброс внутри сектора
+      // Максимально широкий угловой разброс внутри сектора без искусственного сжатия к центру
       const isSparse = (people.length <= 25);
-      const padFrac = (list.length === 1) ? 0.5 : (isSparse ? 0.12 : 0.04);
+      const padFrac = (list.length === 1) ? 0.5 : (isSparse ? 0.03 : 0.02);
 
       list.forEach((p, i) => {
         const frac = (list.length === 1) ? 0.5 : (padFrac + (1 - 2 * padFrac) * (i / (list.length - 1)));
@@ -905,12 +907,15 @@ function renderGraph(){
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
     const finalSize = isSelected ? (nodeSize + 6) : (hasSearch ? nodeSize + 2 : nodeSize);
 
-    // Позиция подписи строго чередуется:
-    // - Четные эшелоны (0, 2): подпись снизу (направлена внутрь)
-    // - Нечетные эшелоны (1, 3): подпись сверху (направлена наружу)
-    // Поскольку эшелоны чередуются между соседними точками, подписи соседних точек никогда не перекрываются
-    const labelPos = (p._trackIdx % 2 === 0) ? "bottom" : "top";
-    const labelDist = isSelected ? 10 : 8;
+    // 4-уровневое чередование подписей (направление + глубина отступа):
+    // track 0: внутрь (bottom), отступ 8px
+    // track 1: наружу (top), отступ 8px
+    // track 2: внутрь (bottom), отступ 16px (смещён глубже внутрь дуги)
+    // track 3: наружу (top), отступ 16px (смещён дальше наружу дуги)
+    // Соседние точки направлены в противоположные стороны, а точки одного направления разнесены по высоте
+    const track = (p._trackIdx || 0) % 4;
+    const labelPos = (track === 0 || track === 2) ? "bottom" : "top";
+    const labelDist = isSelected ? 10 : ((track === 2 || track === 3) ? 16 : 8);
 
     return {
       id: p.id,
@@ -933,7 +938,7 @@ function renderGraph(){
         show: showLabels,
         position: labelPos,
         distance: labelDist,
-        fontSize: isSelected ? 12 : (isMobile ? 10 : 11),
+        fontSize: isSelected ? 12 : (isMobile ? 9.5 : 10.5),
         fontWeight: isSelected ? "bold" : "normal",
         color: "#0D1B2A",
         formatter: "{b}",
@@ -1000,7 +1005,10 @@ function renderGraph(){
   chart.setOption({
     textStyle: { fontFamily: FONT },
     graphic: ringGraphics,
-    animationDuration: 400, animationEasingUpdate: "quinticInOut",
+    animationDuration: 1000,
+    animationEasing: "quinticOut",
+    animationDurationUpdate: 1500,
+    animationEasingUpdate: "quinticInOut",
     tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
     legend: [{
       data: legendItems,
