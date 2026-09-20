@@ -694,26 +694,49 @@ const ringOf = p => p._y ? Math.min(Math.max(Math.floor(p._y / 10) * 10, 1970), 
 const ringR = i => .2 + .8 * (i + 1) / RINGS.length;
 
 function layoutGraph(people, isMobile, activeGroups){
-  const groups = (activeGroups && activeGroups.length) ? activeGroups : G_ORDER;
-  const GAP = isMobile ? 12 : 8;
-  const ARC_SPAN = isMobile ? 360 : 168;
-  const avail = ARC_SPAN - GAP * groups.length;
-  const weights = groups.map(g => people.filter(p => p._g === g).length + 4);
-  const sum = weights.reduce((a, b) => a + b, 0);
-  let start = isMobile ? (-180 + GAP / 2) : (-180 + (180 - ARC_SPAN) / 2 + GAP / 2);
+  // 1. Учитываем только те группы, в которых реально есть люди в текущей выборке
+  const baseGroups = (activeGroups && activeGroups.length) ? activeGroups : G_ORDER;
+  let presentGroups = baseGroups.filter(g => people.some(p => p._g === g));
+  if(!presentGroups.length) presentGroups = baseGroups;
 
-  groups.forEach((g, gi) => {
-    const sector = avail * weights[gi] / sum;
+  const GAP = isMobile ? 12 : (presentGroups.length <= 1 ? 0 : 12);
+  const ARC_SPAN = isMobile ? 360 : 168;
+  const avail = ARC_SPAN - GAP * (presentGroups.length - 1);
+
+  // Каждая присутствующая группа получает пропорциональную долю амфитеатра с минимумом 30°
+  const weights = presentGroups.map(g => {
+    const cnt = people.filter(p => p._g === g).length;
+    return Math.max(cnt, 2);
+  });
+  const sum = weights.reduce((a, b) => a + b, 0) || 1;
+  let start = isMobile ? (-180 + GAP / 2) : (-180 + (180 - ARC_SPAN) / 2);
+
+  presentGroups.forEach((g, gi) => {
+    const rawSector = avail * weights[gi] / sum;
+    const sector = Math.max(rawSector, 30);
+
     RINGS.forEach((_, ri) => {
       const list = people.filter(p => p._g === g && ringOf(p) === ri).sort((a, b) => (a._y || 0) - (b._y || 0));
-      const isLastRing = (ri === RINGS.length - 1);
-      const trackOffsets = list.length <= 2 
-        ? [0] 
-        : (isLastRing ? [-0.032, -0.016, 0] : [-0.026, 0, 0.026]);
+      if(!list.length) return;
+
+      // 4 широких радиальных эшелона, распределяющих точки по глубине
+      const offsets = (list.length <= 1) ? [0]
+        : (list.length === 2) ? [-0.05, 0.05]
+        : (list.length === 3) ? [-0.06, 0, 0.06]
+        : [-0.07, -0.025, 0.025, 0.07];
+
+      // Широкий угловой разброс внутри сектора
+      const isSparse = (people.length <= 25);
+      const padFrac = (list.length === 1) ? 0.5 : (isSparse ? 0.12 : 0.04);
+
       list.forEach((p, i) => {
-        p._ang = (start + sector * (i + .5) / list.length) * Math.PI / 180;
-        const offset = trackOffsets[i % trackOffsets.length];
-        p._rf = ringR(ri) + offset;
+        const frac = (list.length === 1) ? 0.5 : (padFrac + (1 - 2 * padFrac) * (i / (list.length - 1)));
+        p._ang = (start + sector * frac) * Math.PI / 180;
+
+        const offsetIdx = i % offsets.length;
+        p._rf = ringR(ri) + offsets[offsetIdx];
+        p._trackIdx = offsetIdx;
+        p._listIdx = i;
       });
     });
     start += sector + GAP;
@@ -876,6 +899,32 @@ function renderGraph(){
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
     const finalSize = isSelected ? (nodeSize + 6) : (hasSearch ? nodeSize + 2 : nodeSize);
 
+    // Позиция подписи привязана к радиальному эшелону точки:
+    // - Внутренний эшелон: подпись снизу (направлена внутрь к центру)
+    // - Внешний эшелон: подпись сверху (направлена наружу от центра)
+    // - Средние эшелоны: подпись чередуется слева и справа
+    let labelPos = "top";
+    let labelDist = 6;
+    const deg = (p._ang * 180 / Math.PI);
+
+    if(p._trackIdx === 0){
+      labelPos = "bottom";
+    } else if(p._trackIdx === 3){
+      labelPos = "top";
+    } else if(p._trackIdx === 1){
+      labelPos = (deg < -90) ? "left" : "right";
+    } else {
+      labelPos = (deg < -90) ? "right" : "left";
+    }
+
+    // Защита краев холста от обрезки текста
+    if(deg < -145) labelPos = "right";
+    if(deg > -35) labelPos = "left";
+
+    if(isSelected){
+      labelDist = 9;
+    }
+
     return {
       id: p.id,
       name: p.full_name,
@@ -892,15 +941,18 @@ function renderGraph(){
         shadowBlur: isSelected ? 8 : 0,
         opacity: 1
       },
-      // При поиске или в режиме сокурсников имена отображаются прямо над точками
+      // При поиске или в режиме сокурсников имена отображаются с мягкой подложкой и без наложений
       label: {
         show: showLabels,
-        position: "top",
+        position: labelPos,
+        distance: labelDist,
         fontSize: isSelected ? 12 : (isMobile ? 10 : 11),
         fontWeight: isSelected ? "bold" : "normal",
         color: "#0D1B2A",
         formatter: "{b}",
-        distance: isSelected ? 7 : 5
+        backgroundColor: "rgba(255, 255, 255, 0.88)",
+        padding: [2, 5],
+        borderRadius: 4
       },
       tip: escapeHtml(p.full_name) + "<br>" +
            (isDual ? "Хоровое училище и СПбГК" : GROUPS[p._g].name) +
@@ -946,12 +998,12 @@ function renderGraph(){
     if(isMobile){
       return [
         { type: "circle", silent: true, z: 0, shape: { cx, cy, r }, style: { fill: "none", stroke: "rgba(65,90,119,0.22)", lineWidth: 1, lineDash: i === RINGS.length - 1 ? [4, 4] : null } },
-        { type: "text", silent: true, z: 0, x: cx - 20, y: cy - r - 14, style: { text: label, fill: "#657A91", font: '9px "PT Sans"' } }
+        { type: "text", silent: true, z: 0, x: cx - 20, y: cy - r - 14, style: { text: label, fill: "rgba(101,122,145,0.4)", font: '9px "PT Sans"' } }
       ];
     } else {
       return [
         { type: "arc", silent: true, z: 0, shape: { cx, cy, r, startAngle: Math.PI, endAngle: 2 * Math.PI }, style: { fill: "none", stroke: "rgba(65,90,119,0.22)", lineWidth: 1, lineDash: i === RINGS.length - 1 ? [4, 4] : null } },
-        { type: "text", silent: true, z: 0, x: cx - 20, y: cy - r - 12, style: { text: label, fill: "#657A91", font: '11px "PT Sans"' } }
+        { type: "text", silent: true, z: 0, x: cx - 20, y: cy - r - 12, style: { text: label, fill: "rgba(101,122,145,0.4)", font: '10px "PT Sans"' } }
       ];
     }
   });
@@ -977,11 +1029,13 @@ function renderGraph(){
     series: [{
       name: "Люди", type: "graph", layout: "none", roam: false,
       left: cx - R - 10, top: cy - R - 10, width: 2 * R + 20, height: isMobile ? (2 * R + 20) : (R + 40), data: nodes, links, categories,
-      label: { position: "right", formatter: "{b}", fontSize: 12, color: "#0D1B2A" },
       lineStyle: { opacity: 0, width: 0, curveness: .25 },
       emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { opacity: 0, width: 0 } },
       blur: { itemStyle: { opacity: .12 }, label: { opacity: .2 } },
-      labelLayout: { hideOverlap: true }
+      labelLayout: {
+        hideOverlap: false,
+        moveOverlap: 'shiftY'
+      }
     }]
   }, true);
 
