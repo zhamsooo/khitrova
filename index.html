@@ -18,6 +18,7 @@
     #timeline-embed { height: calc(100dvh - 64px - 80px); } /* минус нижняя панель навигации */
   }
 </style>
+<script>document.documentElement.classList.add("preloading");</script>
 </head>
 <body data-page="index">
 
@@ -71,6 +72,8 @@ async function loadTimeline(){
     // шрифты и перевод берём из vendor/, а не с CDN Knight Lab (там путь по умолчанию)
     script_path: new URL("vendor/timeline-3.4.2/js/", location.href).href
   });
+  window.timeline.on("loaded", () => pageReady());
+  setTimeout(pageReady, 3000); // если событие не придёт
 }
 
 // Отступ слева = левый край фото таймлайна. Считаем, когда фото появилось, загрузилось, после шрифтов и при ресайзе.

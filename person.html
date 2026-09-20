@@ -232,6 +232,7 @@
   }
   #personSearchWrap{max-width:280px; height:44px; margin-left:auto; border-radius:22px}
 </style>
+<script>document.documentElement.classList.add("preloading");</script>
 </head>
 <body data-page="people" class="page-person">
 
@@ -808,10 +809,12 @@ async function loadPerson(){
     document.getElementById("personContent").innerHTML = `
       <div class="person-state">Человек не найден или был удалён. <br><br><a href="people.html" style="color:var(--primary)">← Вернуться к списку</a></div>
     `;
+    pageReady();
     return;
   }
   currentPerson = data;
   renderPerson(data);
+  pageReady();
 
   try{
     const { data: students } = await sb.from("people")

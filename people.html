@@ -397,6 +397,7 @@
     }
   }
 </style>
+<script>document.documentElement.classList.add("preloading");</script>
 </head>
 <body data-page="people">
 
@@ -1259,6 +1260,7 @@ async function loadPeople(){
   const { data, error } = await q;
   if(error){
     console.error("Failed to load people:", error);
+    pageReady();
     return;
   }
   allPeople = data || [];
@@ -1267,6 +1269,7 @@ async function loadPeople(){
     allPeople = makeDemo200();
   }
   renderGraph();
+  pageReady();
 }
 
 // Управление строкой поиска

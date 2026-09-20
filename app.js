@@ -28,6 +28,15 @@ window.setNavLeft = setNavLeft;
   if(document.body && document.body.dataset.page !== "index") document.documentElement.classList.add("nav-ready");
 })();
 
+// Прелоадер: страницы с классом .preloading на <html> закрыты экраном загрузки,
+// пока не вызвана pageReady() (данные пришли и отрисованы). Страховка — 6 секунд.
+window.pageReady = function pageReady(){
+  if(!document.documentElement.classList.contains("preloading")) return;
+  const done = () => requestAnimationFrame(() => document.documentElement.classList.remove("preloading"));
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(done, done);
+};
+setTimeout(() => window.pageReady(), 6000);
+
 const HEADER_HTML = `
 <header class="appbar">
   <div class="row">

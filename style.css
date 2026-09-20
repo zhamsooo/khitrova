@@ -1568,3 +1568,31 @@ h1 {
 
 /* Главная: вкладки не показываем, пока не посчитан отступ по фото (или пока его нет в кэше) */
 html:not(.nav-ready) body[data-page="index"] .appbar-tabs { visibility: hidden; }
+
+/* ---------- Прелоадер ---------- */
+html::before, html::after {
+  content: "";
+  position: fixed;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .4s ease, visibility 0s .4s;
+}
+html::before { inset: 0; background: var(--surface); z-index: 9998; }
+html::after {
+  top: 50%; left: 50%;
+  width: 34px; height: 34px; margin: -17px 0 0 -17px;
+  border: 3px solid var(--primary-container);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  z-index: 9999;
+  animation: preloader-spin .9s linear infinite;
+}
+html.preloading::before, html.preloading::after {
+  opacity: 1; visibility: visible; pointer-events: auto; transition: none;
+}
+@keyframes preloader-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  html::before, html::after { transition: none; }
+  html::after { animation-duration: 2.4s; }
+}

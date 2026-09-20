@@ -78,6 +78,7 @@
     content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; background:var(--primary);
   }
 </style>
+<script>document.documentElement.classList.add("preloading");</script>
 </head>
 <body data-page="nasledie">
 
@@ -440,10 +441,11 @@ async function loadList(){
   let q = sb.from("articles").select("*").order("created_at", { ascending:false });
   q = currentUser ? q.or(`status.eq.confirmed,and(created_by.eq.${currentUser.id},status.neq.archived)`) : q.eq("status", "confirmed");
   const { data, error } = await q;
-  if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; return; }
+  if(error){ elList.innerHTML = `<div class="nsl-state">Ошибка загрузки: ${escapeHtml(error.message)}</div>`; pageReady(); return; }
 
   allArticles = data || [];
   renderList();
+  pageReady();
 }
 
 // Табы «Труды Т.И. / Воспоминания и статьи о ней» — состояние в ?tab=, не в hash
@@ -945,6 +947,7 @@ async function router(){
     showView("list");
     await loadList();
   }
+  pageReady();
 }
 
 document.getElementById("btnBackToList").addEventListener("click", () => location.hash = "#list");
