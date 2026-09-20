@@ -10,12 +10,75 @@
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
+  /* Фиксация 100vh на десктопе */
+  @media (min-width: 861px) {
+    body {
+      overflow: hidden;
+      height: 100vh;
+    }
+    .page {
+      height: calc(100vh - 64px);
+      padding: 14px var(--pad-x) 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    #pplGraphWrap {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .graph-layout {
+      flex: 1 1 0;
+      min-height: 0;
+      height: auto;
+      margin-bottom: 6px;
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .graph-area {
+      flex: 1 1 67%;
+      min-width: 0;
+      position: relative;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--outline-variant, #E0E3E8);
+      overflow: hidden;
+    }
+    .graph-panel {
+      flex: 0 0 340px;
+      max-width: 360px;
+      height: 100%;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--outline-variant, #E0E3E8);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .graph-hint {
+      flex-shrink: 0;
+      margin: 0;
+      font-size: 11.5px;
+      line-height: 1.25;
+      color: var(--on-surface-variant);
+    }
+  }
+
+  /* Шапка страницы и компактные элементы управления */
   .people-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
     margin-bottom: 12px;
+    flex-shrink: 0;
   }
   .people-header-text h1 {
     margin: 0 0 4px;
@@ -26,27 +89,26 @@
   }
   .people-header-text .lead {
     margin: 0;
-    font-size: 14.5px;
+    font-size: 14px;
     line-height: 1.45;
     color: var(--on-surface-variant);
   }
-  .view-tumbler {
-    display: inline-flex;
-    background: var(--surface-variant, #EAEFF5);
-    padding: 3px;
-    border-radius: 20px;
-    border: 1px solid var(--outline-variant, #D0D7DE);
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     flex-shrink: 0;
   }
-  .tumbler-btn {
+  .chip-notable {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    border: none;
-    background: transparent;
+    gap: 5px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 18px;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    background: var(--surface, #FFFFFF);
     color: var(--on-surface-variant, #57606A);
-    padding: 6px 14px;
-    border-radius: 16px;
     font-family: inherit;
     font-size: 13px;
     font-weight: 500;
@@ -54,24 +116,82 @@
     transition: all .2s ease;
     user-select: none;
   }
-  .tumbler-btn .sym { font-size: 18px; }
-  .tumbler-btn:hover { color: var(--on-surface); }
-  .tumbler-btn.on {
-    background: #FFFFFF;
-    color: var(--primary, #0D1B2A);
+  .chip-notable .sym {
+    font-size: 17px;
+    color: #C08A3E;
+  }
+  .chip-notable:hover {
+    background: var(--surface-variant, #F4F6F8);
+    color: var(--on-surface);
+  }
+  .chip-notable.on {
+    background: #FFF8E7;
+    border-color: #D4A017;
+    color: #8C6200;
     font-weight: 700;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
   }
-
-  /* Панель фильтров */
-  .filter-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
+  .chip-notable.on .sym {
+    color: #D4A017;
+    font-variation-settings: 'FILL' 1;
+  }
+  .compact-search {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 250px;
+  }
+  .compact-search-input {
+    width: 100%;
+    height: 36px;
+    padding: 0 32px 0 36px;
+    border-radius: 18px;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    background: var(--surface-variant, #F0F4F8);
+    color: var(--on-surface, #0D1B2A);
+    font-family: inherit;
+    font-size: 13.5px;
+    outline: none;
+    transition: all .2s ease;
+    box-sizing: border-box;
+  }
+  .compact-search-input:focus {
+    background: #FFFFFF;
+    border-color: var(--primary, #0D1B2A);
+    box-shadow: 0 0 0 3px rgba(13, 27, 42, 0.08);
+  }
+  .compact-search-input::-webkit-search-cancel-button,
+  .compact-search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+  .compact-search .search-icon {
+    position: absolute;
+    left: 10px;
+    font-size: 18px;
+    color: var(--on-surface-variant, #657A91);
+    pointer-events: none;
+  }
+  .search-clear-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--on-surface-variant, #657A91);
     border-radius: 50%;
-    margin-right: 6px;
-    flex-shrink: 0;
   }
+  .search-clear-btn:hover {
+    color: var(--on-surface);
+    background: rgba(0,0,0,0.06);
+  }
+  .search-clear-btn .sym { font-size: 16px; }
+
+  /* Цветовые индикаторы и точки */
   .card-dot {
     width: 14px;
     height: 14px;
@@ -91,37 +211,9 @@
     background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%) !important;
   }
 
-  /* Граф и десктопная раскладка */
-  .graph-layout {
-    display: flex;
-    gap: 16px;
-    align-items: stretch;
-    height: clamp(520px, calc(100vh - 270px), 780px);
-    margin-bottom: 6px;
-  }
-  .graph-area {
-    flex: 1 1 67%;
-    min-width: 0;
-    position: relative;
-    background: var(--surface);
-    border-radius: 12px;
-    border: 1px solid var(--outline-variant, #E0E3E8);
-    overflow: hidden;
-  }
+  /* Граф и боковая карточка */
   #pplGraph { width: 100%; height: 100%; }
 
-  .graph-panel {
-    flex: 0 0 340px;
-    max-width: 360px;
-    background: var(--surface);
-    border-radius: 12px;
-    border: 1px solid var(--outline-variant, #E0E3E8);
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    transition: transform .25s ease, opacity .25s ease;
-  }
   .panel-placeholder {
     display: flex;
     flex-direction: column;
@@ -176,51 +268,18 @@
   .peer-name { font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .peer-year { font-size: 11.5px; color: var(--on-surface-variant); flex-shrink: 0; }
 
-  .graph-hint { margin: 0; font: var(--t-label-medium); font-size: 12px; color: var(--on-surface-variant); }
-  [hidden] { display: none !important; }
-
-  /* Режим 100vh на десктопе */
-  body.view-graph {
-    overflow: hidden;
-    height: 100vh;
-  }
-  @media (min-width: 861px) {
-    body.view-graph .page {
-      height: calc(100vh - 64px);
-      padding-top: 14px;
-      padding-bottom: 12px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-    body.view-graph #peopleToolbar {
-      margin-bottom: 10px;
-      flex-shrink: 0;
-    }
-    body.view-graph #pplGraphWrap {
-      flex: 1 1 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    body.view-graph .graph-layout {
-      flex: 1 1 0;
-      min-height: 0;
-      height: auto;
-      margin-bottom: 6px;
-    }
-    body.view-graph .graph-panel {
-      height: 100%;
-      box-sizing: border-box;
-    }
-  }
-
   @media (max-width: 860px) {
     .people-header {
       flex-direction: column;
-      gap: 10px;
+      align-items: stretch;
+      gap: 12px;
+    }
+    .header-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+    .compact-search {
+      flex: 1;
     }
     .graph-layout {
       flex-direction: column;
@@ -233,6 +292,9 @@
       min-height: 440px;
       width: 100%;
       margin-bottom: 8px;
+      border-radius: 12px;
+      border: 1px solid var(--outline-variant, #E0E3E8);
+      position: relative;
     }
     .graph-panel {
       display: none;
@@ -246,20 +308,19 @@
       border-radius: 16px 16px 0 0;
       box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
       z-index: 1000;
+      background: var(--surface);
+      padding: 18px 20px;
+      overflow-y: auto;
     }
     .graph-panel.is-open {
       display: flex;
+      flex-direction: column;
     }
-  }
-
-  /* Карточки в списке */
-  .list-card-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-block;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.15);
+    .graph-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--on-surface-variant);
+    }
   }
 </style>
 </head>
@@ -271,34 +332,19 @@
       <h1>Люди</h1>
       <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
     </div>
-    <div class="view-tumbler" id="viewToggle" role="tablist" aria-label="Вид страницы">
-      <button type="button" class="tumbler-btn on" data-view="list" role="tab" aria-selected="true">
-        <span class="sym">format_list_bulleted</span>
-        <span>Список</span>
+    <div class="header-actions">
+      <button type="button" class="chip-notable" id="btnToggleNotable" title="Показать только выдающихся учеников">
+        <span class="sym">star</span><span>Выдающиеся</span>
       </button>
-      <button type="button" class="tumbler-btn" data-view="graph" role="tab" aria-selected="false">
-        <span class="sym">hub</span>
-        <span>Граф</span>
-      </button>
+      <div class="compact-search">
+        <span class="sym search-icon">search</span>
+        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
+        <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
+      </div>
     </div>
   </div>
 
-  <div class="toolbar" id="peopleToolbar">
-    <div class="search">
-      <span class="sym">search</span>
-      <input type="search" class="search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
-    </div>
-    <div class="chips" id="pplFilterChips">
-      <button type="button" class="chip on" data-filter="все"><span class="sym check-sym">check</span>Все<span class="chip-count"></span></button>
-      <button type="button" class="chip" data-filter="choir"><span class="filter-dot" style="background:#B23A22;"></span>Хоровое училище<span class="chip-count"></span></button>
-      <button type="button" class="chip" data-filter="conservatory"><span class="filter-dot" style="background:#2E5B88;"></span>СПбГК<span class="chip-count"></span></button>
-      <button type="button" class="chip" data-filter="коллега"><span class="filter-dot" style="background:#C08A3E;"></span>Коллеги<span class="chip-count"></span></button>
-      <button type="button" class="chip" data-filter="близкие"><span class="filter-dot" style="background:#7A8F6B;"></span>Близкие<span class="chip-count"></span></button>
-      <button type="button" class="chip" data-filter="notable"><span class="sym" style="font-size:16px; color:#D4A017; font-variation-settings:'FILL' 1;">star</span>Выдающиеся<span class="chip-count"></span></button>
-    </div>
-  </div>
-
-  <div id="pplGraphWrap" hidden>
+  <div id="pplGraphWrap">
     <div class="graph-layout">
       <div class="graph-area">
         <div id="pplGraph"></div>
@@ -307,15 +353,13 @@
         <div class="panel-placeholder" id="panelEmpty">
           <span class="sym" style="font-size:32px; margin-bottom:8px; opacity:.4;">person_search</span>
           <div style="font-weight:700; margin-bottom:4px; color:var(--on-surface);">Выберите человека</div>
-          <div style="font-size:13px; line-height:1.4;">Наведите на точку в амфитеатре для быстрого взгляда или нажмите для фиксации.</div>
+          <div style="font-size:13px; line-height:1.4;">Наведите на точку в амфитеатре для быстрого взгляда или нажмите для фиксации карточки.</div>
         </div>
         <div class="panel-card" id="panelContent" style="display:none;"></div>
       </aside>
     </div>
-    <p class="graph-hint">Наведите на точку для быстрого взгляда или нажмите для фиксации карточки и списка сокурсников. Кольца — десятилетия выпуска.</p>
+    <p class="graph-hint">Кольца — десятилетия выпусков. Группы вверху графика можно включать и отключать кликом по названию.</p>
   </div>
-
-  <div id="pplList"><div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant)">Загрузка…</div></div>
 </main>
 
 <!-- Модалка редактирования карточки человека -->
@@ -460,24 +504,9 @@
 <script src="vendor/echarts-5.6.0/echarts.min.js"></script>
 <script src="app.js"></script>
 <script>
-const FILTER_VALUES = ["все", "choir", "conservatory", "коллега", "близкие", "notable"];
-
 let allPeople = [];
-let activeFilter = "все";
 let currentEditingPerson = null;
-
-function decadeLabel(year){
-  if(!year) return "Год выпуска неизвестен";
-  return `${Math.floor(year / 10) * 10}-е`;
-}
-
-function pluralPeople(n){
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if(mod10 === 1 && mod100 !== 11) return "человек";
-  if(mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return "человека";
-  return "человек";
-}
+let onlyNotable = false;
 
 function studyYearsLabel(start, end){
   if(!end) return "";
@@ -524,50 +553,6 @@ function personSubLine(p){
   return result;
 }
 
-function personCard(p){
-  const isMine = p.status !== "confirmed";
-  const subLine = personSubLine(p);
-  const desc = p.notes || p.institution || "";
-  const metaAuthor = p.created_by_name ? escapeHtml(p.created_by_name) : "Из архива";
-  const metaDate = p.created_at ? new Date(p.created_at).toLocaleDateString("ru-RU", { day: "numeric", month: "short" }) : "";
-  const metaAuthorDate = metaDate ? `${metaAuthor} · ${metaDate}` : metaAuthor;
-  const statusLabel = p.status === "unconfirmed" ? "На проверке" : (p.status === "rejected" ? "Отклонено" : "Подтверждено");
-  const notableStar = p.notable ? `<span class="sym person-notable-star" title="Выдающийся" style="color:#D4A017; font-variation-settings:'FILL' 1;">star</span>` : "";
-
-  const dot = getPersonDotInfo(p);
-  const dotHtml = dot.isSplit 
-    ? `<span class="list-card-dot dot-split" title="${dot.label}"></span>` 
-    : `<span class="list-card-dot" style="background:${dot.color};" title="${dot.label}"></span>`;
-
-  return `
-    <div class="card ${isMine ? 'pending' : ''}" onclick="window.openPersonFromList('${p.id}')" tabindex="0" role="button" style="cursor:pointer">
-      <div class="top">
-        <div class="ava" style="background:var(--surface-variant, #EAEFF5); display:flex; align-items:center; justify-content:center;">${dotHtml}</div>
-        <div style="min-width:0; flex:1">
-          <div class="name" style="display:flex; align-items:center; gap:6px;">${escapeHtml(p.full_name)}${notableStar}</div>
-          <div class="sub">${escapeHtml(subLine)}</div>
-        </div>
-      </div>
-      <p class="txt">${escapeHtml(desc)}</p>
-      <div class="meta">
-        <span>${metaAuthorDate}</span>
-        ${isMine ? `<span class="st"${p.moderator_note ? ` title="Заметка модератора: ${escapeAttr(p.moderator_note)}"` : ""}>${statusLabel}</span>` : ""}
-        ${typeof renderMetaIcon === "function" ? renderMetaIcon("people", p.id, p) : ""}
-      </div>
-    </div>
-  `;
-}
-
-function matchesFilter(p, filter){
-  if(filter === "все") return true;
-  if(filter === "choir") return p.relation_type === "ученик" && !!p.studied_choir_school;
-  if(filter === "conservatory") return p.relation_type === "ученик" && (!!p.studied_conservatory || !!p.studied_assistantship);
-  if(filter === "коллега") return p.relation_type === "коллега";
-  if(filter === "близкие") return p.relation_type === "другое";
-  if(filter === "notable") return !!p.notable;
-  return true;
-}
-
 function personMatchesQuery(p, rawQ){
   if(!rawQ) return true;
   const normQ = rawQ.toLowerCase().replace(/ё/g, "е").trim();
@@ -582,16 +567,6 @@ function personMatchesQuery(p, rawQ){
   return words.every(w => text.includes(w));
 }
 
-function updateChipCounts(){
-  document.querySelectorAll("#pplFilterChips .chip").forEach(chip => {
-    const filter = chip.dataset.filter;
-    const count = allPeople.filter(p => matchesFilter(p, filter)).length;
-    const countEl = chip.querySelector(".chip-count");
-    if(countEl) countEl.textContent = ` · ${count}`;
-    chip.dataset.count = count;
-  });
-}
-
 // ---------------------------------------------------------------- ГРАФ (Амфитеатр)
 const GROUPS = {
   choir:     { name: "Хоровое училище", color: "#B23A22" },
@@ -604,7 +579,7 @@ const G_ORDER = ["choir", "spbgk", "colleague", "close", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
-let currentView = "list", chart = null, legendSelected = {}, pinnedPersonId = null;
+let chart = null, legendSelected = {}, pinnedPersonId = null;
 
 // SVG-символы для двухцветных точек (Хоровое училище + Консерватория)
 const SPLIT_SYMBOL_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent(
@@ -671,9 +646,20 @@ function renderGraph(){
   const w = el.clientWidth, h = el.clientHeight;
   const isMobile = w <= 600;
 
-  // Динамическая перегруппировка: активные группы плавно расширяются
+  // Динамическая фильтрация: при поиске и фильтрах несовпадающие люди удаляются из графа
+  const rawQ = (document.getElementById("pplSearch")?.value || "").trim();
+  const hasSearch = rawQ.length > 0;
+
+  const vis = allPeople.filter(p => {
+    if(onlyNotable && !p.notable) return false;
+    if(hasSearch && !personMatchesQuery(p, rawQ)) return false;
+    if(legendSelected[GROUPS[p._g]?.name] === false) return false;
+    return true;
+  });
+
+  // Динамическая перегруппировка: оставшиеся люди гармонично заполняют дуги амфитеатра
   const activeGroups = G_ORDER.filter(g => legendSelected[GROUPS[g].name] !== false);
-  layoutGraph(allPeople, isMobile, activeGroups);
+  layoutGraph(vis, isMobile, activeGroups);
 
   let cx, cy, rx, ry, R;
   if(isMobile){
@@ -689,13 +675,6 @@ function renderGraph(){
     rx = R; ry = R;
   }
 
-  // Фильтрация по активному чипу и легенде
-  const vis = allPeople.filter(p => {
-    if(!matchesFilter(p, activeFilter)) return false;
-    if(legendSelected[GROUPS[p._g]?.name] === false) return false;
-    return true;
-  });
-
   const links = [], degree = new Map(vis.map(p => [p.id, 0]));
   const wy = vis.filter(p => p._y);
   for(let i = 0; i < wy.length; i++) for(let j = i + 1; j < wy.length; j++){
@@ -705,11 +684,6 @@ function renderGraph(){
     }
   }
 
-  // Поиск по графу
-  const rawQ = (document.getElementById("pplSearch")?.value || "").trim();
-  const hasSearch = rawQ.length > 0;
-  const matchingCount = hasSearch ? vis.filter(p => personMatchesQuery(p, rawQ)).length : 0;
-
   const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
   categories.push({ name: "Центр", itemStyle: { color: "#6B3074" } });
 
@@ -718,7 +692,6 @@ function renderGraph(){
 
   const nodes = vis.map(p => {
     const isDual = !!p.studied_choir_school && (!!p.studied_conservatory || !!p.studied_assistantship);
-    const matchesSearch = !hasSearch || personMatchesQuery(p, rawQ);
 
     let symbol = "circle";
     if(isDual){
@@ -726,8 +699,8 @@ function renderGraph(){
     }
 
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
-    const finalSize = hasSearch ? (matchesSearch ? nodeSize + 2 : Math.max(5, nodeSize - 2)) : nodeSize;
-    const finalOpacity = hasSearch ? (matchesSearch ? 1 : 0.12) : 1;
+    // При активном поиске узлы чуть крупнее, чтобы их было легче разглядеть
+    const finalSize = hasSearch ? nodeSize + 2 : nodeSize;
 
     return {
       id: p.id,
@@ -741,14 +714,16 @@ function renderGraph(){
         color: isDual ? undefined : GROUPS[p._g].color,
         borderColor: (!isDual && p.notable) ? "#D4A017" : "transparent",
         borderWidth: (!isDual && p.notable) ? 2.5 : 0,
-        opacity: finalOpacity
+        opacity: 1
       },
+      // При поиске имена отображаются прямо над точками без наложений, так как лишние точки скрыты
       label: {
-        show: hasSearch && matchesSearch && matchingCount <= 8,
+        show: hasSearch && vis.length <= 18,
         position: "top",
-        fontSize: 11,
+        fontSize: isMobile ? 10 : 11,
         color: "#0D1B2A",
-        formatter: "{b}"
+        formatter: "{b}",
+        distance: 5
       },
       tip: escapeHtml(p.full_name) + "<br>" +
            (isDual ? "Хоровое училище и СПбГК" : GROUPS[p._g].name) +
@@ -807,7 +782,7 @@ function renderGraph(){
   chart.setOption({
     textStyle: { fontFamily: FONT },
     graphic: ringGraphics,
-    animationDuration: 500, animationEasingUpdate: "quinticInOut",
+    animationDuration: 400, animationEasingUpdate: "quinticInOut",
     tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
     legend: [{
       data: G_ORDER.map(g => GROUPS[g].name), selected: legendSelected,
@@ -825,9 +800,8 @@ function renderGraph(){
     }]
   }, true);
 
-  if(hasSearch && matchingCount === 1 && !pinnedPersonId){
-    const single = vis.find(p => personMatchesQuery(p, rawQ));
-    if(single) updateGraphPanel(single, false);
+  if(hasSearch && vis.length === 1 && !pinnedPersonId){
+    updateGraphPanel(vis[0], false);
   }
 }
 
@@ -957,7 +931,7 @@ function updateGraphPanel(p, isPinned){
     : `<span class="card-dot" style="background:${dot.color};" title="${dot.label}"></span>`;
 
   const subLine = personSubLine(p);
-  const notableStar = p.notable ? '<span class="sym person-notable-star" title="Выдающийся" style="color:#D4A017; font-variation-settings:\'FILL\' 1;">star</span>' : '';
+  const notableStar = p.notable ? '<span class="sym person-notable-star" title="Выдающийся" style="color:#D4A017; font-variation-settings:\'FILL\' 1;\">star</span>' : '';
   const milestonesHtml = renderPersonMilestones(p);
   const bioText = (p.notes || "").trim();
   const bioHtml = bioText ? escapeHtml(bioText).replace(/\n\n+/g, "<br><br>").replace(/\n/g, "<br>") : "";
@@ -1038,13 +1012,6 @@ window.unpinGraphPerson = function(){
   if(chart) chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
 };
 
-window.openPersonFromList = function(id){
-  setView("graph");
-  setTimeout(() => {
-    window.selectGraphPeer(id);
-  }, 100);
-};
-
 function initGraphEvents(){
   chart.on("legendselectchanged", ev => {
     legendSelected = ev.selected;
@@ -1078,78 +1045,7 @@ function initGraphEvents(){
     }
   });
 
-  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { if(currentView === "graph") renderGraph(); }, 150); });
-}
-
-function setView(v){
-  currentView = v;
-  try { localStorage.setItem("peopleView", v); } catch(e) {}
-
-  document.body.classList.toggle("view-graph", v === "graph");
-  document.body.classList.toggle("view-list", v !== "graph");
-
-  document.querySelectorAll("#viewToggle .tumbler-btn").forEach(btn => {
-    const on = btn.dataset.view === v;
-    btn.classList.toggle("on", on);
-    btn.setAttribute("aria-selected", on ? "true" : "false");
-  });
-
-  document.getElementById("pplGraphWrap").hidden = (v !== "graph");
-  document.getElementById("pplList").hidden = (v === "graph");
-
-  if(v === "graph"){
-    if(!chart){
-      renderGraph();
-      initGraphEvents();
-    } else {
-      renderGraph();
-    }
-  } else {
-    render();
-  }
-}
-
-document.getElementById("viewToggle").addEventListener("click", e => {
-  const b = e.target.closest(".tumbler-btn");
-  if(b && b.dataset.view) setView(b.dataset.view);
-});
-
-function filteredPeople(){
-  const rawQ = (document.getElementById("pplSearch")?.value || "").trim();
-  let list = allPeople.filter(p => matchesFilter(p, activeFilter));
-  if(rawQ){
-    list = list.filter(p => personMatchesQuery(p, rawQ));
-  }
-  return list;
-}
-
-function render(){
-  if(currentView === "graph"){ renderGraph(); return; }
-  const list = filteredPeople();
-  const elList = document.getElementById("pplList");
-  if(!list.length){
-    elList.innerHTML = `<div class="card" style="height:auto; padding:32px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">Никого не нашлось.</div>`;
-    return;
-  }
-
-  const students = list.filter(p => p.relation_type === "ученик").sort((a,b) => (b.study_end||0) - (a.study_end||0));
-  const others = list.filter(p => p.relation_type !== "ученик");
-
-  const groups = new Map();
-  students.forEach(p => {
-    const key = decadeLabel(p.study_end);
-    if(!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(p);
-  });
-
-  let html = "";
-  for(const [label, people] of groups){
-    html += `<div class="group">${escapeHtml(label)} · ${people.length} ${pluralPeople(people.length)}</div><div class="grid">${people.map(personCard).join("")}</div>`;
-  }
-  if(others.length){
-    html += `<div class="group">Коллеги и другие · ${others.length} ${pluralPeople(others.length)}</div><div class="grid">${others.map(personCard).join("")}</div>`;
-  }
-  elList.innerHTML = html;
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(renderGraph, 150); });
 }
 
 function makeDemo200(){
@@ -1193,7 +1089,7 @@ async function loadPeople(){
   q = currentUser ? q.or(`status.eq.confirmed,and(created_by.eq.${currentUser.id},status.neq.archived)`) : q.eq("status", "confirmed");
   const { data, error } = await q;
   if(error){
-    document.getElementById("pplList").innerHTML = `<div class="card" style="height:auto; padding:24px; text-align:center; color:var(--error); max-width:480px; margin:24px auto;">Ошибка загрузки: ${escapeHtml(error.message)}</div>`;
+    console.error("Failed to load people:", error);
     return;
   }
   allPeople = data || [];
@@ -1201,45 +1097,40 @@ async function loadPeople(){
   if(demoParam === "200" || demoParam === "1" || demoParam === "true"){
     allPeople = makeDemo200();
   }
-  updateChipCounts();
-  const saved = new URLSearchParams(location.search).get("view") || (function(){ try { return localStorage.getItem("peopleView"); } catch(e) { return null; } })();
-  setView(saved === "graph" ? "graph" : "list");
+  renderGraph();
+  if(!chart) initGraphEvents();
 }
 
-function setChipFilter(f){
-  activeFilter = f;
-  document.querySelectorAll("#pplFilterChips .chip").forEach(c => {
-    const isOn = c.dataset.filter === f;
-    c.classList.toggle("on", isOn);
-    const existingSym = c.querySelector(".sym.check-sym");
-    if(existingSym) existingSym.remove();
-    if(isOn && f === "все"){
-      c.insertAdjacentHTML("afterbegin", '<span class="sym check-sym">check</span>');
-    }
-  });
-  if(currentView === "graph"){
+// Управление кнопкой «Выдающиеся»
+const btnToggleNotable = document.getElementById("btnToggleNotable");
+if(btnToggleNotable){
+  btnToggleNotable.addEventListener("click", () => {
+    onlyNotable = !onlyNotable;
+    btnToggleNotable.classList.toggle("on", onlyNotable);
     renderGraph();
-  } else {
-    render();
-  }
-}
-
-const urlFilter = new URLSearchParams(location.search).get("filter");
-if(urlFilter && FILTER_VALUES.includes(urlFilter)){
-  setChipFilter(urlFilter);
-}
-
-document.querySelectorAll("#pplFilterChips .chip").forEach(chip => {
-  chip.addEventListener("click", () => {
-    setChipFilter(chip.dataset.filter);
   });
-});
+}
 
+// Управление строкой поиска
 const pplSearch = document.getElementById("pplSearch");
+const btnSearchClear = document.getElementById("btnSearchClear");
+
 if(pplSearch){
   pplSearch.addEventListener("input", () => {
-    if(currentView === "graph") renderGraph();
-    else render();
+    const val = pplSearch.value.trim();
+    if(btnSearchClear) btnSearchClear.style.display = val ? "flex" : "none";
+    renderGraph();
+  });
+}
+
+if(btnSearchClear){
+  btnSearchClear.addEventListener("click", () => {
+    if(pplSearch){
+      pplSearch.value = "";
+      btnSearchClear.style.display = "none";
+      renderGraph();
+      pplSearch.focus();
+    }
   });
 }
 
