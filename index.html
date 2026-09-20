@@ -72,8 +72,20 @@ async function loadTimeline(){
     // шрифты и перевод берём из vendor/, а не с CDN Knight Lab (там путь по умолчанию)
     script_path: new URL("vendor/timeline-3.4.2/js/", location.href).href
   });
-  window.timeline.on("loaded", () => pageReady());
-  setTimeout(pageReady, 3000); // если событие не придёт
+  // Наш прелоадер снимаем, когда TimelineJS собрался И главное фото загружено и отрисовано —
+  // иначе после нашего экрана виден второй «загрузчик» (текст, потом фото)
+  let tlLoaded = false;
+  const photoReady = () => {
+    const img = document.querySelector("#timeline-embed img");
+    return !!img && img.complete && img.naturalWidth > 0 && img.getBoundingClientRect().width > 10;
+  };
+  const tryReady = () => { if(tlLoaded && photoReady()) pageReady(); };
+  window.timeline.on("loaded", () => { tlLoaded = true; tryReady(); });
+  const poll = setInterval(() => {
+    tryReady();
+    if(!document.documentElement.classList.contains("preloading")) clearInterval(poll);
+  }, 100);
+  setTimeout(pageReady, 5000); // если событие или фото не придут
 }
 
 // Отступ слева = левый край фото таймлайна. Считаем, когда фото появилось, загрузилось, после шрифтов и при ресайзе.
