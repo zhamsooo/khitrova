@@ -112,9 +112,12 @@
     left: 0; right: 0;
     z-index: 5;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
-    gap: 6px;
+    gap: 6px 10px;
+    padding: 0 12px;
     pointer-events: none;
   }
   .graph-overlay-stack > * { pointer-events: auto; }
@@ -135,6 +138,7 @@
     user-select: none;
     transition: background .2s ease, color .2s ease;
   }
+  .known-check { border: 1px solid var(--outline-variant, #D0D7DE); background: var(--surface); height: 32px; }
   .known-check:hover { background: var(--surface-low, #F4F6F8); color: var(--on-surface, #0D1B2A); }
   .known-check .sym { font-size: 19px; }
   .known-check .known-star { color: #B0B8C1; margin-left: -2px; }
@@ -409,7 +413,7 @@
     <div class="people-header-actions">
       <div class="compact-search">
         <span class="sym search-icon">search</span>
-        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
+        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
         <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
       </div>
     </div>
@@ -421,11 +425,6 @@
         <div class="graph-canvas-wrap">
           <div id="pplGraph"></div>
           <div class="graph-overlay-stack">
-          <button type="button" class="known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
-            <span class="sym known-box">check_box_outline_blank</span>
-            <span class="sym known-star">star</span>
-            <span>Известные</span>
-          </button>
           <div class="cohort-status-bar" id="cohortStatusBar">
             <div class="cohort-status-info">
               <span class="sym" id="cohortStatusIcon" style="font-size:18px; color:var(--primary);">groups</span>
@@ -435,6 +434,11 @@
               <span class="sym" style="font-size:15px;">close</span> Все люди
             </button>
           </div>
+          <button type="button" class="known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
+            <span class="sym known-box">check_box_outline_blank</span>
+            <span class="sym known-star">star</span>
+            <span>Известные</span>
+          </button>
           </div>
         </div>
       </div>
@@ -763,7 +767,11 @@ function layoutGraph(people, isMobile, activeGroups){
       const padFrac = (list.length === 1) ? 0.5 : (isSparse ? 0.03 : 0.02);
 
       list.forEach((p, i) => {
-        const frac = (list.length === 1) ? 0.5 : (padFrac + (1 - 2 * padFrac) * (i / (list.length - 1)));
+        // Равномерная «плитка» по сектору (точка в центре своей ячейки) + сдвиг соседних колец на полшага,
+        // чтобы точки соседних колец заполняли промежутки друг друга, а не стояли строго в ряд
+        const nList = list.length;
+        const shift = (nList > 1) ? (ri % 2 ? 0.25 : -0.25) : 0;
+        const frac = (i + 0.5 + shift) / nList;
         p._ang = (start + sector * frac) * Math.PI / 180;
 
         const offsetIdx = i % offsets.length;
@@ -930,7 +938,7 @@ function renderGraph(){
 
   let cx, cy, rx, ry, R;
   if(isMobile){
-    const top = 168, bottom = 12;
+    const top = 176, bottom = 12;
     const availH = Math.max(80, h - top - bottom);
     const availW = Math.max(80, w - 32);
     cx = w / 2; cy = top + availH / 2;
@@ -964,7 +972,7 @@ function renderGraph(){
   ];
 
   const baseNodeSize = isMobile ? 8 : 10;
-  const notableNodeSize = isMobile ? 16 : 19;
+  const notableNodeSize = isMobile ? 13 : 15;
   const showLabels = (hasSearch && vis.length <= 18) || isCohortMode;
 
   const nodes = vis.map(p => {
