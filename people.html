@@ -74,112 +74,97 @@
     }
   }
 
-  /* Шапка страницы и гармоничные отступы как на странице «Наследие» */
+  /* Шапка страницы */
   .people-header {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     align-items: flex-end;
-    gap: 40px;
-    margin-bottom: 18px;
+    gap: 24px;
+    margin-bottom: 14px;
     flex-shrink: 0;
   }
   .people-header-text h1 {
-    font-size: 36px;
-    line-height: 44px;
+    font-size: 34px;
+    line-height: 40px;
     font-weight: 400;
-    margin: 0 0 8px;
-    letter-spacing: 0;
-    text-wrap: balance;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
     color: var(--on-surface);
   }
   .people-header-text .lead {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 15px;
+    line-height: 22px;
     color: var(--on-surface-variant);
-    max-width: 64ch;
+    max-width: 60ch;
     margin: 0;
   }
   .people-header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: 0 0 2px;
     flex-shrink: 0;
+    margin-bottom: 2px;
   }
-  .add-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
-  .add-link .sym { font-size: 18px; transition: transform .2s ease; }
-  .add-link:hover { color: var(--secondary); text-decoration: underline; text-underline-offset: 3px; }
-  .add-link:hover .sym { transform: translateX(3px); }
-  .graph-overlay-stack {
-    position: absolute;
-    top: 8px;
-    left: 0; right: 0;
-    z-index: 5;
-    display: flex;
-    justify-content: center;
-    padding: 0 12px;
-    pointer-events: none;
-  }
-  .graph-overlay-stack > * { pointer-events: auto; }
-
-  /* Фильтры-группы над графиком (HTML, чтобы ряд не зависел от табло) */
-  .graph-filters {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px 14px 0;
-  }
-  .flt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
-  .flt-row .known-check { margin-left: auto; }
-  .flt-chip {
+  .btn-add-person {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    height: 30px;
-    padding: 0 12px 0 10px;
-    border-radius: 15px;
+    gap: 6px;
+    height: 38px;
+    padding: 0 16px 0 12px;
+    border-radius: 19px;
     border: 1px solid var(--outline-variant, #D0D7DE);
-    background: var(--surface-low, #F4F6F8);
+    background: var(--surface, #FFFFFF);
+    color: var(--primary, #0D1B2A);
     font-family: inherit;
-    font-size: 13.5px;
-    color: var(--on-surface, #0D1B2A);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
     cursor: pointer;
-    user-select: none;
-    transition: background .2s ease, color .2s ease, border-color .2s ease;
+    white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(13, 27, 42, 0.05);
+    transition: all .18s ease;
   }
-  .flt-chip:hover { background: #E9EEF3; }
-  .flt-chip[aria-pressed="false"] { background: transparent; color: #8A96A3; border-style: dashed; }
-  .flt-chip[aria-pressed="false"] .flt-dot { background: #C5CCD3; }
-  .flt-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex-shrink: 0; }
-  .flt-dot.split { background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%); }
-  .flt-n { font-weight: 700; font-size: 12.5px; color: var(--on-surface-variant, #657A91); }
-  .flt-chip[aria-pressed="false"] .flt-n { color: #A9B2BC; }
+  .btn-add-person .sym {
+    font-size: 20px;
+    color: var(--primary, #0D1B2A);
+  }
+  .btn-add-person:hover {
+    background: var(--surface-variant, #F0F4F8);
+    border-color: var(--primary, #0D1B2A);
+    box-shadow: 0 2px 6px rgba(13, 27, 42, 0.09);
+    color: var(--primary, #0D1B2A);
+  }
 
-  /* «Известные» — отдельный переключатель, не группа */
-  .known-check { padding-left: 6px; background: var(--surface); }
-  .known-check .sym { font-size: 19px; }
-  .known-check .known-star { color: #B0B8C1; margin-left: -2px; }
-  .known-check.active { background: #FFF8E1; border-color: #D4A017; color: #8D6E00; font-weight: 600; }
-  .known-check.active .sym { color: #D4A017; font-variation-settings: 'FILL' 1; }
+  /* Единая панель управления графиком */
+  .graph-controls-panel {
+    flex: 0 0 auto;
+    background: var(--surface, #FFFFFF);
+    border-bottom: 1px solid var(--outline-variant, #E0E3E8);
+    display: flex;
+    flex-direction: column;
+  }
+  .graph-controls-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 16px 8px;
+  }
   .compact-search {
     position: relative;
     display: flex;
     align-items: center;
-    width: 320px;
+    width: 280px;
     max-width: 100%;
-    flex-shrink: 0;
   }
   .compact-search-input {
     width: 100%;
-    height: 38px;
-    padding: 0 32px 0 36px;
-    border-radius: 19px;
+    height: 32px;
+    padding: 0 28px 0 32px;
+    border-radius: 16px;
     border: 1px solid var(--outline-variant, #D0D7DE);
-    background: var(--surface-variant, #F0F4F8);
+    background: var(--surface-variant, #F4F6F8);
     color: var(--on-surface, #0D1B2A);
     font-family: inherit;
-    font-size: 13.5px;
+    font-size: 13px;
     outline: none;
     transition: all .2s ease;
     box-sizing: border-box;
@@ -197,14 +182,14 @@
   }
   .compact-search .search-icon {
     position: absolute;
-    left: 10px;
-    font-size: 18px;
+    left: 9px;
+    font-size: 17px;
     color: var(--on-surface-variant, #657A91);
     pointer-events: none;
   }
   .search-clear-btn {
     position: absolute;
-    right: 8px;
+    right: 6px;
     background: none;
     border: none;
     cursor: pointer;
@@ -219,7 +204,188 @@
     color: var(--on-surface);
     background: rgba(0,0,0,0.06);
   }
-  .search-clear-btn .sym { font-size: 16px; }
+  .search-clear-btn .sym { font-size: 15px; }
+
+  /* Фильтры и модификатор */
+  .graph-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+  }
+  .flt-row {
+    display: flex;
+    align-items: center;
+    gap: 6px 8px;
+    width: 100%;
+  }
+  #fltRow2 .known-switch-btn {
+    margin-left: auto;
+  }
+
+  .flt-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px 0 8px;
+    border-radius: 14px;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    background: var(--surface-low, #F6F8FA);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--on-surface, #0D1B2A);
+    cursor: pointer;
+    user-select: none;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+    white-space: nowrap;
+  }
+  .flt-chip:hover {
+    background: #EAEFF4;
+    border-color: #BCC5CE;
+  }
+  .flt-chip[aria-pressed="false"] {
+    background: transparent;
+    color: #8A96A3;
+    border-style: dashed;
+  }
+  .flt-chip[aria-pressed="false"] .flt-dot {
+    background: #C5CCD3 !important;
+  }
+  .flt-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--c);
+    flex-shrink: 0;
+  }
+  .flt-dot.split {
+    background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%) !important;
+  }
+  .flt-n {
+    font-weight: 600;
+    font-size: 11.5px;
+    color: var(--on-surface-variant, #657A91);
+    background: rgba(0, 0, 0, 0.05);
+    padding: 1px 5px;
+    border-radius: 8px;
+    line-height: 1.2;
+  }
+  .flt-chip[aria-pressed="false"] .flt-n {
+    color: #A9B2BC;
+    background: transparent;
+  }
+
+  /* «Известные» — отдельный переключатель-модификатор */
+  .known-switch-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px 0 8px;
+    border-radius: 14px;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    background: var(--surface, #FFFFFF);
+    color: var(--on-surface-variant, #526375);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    transition: all .18s ease;
+    white-space: nowrap;
+  }
+  .known-switch-btn:hover {
+    background: var(--surface-variant, #F4F6F8);
+    border-color: #B0B8C1;
+    color: var(--on-surface, #0D1B2A);
+  }
+  .known-switch-btn .known-star {
+    font-size: 16px;
+    color: #C08A3E;
+    font-variation-settings: 'FILL' 0;
+    transition: all .18s ease;
+  }
+  .known-switch-btn .known-box {
+    font-size: 17px;
+    color: #8A96A3;
+    margin-left: 2px;
+  }
+  .known-switch-btn.active {
+    background: #FFFDF5;
+    border-color: #D4A017;
+    color: #735400;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(212, 160, 23, 0.15);
+  }
+  .known-switch-btn.active .known-star {
+    color: #D4A017;
+    font-variation-settings: 'FILL' 1;
+  }
+  .known-switch-btn.active .known-box {
+    color: #D4A017;
+  }
+
+  /* Спокойное табло статуса прямо под контролами (в потоке документа) */
+  .cohort-status-strip {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 4px 14px;
+    background: var(--surface-low, #F8FAFC);
+    border-top: 1px solid var(--outline-variant, #EAEFF4);
+    box-sizing: border-box;
+  }
+  .cohort-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 12px;
+  }
+  .cohort-status-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: var(--on-surface, #0D1B2A);
+    min-width: 0;
+  }
+  .cohort-status-info .sym {
+    font-size: 18px;
+    color: var(--primary, #0D1B2A);
+    flex-shrink: 0;
+  }
+  #cohortStatusText {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .cohort-status-reset {
+    flex-shrink: 0;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #FFFFFF;
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    border-radius: 12px;
+    padding: 2px 8px 2px 6px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--primary, #0D1B2A);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .cohort-status-reset:hover {
+    background: var(--surface-variant, #F0F4F8);
+    border-color: var(--primary);
+  }
+  .cohort-status-reset .sym {
+    font-size: 14px;
+  }
 
   /* Цветовые индикаторы и точки */
   .card-dot {
@@ -309,70 +475,62 @@
   .panel-pin-btn:hover { background: var(--surface-variant, #F4F6F8); color: var(--on-surface); }
   .panel-pin-btn .sym { font-size: 17px; }
 
-  /* Бейдж сокурсников прямо над амфитеатром */
-  .cohort-status-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(13, 27, 42, 0.12);
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    border-radius: 20px;
-    padding: 5px 14px;
-    animation: fadeInDown .2s ease;
-    max-width: 92%;
-    width: max-content;
-  }
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .cohort-status-info {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1.3;
-    color: var(--on-surface);
-  }
-  .cohort-status-reset {
-    flex-shrink: 0;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: var(--surface-variant, #F0F4F8);
-    border: 1px solid var(--outline-variant, #D0D7DE);
-    border-radius: 12px;
-    padding: 3px 8px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--primary, #0D1B2A);
-    cursor: pointer;
-    transition: all .15s ease;
-  }
-  .cohort-status-reset:hover {
-    background: #E2E8F0;
-  }
-
   @media (max-width: 860px) {
     .people-header {
       flex-direction: column;
       align-items: stretch;
-      gap: 14px;
+      gap: 12px;
+      margin-bottom: 12px;
     }
     .people-header-actions {
       width: 100%;
-      flex-direction: row;
-      justify-content: space-between;
+      margin: 0;
+    }
+    .btn-add-person {
+      width: 100%;
+      justify-content: center;
+    }
+    .graph-controls-toolbar {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 10px 12px;
     }
     .compact-search {
-      flex: 1;
-      width: auto;
+      width: 100%;
+    }
+    .graph-filters {
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .flt-chip {
+      height: 26px;
+      font-size: 12px;
+      padding: 0 8px 0 7px;
+      gap: 5px;
+    }
+    .flt-n {
+      font-size: 11px;
+      padding: 1px 4px;
+    }
+    .known-switch-btn {
+      height: 26px;
+      font-size: 12px;
+      padding: 0 8px 0 6px;
+    }
+    .cohort-status-strip {
+      padding: 6px 12px;
+      min-height: 34px;
+    }
+    .cohort-status-info {
+      font-size: 12px;
+    }
+    #cohortStatusText {
+      white-space: normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
     }
     .graph-layout {
       flex-direction: column;
@@ -381,8 +539,8 @@
     }
     .graph-area {
       flex: none;
-      height: 480px;
-      min-height: 440px;
+      height: 520px;
+      min-height: 460px;
       width: 100%;
       margin-bottom: 8px;
       border-radius: 12px;
@@ -412,8 +570,6 @@
       display: flex;
       flex-direction: column;
     }
-    .flt-chip { height: 28px; font-size: 12px; padding: 0 9px 0 8px; gap: 5px; }
-    .compact-search { width: 100%; }
     .graph-hint {
       margin-top: 6px;
       font-size: 12px;
@@ -429,43 +585,52 @@
   <div class="people-header">
     <div class="people-header-text">
       <h1>Люди</h1>
-      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его. <a href="#" class="add-link" id="linkAddPerson"><span class="sym">arrow_forward</span>добавить человека</a></p>
+      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
     </div>
     <div class="people-header-actions">
-      <div class="compact-search">
-        <span class="sym search-icon">search</span>
-        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
-        <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
-      </div>
+      <a href="#" class="btn-add-person" id="linkAddPerson" role="button">
+        <span class="sym">add</span>
+        <span>Добавить человека</span>
+      </a>
     </div>
   </div>
 
   <div id="pplGraphWrap">
     <div class="graph-layout">
       <div class="graph-area">
-        <div class="graph-filters" id="graphFilters">
-          <div class="flt-row" id="fltRow1"></div>
-          <div class="flt-row" id="fltRow2">
-          <button type="button" class="flt-chip known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
-            <span class="sym known-box">check_box_outline_blank</span>
-            <span class="sym known-star">star</span>
-            <span>Известные</span>
-          </button>
+        <div class="graph-controls-panel">
+          <div class="graph-controls-toolbar">
+            <div class="compact-search">
+              <span class="sym search-icon">search</span>
+              <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
+              <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
+            </div>
+            <div class="graph-filters" id="graphFilters">
+              <div class="flt-row" id="fltRow1"></div>
+              <div class="flt-row" id="fltRow2">
+                <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
+                  <span class="sym known-star">star</span>
+                  <span class="known-label">Только известные</span>
+                  <span class="sym known-box">check_box_outline_blank</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="graph-canvas-wrap">
-          <div id="pplGraph"></div>
-          <div class="graph-overlay-stack">
+          <div class="cohort-status-strip">
             <div class="cohort-status-bar" id="cohortStatusBar">
               <div class="cohort-status-info">
-                <span class="sym" id="cohortStatusIcon" style="font-size:18px; color:var(--primary);">groups</span>
+                <span class="sym" id="cohortStatusIcon">groups</span>
                 <span id="cohortStatusText"></span>
               </div>
               <button type="button" class="cohort-status-reset" id="cohortStatusReset" style="display:none;" onclick="window.resetGraphView()" title="Показать всех (Esc)">
-                <span class="sym" style="font-size:15px;">close</span> Все люди
+                <span class="sym">close</span> Все люди
               </button>
             </div>
           </div>
+        </div>
+
+        <div class="graph-canvas-wrap">
+          <div id="pplGraph"></div>
         </div>
       </div>
       <aside class="graph-panel" id="pplPanel">
