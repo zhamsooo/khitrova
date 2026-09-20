@@ -18,7 +18,7 @@
     }
     .page {
       height: calc(100vh - 64px);
-      padding: 24px var(--pad-x) 16px;
+      padding: 32px var(--pad-x) 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -65,38 +65,27 @@
       overflow-y: auto;
       box-sizing: border-box;
     }
-    .graph-hint {
-      flex-shrink: 0;
-      margin: 0;
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--on-surface-variant);
-    }
   }
 
   /* Шапка страницы */
   .people-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 24px;
-    margin-bottom: 14px;
+    margin-bottom: 24px;
     flex-shrink: 0;
   }
-  .people-header-text h1 {
-    font-size: 34px;
-    line-height: 40px;
-    font-weight: 400;
-    margin: 0 0 6px;
-    letter-spacing: -0.01em;
-    color: var(--on-surface);
-  }
-  .people-header-text .lead {
-    font-size: 15px;
-    line-height: 22px;
+  .people-header-text .lead { margin: 0; }
+  /* Тихая подсказка справа вверху: не спорит с заголовком */
+  .graph-hint {
+    margin: 4px 0 0;
+    max-width: 300px;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: right;
     color: var(--on-surface-variant);
-    max-width: 60ch;
-    margin: 0;
+    opacity: .7;
   }
   .lead-add {
     color: var(--primary, #0D1B2A);
@@ -201,13 +190,13 @@
     gap: 8px;
   }
   .toolbar-row { flex-wrap: wrap; }
-  .toolbar-row .compact-search { flex: 0 1 190px; min-width: 150px; width: auto; }
+  .toolbar-row .compact-search { flex: 0 1 160px; min-width: 130px; width: auto; }
   .classmate-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    margin-left: 8px;
+    margin-left: auto;
     padding-left: 14px;
     border-left: 1px solid var(--outline-variant, #D0D7DE);
   }
@@ -499,6 +488,7 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
+    .graph-hint { max-width: none; margin: 0; text-align: left; }
     .classmate-filters { margin-left: 0; padding-left: 0; border-left: 0; }
     .toolbar-row .compact-search { flex: 1 1 0; }
     .flt-chip {
@@ -567,11 +557,6 @@
       display: flex;
       flex-direction: column;
     }
-    .graph-hint {
-      margin-top: 6px;
-      font-size: 12px;
-      color: var(--on-surface-variant);
-    }
   }
 </style>
 <script>document.documentElement.classList.add("preloading");</script>
@@ -584,6 +569,7 @@
       <h1>Люди</h1>
       <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, <a href="#" class="lead-add" id="linkAddPerson" role="button">дополняйте его</a>.</p>
     </div>
+    <p class="graph-hint">Кольца — десятилетия выпусков. Нажмите на группу или человека — останутся только связанные с ним.</p>
   </div>
   <svg class="add-arrow" id="addArrow" aria-hidden="true"><defs><marker id="addArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path id="addArrowPath" d="" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" marker-end="url(#addArrowHead)"/></svg>
 
@@ -595,7 +581,7 @@
             <div class="toolbar-row">
             <div class="compact-search">
               <span class="sym search-icon">search</span>
-              <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
+              <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год" autocomplete="off" spellcheck="false">
               <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
             </div>
               <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
@@ -634,7 +620,6 @@
         <div class="panel-card" id="panelContent" style="display:none;"></div>
       </aside>
     </div>
-    <p class="graph-hint">Кольца — десятилетия выпусков. Группы вверху графика можно включать и отключать кликом по названию.</p>
   </div>
 </main>
 
@@ -1047,7 +1032,14 @@ function initGraphEvents(){
     }
   });
 
-  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(renderGraph, 150); });
+  // Перерисовка при любом изменении размера поля графа (окно, подгрузка шрифтов, перенос строк в шапке)
+  let t, lastW = 0, lastH = 0;
+  new ResizeObserver(([e]) => {
+    const { width, height } = e.contentRect;
+    if(Math.round(width) === lastW && Math.round(height) === lastH) return;
+    lastW = Math.round(width); lastH = Math.round(height);
+    clearTimeout(t); t = setTimeout(renderGraph, 100);
+  }).observe(document.getElementById("pplGraph"));
 }
 
 function renderGraph(){
@@ -1123,7 +1115,7 @@ function renderGraph(){
     const together = (pinnedPerson._y || insts.length > 1) ? `в те же годы${yr}` : "(год выпуска не указан)";
     boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> и все, кто учился ${where} ${together} · ${shownCount} чел.`;
   } else if(focusGroup){
-    boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> ${focusGroup === "colleague" ? "и все коллеги Т.И." : CLASSMATE_GROUPS.includes(focusGroup) ? "и все, кто учился с Т.И." : "и другие люди, знакомые с Т.И."} · ${shownCount} чел.`;
+    boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> ${focusGroup === "colleague" ? "и все коллеги Т.И." : focusGroup === "coursemate" ? "и все однокурсники Т.И. по консерватории" : focusGroup === "classmate" ? "и все одноклассники Т.И. по училищу Римского-Корсакова" : "и другие люди, знакомые с Т.И."} · ${shownCount} чел.`;
   } else if(hasSearch){
     boardIcon = "search";
     boardHtml = shownCount
@@ -1140,13 +1132,13 @@ function renderGraph(){
       spbgk: "Все студенты СПбГК",
       dual: "Все, кто учился и в училище, и в СПбГК",
       colleague: "Все коллеги Т.И.",
-      coursemate: "Все, кто учился с Т.И. в консерватории",
-      classmate: "Все, кто учился с Т.И. в училище им. Римского-Корсакова",
+      coursemate: "Однокурсники Т.И. — учились с ней в консерватории",
+      classmate: "Одноклассники Т.И. — учились с ней в училище им. Римского-Корсакова",
       unspec: "Другие люди, знакомые с Т.И."
     };
     boardHtml = `${PHRASE[selectedGroups[0]]} · ${shownCount} чел.`;
   } else {
-    boardHtml = `Показаны: ${selectedGroups.map(g => GROUPS[g].name).join(", ")} · ${shownCount} чел.`;
+    boardHtml = `Показаны: ${selectedGroups.map(g => g === "coursemate" ? "Однокурсники Т.И. (консерватория)" : g === "classmate" ? "Одноклассники Т.И. (училище Римского-Корсакова)" : GROUPS[g].name).join(", ")} · ${shownCount} чел.`;
   }
   if(onlyKnown) boardHtml += " · только известные";
 
@@ -1157,8 +1149,8 @@ function renderGraph(){
   }
   if(graphHint){
     graphHint.innerHTML = (isCohortMode || focusGroup)
-      ? `Нажмите <b>Esc</b> или «Все люди», чтобы вернуться ко всем. Нажатие на другую точку переключит на этого человека.`
-      : `Кольца — десятилетия выпусков. Нажмите на группу — останутся только её люди (можно добавить ещё). Нажмите на ученика или студента — останутся те, кто учился в те же годы.`;
+      ? `<b>Esc</b> или «Все люди» — вернуться ко всем. Другая точка — переключиться на неё.`
+      : `Кольца — десятилетия выпусков. Нажмите на группу или человека — останутся только связанные с ним.`;
   }
 
   // Динамическая перегруппировка: оставшиеся люди гармонично заполняют дуги амфитеатра
@@ -1554,6 +1546,9 @@ function makeDemo200(){
   }
   for(let i = 0; i < 25; i++) add({ relation_type: "коллега", study_end: rnd() < .2 ? null : span(1975, 2012) });
   for(let i = 0; i < 15; i++) add({ relation_type: "другое", study_end: null });
+  // Однокурсники Т.И. (консерватория) и одноклассники (училище Римского-Корсакова)
+  for(let i = 0; i < 12; i++) add({ relation_type: "однокурсник", study_end: rnd() < .1 ? null : span(1953, 1972) });
+  for(let i = 0; i < 10; i++) add({ relation_type: "одноклассник", study_end: rnd() < .1 ? null : span(1950, 1968) });
   for(let i = 0; i < 15; i++) add({ relation_type: "ученик", study_end: rnd() < .5 ? span(1980, 2005) : null });
   return out;
 }
