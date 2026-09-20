@@ -77,15 +77,14 @@
     flex-shrink: 0;
   }
   .people-header-text .lead { margin: 0; }
-  /* Тихая подсказка справа вверху: не спорит с заголовком */
-  .graph-hint {
-    margin: 4px 0 0;
-    max-width: 300px;
+  .panel-hint {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--outline-variant, #E0E3E8);
     font-size: 12px;
-    line-height: 1.4;
-    text-align: right;
+    line-height: 1.45;
     color: var(--on-surface-variant);
-    opacity: .7;
+    opacity: .75;
   }
   .lead-add {
     color: var(--primary, #0D1B2A);
@@ -190,17 +189,17 @@
     gap: 8px;
   }
   .toolbar-row { flex-wrap: wrap; }
-  .toolbar-row .compact-search { flex: 0 1 160px; min-width: 130px; width: auto; }
+  .toolbar-row .compact-search { flex: 0 1 200px; min-width: 130px; width: auto; }
   .classmate-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
-    padding-left: 14px;
-    border-left: 1px solid var(--outline-variant, #D0D7DE);
+    flex: 1 1 100%;
   }
   .classmate-filters .flt-chip {
+    flex: 1 1 auto;
+    justify-content: center;
     padding: 0 7px 0 6px;
     gap: 4px;
     font-size: 12px;
@@ -488,8 +487,6 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
-    .graph-hint { max-width: none; margin: 0; text-align: left; }
-    .classmate-filters { margin-left: 0; padding-left: 0; border-left: 0; }
     .toolbar-row .compact-search { flex: 1 1 0; }
     .flt-chip {
       height: 26px;
@@ -569,7 +566,6 @@
       <h1>Люди</h1>
       <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, <a href="#" class="lead-add" id="linkAddPerson" role="button">дополняйте его</a>.</p>
     </div>
-    <p class="graph-hint">Кольца — десятилетия выпусков. Нажмите на группу или человека — останутся только связанные с ним.</p>
   </div>
   <svg class="add-arrow" id="addArrow" aria-hidden="true"><defs><marker id="addArrowHead" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1.5 L8 5 L1 8.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></marker></defs><path id="addArrowPath" d="" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" marker-end="url(#addArrowHead)"/></svg>
 
@@ -616,6 +612,7 @@
           <span class="sym" style="font-size:32px; margin-bottom:8px; opacity:.4;">person_search</span>
           <div style="font-weight:700; margin-bottom:4px; color:var(--on-surface);">Выберите человека</div>
           <div style="font-size:13px; line-height:1.4;">Наведите на точку в амфитеатре для быстрого взгляда или нажмите для фиксации карточки.</div>
+          <div class="panel-hint">Кольца — десятилетия выпусков. Нажмите на группу или человека — останутся только связанные с ним. Esc — показать всех.</div>
         </div>
         <div class="panel-card" id="panelContent" style="display:none;"></div>
       </aside>
@@ -840,8 +837,8 @@ const GROUPS = {
   spbgk:     { name: "СПбГК",           color: "#2E5B88" },
   colleague: { name: "Коллеги",         color: "#C08A3E" },
   unspec:    { name: "Не указано",      color: "#8A96A3" },
-  coursemate:{ name: "Однокурсники Т.И.", short: "Однокурсники", color: "#2A8C82", hint: "Учились с Т.И. в консерватории" },
-  classmate: { name: "Одноклассники Т.И.", short: "Одноклассники", color: "#7B8F2E", hint: "Учились с Т.И. в училище им. Римского-Корсакова" }
+  coursemate:{ name: "Однокурсники Т.И.", short: "Однокурсники Т.И. по СПбГК", color: "#2A8C82", hint: "Учились с Т.И. в консерватории" },
+  classmate: { name: "Одноклассники Т.И.", short: "Одноклассники Т.И. по уч. Римского-Корсакова", color: "#7B8F2E", hint: "Учились с Т.И. в училище им. Римского-Корсакова" }
 };
 const CLASSMATE_GROUPS = ["coursemate", "classmate"];
 const G_ORDER = ["choir", "spbgk", "dual", "colleague", "unspec", "coursemate", "classmate"];
@@ -1100,7 +1097,6 @@ function renderGraph(){
   const cohortText = document.getElementById("cohortStatusText");
   const cohortIcon = document.getElementById("cohortStatusIcon");
   const cohortReset = document.getElementById("cohortStatusReset");
-  const graphHint = document.querySelector(".graph-hint");
 
   const selectedGroups = G_ORDER.filter(g => legendSelected[GROUPS[g].name] !== false);
   const shownCount = vis.length;
@@ -1145,12 +1141,7 @@ function renderGraph(){
   if(cohortText){
     cohortText.innerHTML = boardHtml;
     if(cohortIcon) cohortIcon.textContent = boardIcon;
-    if(cohortReset) cohortReset.style.display = (isCohortMode || focusGroup || (selectedGroups.length < G_ORDER.length)) ? "" : "none";
-  }
-  if(graphHint){
-    graphHint.innerHTML = (isCohortMode || focusGroup)
-      ? `<b>Esc</b> или «Все люди» — вернуться ко всем. Другая точка — переключиться на неё.`
-      : `Кольца — десятилетия выпусков. Нажмите на группу или человека — останутся только связанные с ним.`;
+    if(cohortReset) cohortReset.style.display = (isCohortMode || focusGroup || hasSearch || onlyKnown || (selectedGroups.length < G_ORDER.length)) ? "" : "none";
   }
 
   // Динамическая перегруппировка: оставшиеся люди гармонично заполняют дуги амфитеатра
@@ -1503,9 +1494,23 @@ window.selectGraphPeer = function(id){
   }
 };
 
+// Полный сброс: закрепление, группы, «Известные», поиск — всё возвращается к «все люди»
 window.resetGraphView = function(){
-  if(pinnedPersonId){ window.unpinGraphPerson(); return; }
+  pinnedPersonId = null;
+  autoShownFromSearch = false;
   legendSelected = {};
+  onlyKnown = false;
+  const known = document.getElementById("btnToggleKnown");
+  if(known){
+    known.classList.remove("active");
+    known.setAttribute("aria-checked", "false");
+    known.querySelector(".known-box").textContent = "check_box_outline_blank";
+  }
+  const search = document.getElementById("pplSearch");
+  if(search){ search.value = ""; search.blur(); }
+  const clear = document.getElementById("btnSearchClear");
+  if(clear) clear.style.display = "none";
+  updateGraphPanel(null);
   renderGraph();
 };
 
@@ -1620,9 +1625,7 @@ window.addEventListener("keydown", e => {
       if(typeof close_ === "function") close_("authOverlay");
       return;
     }
-    if(pinnedPersonId){
-      window.unpinGraphPerson();
-    }
+    window.resetGraphView();
   }
 });
 
