@@ -290,7 +290,7 @@
   /* Бейдж сокурсников прямо над амфитеатром */
   .cohort-status-bar {
     position: absolute;
-    top: 40px;
+    top: 64px; /* под легендой в две строки */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -309,6 +309,7 @@
     white-space: nowrap;
     max-width: 90%;
   }
+  @media (max-width: 600px) { .cohort-status-bar { top: 88px; } }
   @keyframes fadeInDown {
     from { opacity: 0; transform: translate(-50%, -6px); }
     to { opacity: 1; transform: translate(-50%, 0); }
@@ -654,12 +655,13 @@ function personMatchesQuery(p, rawQ){
 // ---------------------------------------------------------------- ГРАФ (Амфитеатр)
 const GROUPS = {
   choir:     { name: "Хоровое училище", color: "#B23A22" },
+  dual:      { name: "Училище и СПбГК", color: "#6E4A5F" },
   spbgk:     { name: "СПбГК",           color: "#2E5B88" },
   colleague: { name: "Коллеги",         color: "#C08A3E" },
   close:     { name: "Близкие",         color: "#7A8F6B" },
   unspec:    { name: "Не указано",      color: "#8A96A3" }
 };
-const G_ORDER = ["choir", "spbgk", "colleague", "close", "unspec"];
+const G_ORDER = ["choir", "dual", "spbgk", "colleague", "close", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
@@ -683,11 +685,32 @@ const SPLIT_NOTABLE_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponen
 function graphGroup(p){
   if(p.relation_type === "коллега") return "colleague";
   if(p.relation_type === "другое") return "close";
+  if(p.studied_choir_school && (p.studied_conservatory || p.studied_assistantship)) return "dual";
   if(p.studied_conservatory) return "spbgk";
   if(p.studied_choir_school) return "choir";
   return "unspec";
 }
-function graphYear(p){ return p.conservatory_end || p.choir_school_end || p.study_end || null; }
+function graphYear(p){
+  if(p.relation_type === "коллега") return p.study_start || p.study_end || null; // год начала совместной работы
+  return p.conservatory_end || p.choir_school_end || p.study_end || null;
+}
+
+// Сокурсники: то же учебное заведение и выпуск ±WINDOW лет
+const INST_NAME = { choir: "Хорового училища", spbgk: "СПбГК" };
+const inInst = (p, inst) => inst === "choir" ? !!p.studied_choir_school : (!!p.studied_conservatory || !!p.studied_assistantship);
+const instYear = (p, inst) => (inst === "choir"
+  ? (p.choir_school_end || p.study_end)
+  : (p.conservatory_end || p.assistantship_end || p.study_end)) || null;
+const cohortInsts = g => g === "choir" ? ["choir"] : g === "spbgk" ? ["spbgk"] : g === "dual" ? ["choir", "spbgk"] : [];
+const yearsClose = (a, b) => (!a && !b) || (a && b && Math.abs(a - b) <= WINDOW);
+
+function inCohort(pinned, p){
+  if(p.id === pinned.id) return true;
+  const insts = cohortInsts(pinned._g);
+  if(!insts.length) return p._g === pinned._g && yearsClose(pinned._y, p._y);
+  if(p._g === "colleague" || p._g === "close") return false;
+  return insts.some(i => inInst(p, i) && yearsClose(instYear(pinned, i), instYear(p, i)));
+}
 
 const DECADES = [1970, 1980, 1990, 2000, 2010];
 const RINGS = DECADES.map(d => d + "-е").concat(["год не указан"]);
@@ -700,7 +723,7 @@ function layoutGraph(people, isMobile, activeGroups){
   let presentGroups = baseGroups.filter(g => people.some(p => p._g === g));
   if(!presentGroups.length) presentGroups = baseGroups;
 
-  const GAP = isMobile ? 12 : (presentGroups.length <= 1 ? 0 : 12);
+  const GAP = isMobile ? 8 : (presentGroups.length <= 1 ? 0 : 6);
   const ARC_SPAN = isMobile ? 360 : 168;
   const avail = ARC_SPAN - GAP * (presentGroups.length - 1);
 
@@ -713,10 +736,10 @@ function layoutGraph(people, isMobile, activeGroups){
   let start = isMobile ? (-180 + GAP / 2) : (-180 + (180 - ARC_SPAN) / 2);
 
   // Каждая группа получает сектор пропорционально количеству людей в ней.
-  // Для групп с 1 человеком выделяем компактный сектор (~10°), отдавая всё остальное пространство многолюдным когортам.
+  // Малым группам — компактный сектор (от 4°); всё остальное пространство делится пропорционально числу людей, чтобы плотность точек была ровной.
   const counts = presentGroups.map(g => people.filter(p => p._g === g).length);
   const totalCount = counts.reduce((a, b) => a + b, 0) || 1;
-  const minSectorPerGroup = (presentGroups.length > 1) ? Math.min(10, avail / presentGroups.length) : avail;
+  const minSectorPerGroup = (presentGroups.length > 1) ? Math.min(4, avail / presentGroups.length) : avail;
   const remAvail = Math.max(0, avail - presentGroups.length * minSectorPerGroup);
 
   presentGroups.forEach((g, gi) => {
@@ -815,23 +838,24 @@ function renderGraph(){
     : null;
   const isCohortMode = !!pinnedPerson;
 
-  let vis = allPeople.filter(p => {
+  let base = allPeople.filter(p => {
     if(onlyKnown && !p.notable) return false;
     if(hasSearch && !personMatchesQuery(p, rawQ)) return false;
-    if(legendSelected[GROUPS[p._g]?.name] === false) return false;
     return true;
   });
 
-  // В режиме сокурсников в амфитеатре остаются только выбранный человек и те, кто учился ±5 лет
+  // Режим сокурсников (при фиксации карточки): только то же заведение и выпуск ±5 лет
   if(isCohortMode){
-    const py = pinnedPerson._y;
-    vis = vis.filter(p => {
-      if(p.id === pinnedPerson.id) return true;
-      if(py && p._y) return Math.abs(p._y - py) <= WINDOW;
-      if(!py && !p._y) return p._g === pinnedPerson._g;
-      return false;
-    });
+    base = base.filter(p => inCohort(pinnedPerson, p));
+    const insts = cohortInsts(pinnedPerson._g);
+    if(insts.length === 1) base.forEach(p => { p._y = instYear(p, insts[0]) || p._y; }); // кольца по году этого заведения
   }
+
+  // Числа в легенде: сколько человек в группе при текущих фильтрах (поиск, «Известные», сокурсники)
+  const groupCounts = {};
+  base.forEach(p => { groupCounts[p._g] = (groupCounts[p._g] || 0) + 1; });
+
+  let vis = base.filter(p => legendSelected[GROUPS[p._g]?.name] !== false);
 
   // Обновление бейджа сокурсников и нижней подсказки
   const cohortBar = document.getElementById("cohortStatusBar");
@@ -842,7 +866,9 @@ function renderGraph(){
     cohortBar.style.display = "flex";
     const yearInfo = pinnedPerson._y ? ` (${pinnedPerson._y} г.)` : "";
     const cohortCount = vis.filter(p => p.id !== pinnedPerson.id).length;
-    cohortText.innerHTML = `Сокурсники (±5 лет) для: <b>${escapeHtml(pinnedPerson.full_name)}${yearInfo}</b> · ${cohortCount} чел. с именами`;
+    const cInsts = cohortInsts(pinnedPerson._g);
+    const cohortWhere = cInsts.length ? " " + cInsts.map(i => INST_NAME[i]).join(" и ") : "";
+    cohortText.innerHTML = `Сокурсники${cohortWhere} (±5 лет) для: <b>${escapeHtml(pinnedPerson.full_name)}${yearInfo}</b> · ${cohortCount} чел. с именами`;
     if(graphHint){
       graphHint.innerHTML = `🎓 Отображаются сокурсники (±5 лет) для: <b>${escapeHtml(pinnedPerson.full_name)}</b> (${cohortCount} чел.). Нажмите <b>Esc</b> или кнопку в карточке, чтобы вернуться ко всем людям.`;
     }
@@ -886,6 +912,7 @@ function renderGraph(){
 
   const legendItems = [
     { name: "Хоровое училище", icon: "circle" },
+    { name: "Училище и СПбГК", icon: SPLIT_SYMBOL_SVG },
     { name: "СПбГК", icon: "circle" },
     { name: "Коллеги", icon: "circle" },
     { name: "Близкие", icon: "circle" },
@@ -1021,7 +1048,11 @@ function renderGraph(){
       itemWidth: isMobile ? 8 : 10,
       itemHeight: isMobile ? 8 : 10,
       itemGap: isMobile ? 8 : 16,
-      textStyle: { fontFamily: FONT, fontSize: isMobile ? 11.5 : 13.5, color: "#0D1B2A" },
+      formatter: name => {
+        const g = G_ORDER.find(k => GROUPS[k].name === name);
+        return `${name} {n|${groupCounts[g] || 0}}`;
+      },
+      textStyle: { fontFamily: FONT, fontSize: isMobile ? 11.5 : 13.5, color: "#0D1B2A", rich: { n: { color: "#657A91", fontWeight: "bold" } } },
       inactiveColor: "#B0B8C1"
     }],
     series: [{
