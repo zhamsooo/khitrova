@@ -77,9 +77,9 @@
   /* Шапка страницы и гармоничные отступы как на странице «Наследие» */
   .people-header {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 24px;
+    justify-content: flex-start;
+    align-items: flex-end;
+    gap: 40px;
     margin-bottom: 18px;
     flex-shrink: 0;
   }
@@ -103,11 +103,13 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: 14px;
+    margin: 0 0 2px;
     flex-shrink: 0;
   }
-  .add-link { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-  .add-link:hover { color: var(--secondary); }
+  .add-link { display: inline-flex; align-items: center; gap: 4px; color: var(--primary); font-weight: 600; text-decoration: none; cursor: pointer; }
+  .add-link .sym { font-size: 18px; transition: transform .2s ease; }
+  .add-link:hover { color: var(--secondary); text-decoration: underline; text-underline-offset: 3px; }
+  .add-link:hover .sym { transform: translateX(3px); }
   .graph-overlay-stack {
     position: absolute;
     top: 8px;
@@ -124,12 +126,12 @@
   .graph-filters {
     flex: 0 0 auto;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 6px 8px;
-    padding: 10px 12px 0;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px 0;
   }
+  .flt-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .flt-row .known-check { margin-left: auto; }
   .flt-chip {
     display: inline-flex;
     align-items: center;
@@ -153,7 +155,6 @@
   .flt-dot.split { background: linear-gradient(90deg, #B23A22 50%, #2E5B88 50%); }
   .flt-n { font-weight: 700; font-size: 12.5px; color: var(--on-surface-variant, #657A91); }
   .flt-chip[aria-pressed="false"] .flt-n { color: #A9B2BC; }
-  .flt-sep { width: 1px; height: 20px; background: var(--outline-variant, #D0D7DE); margin: 0 4px; }
 
   /* «Известные» — отдельный переключатель, не группа */
   .known-check { padding-left: 6px; background: var(--surface); }
@@ -362,7 +363,7 @@
     .people-header {
       flex-direction: column;
       align-items: stretch;
-      gap: 12px;
+      gap: 14px;
     }
     .people-header-actions {
       width: 100%;
@@ -412,7 +413,6 @@
       flex-direction: column;
     }
     .flt-chip { height: 28px; font-size: 12px; padding: 0 9px 0 8px; gap: 5px; }
-    .flt-sep { display: none; }
     .compact-search { width: 100%; }
     .graph-hint {
       margin-top: 6px;
@@ -429,7 +429,8 @@
   <div class="people-header">
     <div class="people-header-text">
       <h1>Люди</h1>
-      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, <a href="#" class="add-link" id="linkAddPerson">добавьте человека</a>.</p>
+      <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его. <a href="#" class="add-link" id="linkAddPerson"><span class="sym">arrow_forward</span>добавить человека</a></p>
+    </div>
     <div class="people-header-actions">
       <div class="compact-search">
         <span class="sym search-icon">search</span>
@@ -437,19 +438,20 @@
         <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
       </div>
     </div>
-    </div>
   </div>
 
   <div id="pplGraphWrap">
     <div class="graph-layout">
       <div class="graph-area">
         <div class="graph-filters" id="graphFilters">
-          <span class="flt-sep" id="fltSep"></span>
+          <div class="flt-row" id="fltRow1"></div>
+          <div class="flt-row" id="fltRow2">
           <button type="button" class="flt-chip known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
             <span class="sym known-box">check_box_outline_blank</span>
             <span class="sym known-star">star</span>
             <span>Известные</span>
           </button>
+          </div>
         </div>
         <div class="graph-canvas-wrap">
           <div id="pplGraph"></div>
@@ -826,9 +828,11 @@ function toggleGroupFilter(name){
 
 function initFilterChips(){
   const box = document.getElementById("graphFilters");
-  const sep = document.getElementById("fltSep");
+  const row1 = document.getElementById("fltRow1");
+  const row2 = document.getElementById("fltRow2");
+  const known = document.getElementById("btnToggleKnown");
   if(!box || box.querySelector(".flt-chip[data-g]")) return;
-  G_ORDER.forEach(g => {
+  G_ORDER.forEach((g, gi) => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "flt-chip";
@@ -836,7 +840,7 @@ function initFilterChips(){
     b.setAttribute("aria-pressed", "true");
     b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].name}</span> <span class="flt-n">0</span>`;
     b.addEventListener("click", () => toggleGroupFilter(GROUPS[g].name));
-    box.insertBefore(b, sep);
+    if(gi < 3) row1.appendChild(b); else row2.insertBefore(b, known);
   });
 }
 
