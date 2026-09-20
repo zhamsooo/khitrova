@@ -9,6 +9,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+  #pplGraph { height: clamp(460px, calc(100vh - 350px), 780px); background: var(--surface); border-radius: 12px; }
+  .graph-hint { margin: 10px 0 0; font: var(--t-label-medium); color: var(--on-surface-variant); }
+  .view-toggle { margin-right: 8px; }
+  @media (max-width: 600px) { #pplGraph { height: clamp(420px, calc(100vh - 340px), 640px); } }
+</style>
 </head>
 <body data-page="people">
 
@@ -17,6 +23,10 @@
   <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна. Список неполный — пожалуйста, дополняйте его.</p>
 
   <div class="toolbar">
+    <div class="chips view-toggle" id="viewToggle">
+      <button type="button" class="chip on" data-view="list"><span class="sym">check</span>Список</button>
+      <button type="button" class="chip" data-view="graph">Граф</button>
+    </div>
     <div class="search">
       <span class="sym">search</span>
       <input type="search" class="search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
@@ -31,10 +41,16 @@
     </div>
   </div>
 
+  <div id="pplGraphWrap" hidden>
+    <div id="pplGraph"></div>
+    <p class="graph-hint">Наведите на точку: подсветятся те, кто мог учиться в те же годы (выпуск плюс-минус 5 лет). Нажмите, чтобы открыть карточку. Расстояние от Т.И. — год выпуска: чем позже, тем дальше.</p>
+  </div>
+
   <div id="pplList"><div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant)">Загрузка…</div></div>
 </main>
 
 <script src="vendor/supabase-js-2.116.0/supabase.js"></script>
+<script src="vendor/echarts-5.6.0/echarts.min.js"></script>
 <script src="app.js"></script>
 <script>
 const STATUS_LABEL_P = { unconfirmed:"На проверке", rejected:"Отклонено" };
@@ -143,7 +159,136 @@ function updateChipCounts(){
   });
 }
 
-function render(){
+
+// ---------------------------------------------------------------- граф (второй вид страницы)
+const GROUPS = {
+  choir:     { name: "Хоровое училище", color: "#1B263B" },
+  spbgk:     { name: "СПбГК",           color: "#4F7CAC" },
+  colleague: { name: "Коллеги",         color: "#C08A3E" },
+  close:     { name: "Близкие",         color: "#7A8F6B" },
+  unspec:    { name: "Не указано",      color: "#8A96A3" }
+};
+const G_ORDER = ["choir", "spbgk", "colleague", "close", "unspec"];
+const YEAR_MIN = 1974, YEAR_MAX = 2017, WINDOW = 5;
+const FONT = '"PT Sans", sans-serif';
+const isFinePointer = window.matchMedia("(hover: hover)").matches;
+let currentView = "list", chart = null, legendSelected = {}, lastTap = null;
+
+function graphGroup(p){
+  if(p.relation_type === "коллега") return "colleague";
+  if(p.relation_type === "другое") return "close";
+  if(p.studied_conservatory) return "spbgk";
+  if(p.studied_choir_school) return "choir";
+  return "unspec";
+}
+function graphYear(p){ return p.conservatory_end || p.choir_school_end || p.study_end || null; }
+
+// сектор на группу; по спирали: позже выпуск, дальше от центра. Раскладка считается по всем людям, фильтры только скрывают.
+function layoutGraph(people){
+  const GAP = 12, avail = 360 - GAP * G_ORDER.length;
+  const by = {}; G_ORDER.forEach(g => by[g] = people.filter(p => p._g === g).sort((a, b) => (a._y || 0) - (b._y || 0)));
+  const weights = G_ORDER.map(g => by[g].length + 4), sum = weights.reduce((a, b) => a + b, 0);
+  let start = -180 + GAP / 2;
+  G_ORDER.forEach((g, gi) => {
+    const list = by[g], sector = avail * weights[gi] / sum;
+    list.forEach((p, i) => {
+      p._ang = (start + sector * (i + .5) / list.length) * Math.PI / 180;
+      const t = p._y ? (Math.min(Math.max(p._y, YEAR_MIN), YEAR_MAX) - YEAR_MIN) / (YEAR_MAX - YEAR_MIN) : 0;
+      p._rf = .24 + .72 * t + [-.035, 0, .035][i % 3];
+    });
+    start += sector + GAP;
+  });
+}
+
+function renderGraph(){
+  const el = document.getElementById("pplGraph");
+  if(!chart) chart = echarts.init(el, null, { renderer: "canvas" });
+  chart.resize();
+  allPeople.forEach(p => { p._g = graphGroup(p); p._y = graphYear(p); });
+  layoutGraph(allPeople);
+
+  const w = el.clientWidth, h = el.clientHeight;
+  const top = 48, bottom = 12, cx = w / 2, cy = top + (h - top - bottom) / 2;
+  const rx = w / 2 - 70, ry = (h - top - bottom) / 2 - 8;
+  const vis = filteredPeople(), visIds = new Set(vis.map(p => p.id));
+
+  const links = [], degree = new Map(vis.map(p => [p.id, 0]));
+  const wy = vis.filter(p => p._y);
+  for(let i = 0; i < wy.length; i++) for(let j = i + 1; j < wy.length; j++){
+    if(Math.abs(wy[i]._y - wy[j]._y) <= WINDOW){
+      links.push({ source: wy[i].id, target: wy[j].id });
+      degree.set(wy[i].id, degree.get(wy[i].id) + 1); degree.set(wy[j].id, degree.get(wy[j].id) + 1);
+    }
+  }
+
+  const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
+  categories.push({ name: "Центр", itemStyle: { color: "#0D1B2A" } });
+  const nodes = vis.map(p => ({
+    id: p.id, name: p.full_name, category: G_ORDER.indexOf(p._g),
+    x: cx + rx * p._rf * Math.cos(p._ang), y: cy + ry * p._rf * Math.sin(p._ang),
+    symbolSize: p.notable ? 14 : 10, itemStyle: { color: GROUPS[p._g].color }, label: { show: false },
+    tip: escapeHtml(p.full_name) + "<br>" + GROUPS[p._g].name + (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан")
+       + (p.notable ? "<br>Выдающийся" : "") + (p._y ? "<br>Могли учиться вместе: " + degree.get(p.id) + " чел." : "")
+       + (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : "")
+  }));
+  nodes.push({ id: "ti", name: "Т. И. Хитрова", category: G_ORDER.length, x: cx, y: cy, symbolSize: 34, itemStyle: { color: "#0D1B2A" },
+    label: { show: true, position: "bottom", distance: 8, fontWeight: 700, fontSize: 13, color: "#0D1B2A" }, tip: "Татьяна Ивановна Хитрова", silent: true });
+  [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
+    id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + 40), y: cy + sy * (ry + 20), symbolSize: 0, silent: true, label: { show: false }, tip: ""
+  }));
+
+  chart.setOption({
+    textStyle: { fontFamily: FONT },
+    animationDuration: 600, animationEasingUpdate: "quinticInOut",
+    tooltip: { confine: true, formatter: p => (p.dataType === "node" && p.data.tip) ? p.data.tip : "", textStyle: { fontFamily: FONT, fontSize: 13 } },
+    legend: [{
+      data: G_ORDER.map(g => GROUPS[g].name), selected: legendSelected,
+      top: 8, left: "center", width: Math.min(w - 24, 720), icon: "circle", itemWidth: 10, itemHeight: 10, itemGap: 18,
+      textStyle: { fontFamily: FONT, fontSize: 14, color: "#0D1B2A" }, inactiveColor: "#C3CAD2"
+    }],
+    series: [{
+      name: "Люди", type: "graph", layout: "none", roam: true, scaleLimit: { min: .7, max: 6 },
+      left: 0, right: 0, top: 0, bottom: 0, data: nodes, links, categories,
+      label: { position: "right", formatter: "{b}", fontSize: 12, color: "#0D1B2A" },
+      lineStyle: { color: "rgba(65,90,119,0.035)", width: 1, curveness: .25 },
+      emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { color: "rgba(65,90,119,0.7)", width: 1.6 } },
+      blur: { itemStyle: { opacity: .15 }, label: { opacity: .25 } },
+      labelLayout: { hideOverlap: true }
+    }]
+  }, true);
+}
+
+function initGraphEvents(){
+  chart.on("legendselectchanged", ev => { legendSelected = ev.selected; });
+  // мышь: клик открывает карточку. Тач: первое касание подсвечивает, второе по той же точке открывает.
+  chart.on("click", ev => {
+    const id = ev.data && ev.data.id;
+    if(!id || id === "ti" || String(id).startsWith("anchor")) return;
+    if(isFinePointer || lastTap === id) location.href = "person.html?id=" + encodeURIComponent(id);
+    else lastTap = id;
+  });
+  chart.getZr().on("click", e => { if(!e.target) lastTap = null; });
+  let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { if(currentView === "graph") renderGraph(); }, 150); });
+}
+
+function setView(v){
+  currentView = v;
+  try { localStorage.setItem("peopleView", v); } catch(e) {}
+  document.querySelectorAll("#viewToggle .chip").forEach(c => {
+    const on = c.dataset.view === v;
+    c.classList.toggle("on", on);
+    const sym = c.querySelector(".sym"); if(sym) sym.remove();
+    if(on) c.insertAdjacentHTML("afterbegin", '<span class="sym">check</span>');
+  });
+  document.getElementById("pplGraphWrap").hidden = v !== "graph";
+  document.getElementById("pplList").hidden = v === "graph";
+  if(v === "graph" && !chart){ render(); initGraphEvents(); } else render();
+}
+document.getElementById("viewToggle").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if(b) setView(b.dataset.view);
+});
+
+function filteredPeople(){
   const pplInput = document.getElementById("pplSearch");
   const rawQ = pplInput ? pplInput.value.trim() : "";
   let list = allPeople.filter(p => matchesFilter(p, activeFilter));
@@ -161,7 +306,12 @@ function render(){
       return words.every(w => text.includes(w));
     });
   }
+  return list;
+}
 
+function render(){
+  if(currentView === "graph"){ renderGraph(); return; }
+  const list = filteredPeople();
   const elList = document.getElementById("pplList");
   if(!list.length){
     elList.innerHTML = `<div class="card" style="height:auto; padding:32px; text-align:center; color:var(--on-surface-variant); max-width:400px; margin:24px auto;">Никого не нашлось.</div>`;
@@ -199,7 +349,8 @@ async function loadPeople(){
   }
   allPeople = data || [];
   updateChipCounts();
-  render();
+  const saved = new URLSearchParams(location.search).get("view") || (function(){ try { return localStorage.getItem("peopleView"); } catch(e) { return null; } })();
+  setView(saved === "graph" ? "graph" : "list");
 }
 
 function setChipFilter(f){
