@@ -10,12 +10,109 @@
 <link rel="stylesheet" href="style.css">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
-  #pplGraph { height: clamp(460px, calc(100vh - 350px), 780px); background: var(--surface); border-radius: 12px; }
-  .graph-hint { margin: 10px 0 0; font: var(--t-label-medium); color: var(--on-surface-variant); }
+  .graph-layout {
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+    height: clamp(520px, calc(100vh - 280px), 780px);
+    margin-bottom: 8px;
+  }
+  .graph-area {
+    flex: 1 1 67%;
+    min-width: 0;
+    position: relative;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--outline-variant, #E0E3E8);
+    overflow: hidden;
+  }
+  #pplGraph { width: 100%; height: 100%; }
+
+  .graph-panel {
+    flex: 0 0 340px;
+    max-width: 360px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--outline-variant, #E0E3E8);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    transition: transform .25s ease, opacity .25s ease;
+  }
+  .panel-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    color: var(--on-surface-variant);
+    padding: 20px;
+  }
+  .panel-card { display: flex; flex-direction: column; gap: 14px; }
+  .panel-head { display: flex; align-items: flex-start; gap: 12px; }
+  .panel-ava {
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--primary); color: #fff; font-size: 20px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    overflow: hidden;
+  }
+  .panel-ava img { width: 100%; height: 100%; object-fit: cover; }
+  .panel-title { flex: 1; min-width: 0; }
+  .panel-name { font-size: 18px; font-weight: 700; line-height: 1.25; margin-bottom: 4px; color: var(--on-surface); }
+  .panel-sub { font-size: 13px; color: var(--on-surface-variant); line-height: 1.35; }
+  .panel-pin-btn {
+    background: none; border: 1px solid var(--outline-variant, #D0D7DE); border-radius: 6px;
+    padding: 3px 8px; font-size: 11px; cursor: pointer; color: var(--on-surface-variant); font-family: inherit;
+    transition: all .15s;
+  }
+  .panel-pin-btn:hover { background: var(--surface-variant, #F4F6F8); color: var(--on-surface); }
+  .panel-bio { font-size: 13.5px; line-height: 1.5; color: var(--on-surface); background: var(--surface-variant, #F4F6F8); padding: 12px; border-radius: 8px; word-break: break-word; }
+  .panel-peers { margin-top: 4px; }
+  .panel-peers-head { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--on-surface-variant); margin-bottom: 8px; }
+  .peer-item {
+    display: flex; align-items: center; gap: 10px; padding: 6px 8px;
+    border-radius: 6px; cursor: pointer; text-decoration: none; color: inherit; transition: background .15s;
+  }
+  .peer-item:hover { background: var(--surface-variant, #F4F6F8); }
+  .peer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .peer-name { font-size: 13.5px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .peer-year { font-size: 12px; color: var(--on-surface-variant); flex-shrink: 0; }
+  .panel-edit-link { display: inline-block; font-size: 12.5px; color: var(--on-surface-variant); text-decoration: none; margin-top: 2px; }
+  .panel-edit-link:hover { text-decoration: underline; color: var(--on-surface); }
+
+  .graph-hint { margin: 8px 0 0; font: var(--t-label-medium); color: var(--on-surface-variant); }
   [hidden] { display: none !important; }
   .view-toggle { margin: 0 0 12px; }
-  .graph-tools { display: flex; justify-content: flex-end; margin-bottom: 6px; }
-  @media (max-width: 600px) { #pplGraph { height: clamp(420px, calc(100vh - 340px), 640px); } }
+  .graph-tools { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+
+  @media (max-width: 860px) {
+    .graph-layout {
+      flex-direction: column;
+      height: auto;
+    }
+    .graph-area {
+      height: clamp(420px, calc(100vh - 340px), 640px);
+      width: 100%;
+    }
+    .graph-panel {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      max-width: none;
+      width: 100%;
+      max-height: 65vh;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      z-index: 1000;
+    }
+    .graph-panel.is-open {
+      display: flex;
+    }
+  }
 </style>
 </head>
 <body data-page="people">
@@ -46,8 +143,20 @@
 
   <div id="pplGraphWrap" hidden>
     <div class="graph-tools"><button type="button" class="chip" id="gNotable">Только выдающиеся</button></div>
-    <div id="pplGraph"></div>
-    <p class="graph-hint">Наведите на точку: подсветятся те, кто мог учиться в те же годы (выпуск плюс-минус 5 лет). Нажмите, чтобы открыть карточку. Кольца — десятилетия выпуска: чем позже, тем дальше от Т.И.</p>
+    <div class="graph-layout">
+      <div class="graph-area">
+        <div id="pplGraph"></div>
+      </div>
+      <aside class="graph-panel" id="pplPanel">
+        <div class="panel-placeholder" id="panelEmpty">
+          <span class="sym" style="font-size:32px; margin-bottom:8px; opacity:.4;">person_search</span>
+          <div style="font-weight:700; margin-bottom:4px; color:var(--on-surface);">Выберите человека</div>
+          <div style="font-size:13px; line-height:1.4;">Наведите на точку в амфитеатре для быстрого взгляда или нажмите для фиксации.</div>
+        </div>
+        <div class="panel-card" id="panelContent" style="display:none;"></div>
+      </aside>
+    </div>
+    <p class="graph-hint">Наведите на точку для быстрого взгляда или нажмите для фиксации карточки и списка сокурсников. Кольца — десятилетия выпуска.</p>
   </div>
 
   <div id="pplList"><div class="card" style="height:auto; padding:24px; text-align:center; color:var(--on-surface-variant)">Загрузка…</div></div>
@@ -237,13 +346,15 @@ function renderGraph(){
   if(isMobile){
     // На мобильном: полный круг 360° (максимальный периметр на узком экране)
     const top = 64, bottom = 12;
-    cx = w / 2; cy = top + (h - top - bottom) / 2;
-    R = Math.min(w / 2 - 16, (h - top - bottom) / 2 - 8);
+    const availH = Math.max(80, h - top - bottom);
+    const availW = Math.max(80, w - 32);
+    cx = w / 2; cy = top + availH / 2;
+    R = Math.max(30, Math.min(availW / 2, availH / 2 - 8));
     rx = R; ry = R;
   } else {
     // На десктопе: амфитеатр 180° (рассадка хора перед дирижёром Т.И. на всю ширину экрана)
-    cx = w / 2; cy = h - 36;
-    R = Math.min(w / 2 - 40, h - 80);
+    cx = w / 2; cy = Math.max(100, h - 36);
+    R = Math.max(40, Math.min(Math.max(100, w / 2 - 40), Math.max(100, h - 80)));
     rx = R; ry = R;
   }
 
@@ -270,8 +381,12 @@ function renderGraph(){
        + (p.notable ? "<br>Выдающийся" : "") + (p._y ? "<br>Могли учиться вместе: " + degree.get(p.id) + " чел." : "")
        + (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы открыть карточку" : ""))
   }));
-  nodes.push({ id: "ti", name: "Т. И. Хитрова", category: G_ORDER.length, x: cx, y: cy, symbolSize: isMobile ? 28 : 34, itemStyle: { color: "#0D1B2A" },
-    label: { show: true, position: isMobile ? "bottom" : "top", distance: isMobile ? 6 : 10, fontWeight: 700, fontSize: isMobile ? 11 : 13, color: "#0D1B2A" }, tip: "Татьяна Ивановна Хитрова", silent: true });
+  nodes.push({
+    id: "ti", name: "Т. И. Хитрова", category: G_ORDER.length, x: cx, y: cy,
+    symbolSize: isMobile ? 28 : 34, itemStyle: { color: "#0D1B2A" },
+    label: { show: false }, // подпись скрыта по запросу владельца
+    tip: "Татьяна Ивановна Хитрова"
+  });
 
   if(isMobile){
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
@@ -312,27 +427,154 @@ function renderGraph(){
       name: "Люди", type: "graph", layout: "none", roam: false,
       left: cx - R - 10, top: cy - R - 10, width: 2 * R + 20, height: isMobile ? (2 * R + 20) : (R + 40), data: nodes, links, categories,
       label: { position: "right", formatter: "{b}", fontSize: 12, color: "#0D1B2A" },
-      lineStyle: { color: "rgba(65,90,119,0.035)", width: 1, curveness: .25 },
-      emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { color: "rgba(65,90,119,0.7)", width: 1.6 } },
+      // Линии связей полностью убраны (прозрачность 0), подсветка точек сокурсников сохранена
+      lineStyle: { opacity: 0, width: 0, curveness: .25 },
+      emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { opacity: 0, width: 0 } },
       blur: { itemStyle: { opacity: .15 }, label: { opacity: .25 } },
       labelLayout: { hideOverlap: true }
     }]
   }, true);
 }
 
+let pinnedPersonId = null;
+
+function updateGraphPanel(p, isPinned){
+  const empty = document.getElementById("panelEmpty");
+  const content = document.getElementById("panelContent");
+  const panel = document.getElementById("pplPanel");
+  if(!panel) return;
+
+  if(!p){
+    if(empty) empty.style.display = "flex";
+    if(content) content.style.display = "none";
+    panel.classList.remove("is-open");
+    return;
+  }
+
+  if(empty) empty.style.display = "none";
+  if(content) content.style.display = "flex";
+  panel.classList.add("is-open");
+
+  if(p.id === "ti"){
+    content.innerHTML = `
+      <div class="panel-head">
+        <div class="panel-ava" style="background:#0D1B2A;">ТИ</div>
+        <div class="panel-title">
+          <div class="panel-name">Татьяна Ивановна Хитрова</div>
+          <div class="panel-sub">1948–2021 · Основатель традиции</div>
+        </div>
+        ${isPinned ? '<button type="button" class="panel-pin-btn" onclick="window.unpinGraphPerson()">Сбросить</button>' : ''}
+      </div>
+      <div class="panel-bio">
+        Заслуженный деятель искусств РФ. Выдающийся хоровой дирижёр и педагог Хорового училища им. М.И. Глинки и Ленинградской / Санкт-Петербургской консерватории. В центре амфитеатра — основатель; вокруг — поколения её учеников и коллег.
+      </div>
+    `;
+    return;
+  }
+
+  const initial = (p.full_name || "?").trim().charAt(0).toUpperCase();
+  const grp = GROUPS[p._g] || GROUPS.unspec;
+  const subLine = personSubLine(p);
+  const desc = p.notes || p.institution || "";
+  const notableStar = p.notable ? '<span class="sym person-notable-star" title="Выдающийся">star</span>' : '';
+  const avaHtml = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" alt="">` : initial;
+
+  let peers = [];
+  if(p._y){
+    peers = allPeople.filter(o => o.id !== p.id && o._y && Math.abs(o._y - p._y) <= WINDOW).sort((a,b) => (a._y || 0) - (b._y || 0));
+  } else {
+    peers = allPeople.filter(o => o.id !== p.id && o._g === p._g).slice(0, 15);
+  }
+
+  let peersHtml = "";
+  if(peers.length){
+    peersHtml = `
+      <div class="panel-peers">
+        <div class="panel-peers-head">${p._y ? "Учились в те же годы (±5 лет) · " + peers.length : "Та же группа · " + peers.length}</div>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          ${peers.slice(0, 25).map(pr => `
+            <div class="peer-item" onclick="window.selectGraphPeer('${pr.id}')">
+              <span class="peer-dot" style="background:${(GROUPS[pr._g] || GROUPS.unspec).color};"></span>
+              <span class="peer-name">${escapeHtml(pr.full_name)}</span>
+              <span class="peer-year">${pr._y || ""}</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  const isDemo = String(p.id).startsWith("demo_");
+  const editLinkHtml = !isDemo ? `<a class="panel-edit-link" href="person.html?id=${encodeURIComponent(p.id)}">Открыть страницу человека →</a>` : "";
+
+  content.innerHTML = `
+    <div class="panel-head">
+      <div class="panel-ava" style="background:${grp.color};">${avaHtml}</div>
+      <div class="panel-title">
+        <div class="panel-name">${escapeHtml(p.full_name)} ${notableStar}</div>
+        <div class="panel-sub">${escapeHtml(subLine)}</div>
+        ${editLinkHtml}
+      </div>
+      ${isPinned ? '<button type="button" class="panel-pin-btn" onclick="window.unpinGraphPerson()">Сбросить</button>' : ''}
+    </div>
+    ${desc ? `<div class="panel-bio">${escapeHtml(desc)}</div>` : ''}
+    ${peersHtml}
+  `;
+}
+
+window.selectGraphPeer = function(id){
+  const p = (id === "ti") ? { id: "ti" } : allPeople.find(o => o.id === id);
+  if(p){
+    pinnedPersonId = p.id;
+    updateGraphPanel(p, true);
+    if(chart && p.id !== "ti"){
+      chart.dispatchAction({ type: "highlight", seriesIndex: 0, name: p.full_name });
+    }
+  }
+};
+
+window.unpinGraphPerson = function(){
+  pinnedPersonId = null;
+  updateGraphPanel(null);
+  if(chart) chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
+};
+
 function initGraphEvents(){
   chart.on("legendselectchanged", ev => {
     legendSelected = ev.selected;
     renderGraph();
   });
-  // мышь: клик открывает карточку. Тач: первое касание подсвечивает, второе по той же точке открывает.
+
+  // Наведение: быстрый просмотр в панели (если не зафиксировано)
+  chart.on("mouseover", ev => {
+    if(pinnedPersonId) return;
+    const id = ev.data && ev.data.id;
+    if(!id || String(id).startsWith("anchor")) return;
+    if(id === "ti") updateGraphPanel({ id: "ti" }, false);
+    else {
+      const p = allPeople.find(o => o.id === id);
+      if(p) updateGraphPanel(p, false);
+    }
+  });
+
+  chart.on("mouseout", () => {
+    if(!pinnedPersonId) updateGraphPanel(null);
+  });
+
+  // Клик: фиксация карточки в панели
   chart.on("click", ev => {
     const id = ev.data && ev.data.id;
-    if(!id || id === "ti" || String(id).startsWith("anchor") || String(id).startsWith("demo_")) return;
-    if(isFinePointer || lastTap === id) location.href = "person.html?id=" + encodeURIComponent(id);
-    else lastTap = id;
+    if(!id || String(id).startsWith("anchor")) return;
+    window.selectGraphPeer(id);
   });
-  chart.getZr().on("click", e => { if(!e.target) lastTap = null; });
+
+  // Клик по пустому полю: сброс фиксации
+  chart.getZr().on("click", e => {
+    if(!e.target && pinnedPersonId) {
+      window.unpinGraphPerson();
+    }
+  });
+
   let t; window.addEventListener("resize", () => { clearTimeout(t); t = setTimeout(() => { if(currentView === "graph") renderGraph(); }, 150); });
 }
 
