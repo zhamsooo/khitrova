@@ -719,11 +719,11 @@ function layoutGraph(people, isMobile, activeGroups){
       const list = people.filter(p => p._g === g && ringOf(p) === ri).sort((a, b) => (a._y || 0) - (b._y || 0));
       if(!list.length) return;
 
-      // 4 широких радиальных эшелона, распределяющих точки по глубине
+      // 4 чередующихся радиальных эшелона (внутренний - внешний - внутренний - внешний)
       const offsets = (list.length <= 1) ? [0]
         : (list.length === 2) ? [-0.05, 0.05]
-        : (list.length === 3) ? [-0.06, 0, 0.06]
-        : [-0.07, -0.025, 0.025, 0.07];
+        : (list.length === 3) ? [-0.06, 0.06, -0.03]
+        : [-0.07, 0.06, -0.04, 0.08];
 
       // Широкий угловой разброс внутри сектора
       const isSparse = (people.length <= 25);
@@ -899,31 +899,12 @@ function renderGraph(){
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
     const finalSize = isSelected ? (nodeSize + 6) : (hasSearch ? nodeSize + 2 : nodeSize);
 
-    // Позиция подписи привязана к радиальному эшелону точки:
-    // - Внутренний эшелон: подпись снизу (направлена внутрь к центру)
-    // - Внешний эшелон: подпись сверху (направлена наружу от центра)
-    // - Средние эшелоны: подпись чередуется слева и справа
-    let labelPos = "top";
-    let labelDist = 6;
-    const deg = (p._ang * 180 / Math.PI);
-
-    if(p._trackIdx === 0){
-      labelPos = "bottom";
-    } else if(p._trackIdx === 3){
-      labelPos = "top";
-    } else if(p._trackIdx === 1){
-      labelPos = (deg < -90) ? "left" : "right";
-    } else {
-      labelPos = (deg < -90) ? "right" : "left";
-    }
-
-    // Защита краев холста от обрезки текста
-    if(deg < -145) labelPos = "right";
-    if(deg > -35) labelPos = "left";
-
-    if(isSelected){
-      labelDist = 9;
-    }
+    // Позиция подписи строго чередуется:
+    // - Четные эшелоны (0, 2): подпись снизу (направлена внутрь)
+    // - Нечетные эшелоны (1, 3): подпись сверху (направлена наружу)
+    // Поскольку эшелоны чередуются между соседними точками, подписи соседних точек никогда не перекрываются
+    const labelPos = (p._trackIdx % 2 === 0) ? "bottom" : "top";
+    const labelDist = isSelected ? 10 : 8;
 
     return {
       id: p.id,
@@ -941,7 +922,7 @@ function renderGraph(){
         shadowBlur: isSelected ? 8 : 0,
         opacity: 1
       },
-      // При поиске или в режиме сокурсников имена отображаются с мягкой подложкой и без наложений
+      // Имена отображаются с мягкой подложкой и достаточным отступом от кружка
       label: {
         show: showLabels,
         position: labelPos,
@@ -950,7 +931,7 @@ function renderGraph(){
         fontWeight: isSelected ? "bold" : "normal",
         color: "#0D1B2A",
         formatter: "{b}",
-        backgroundColor: "rgba(255, 255, 255, 0.88)",
+        backgroundColor: "rgba(255, 255, 255, 0.92)",
         padding: [2, 5],
         borderRadius: 4
       },
@@ -983,14 +964,26 @@ function renderGraph(){
     tip: "Татьяна Ивановна Хитрова"
   });
 
+  const anchorPad = 30;
+  let seriesLeft, seriesTop, seriesW, seriesH;
   if(isMobile){
+    seriesLeft = cx - (rx + anchorPad);
+    seriesTop = cy - (ry + anchorPad);
+    seriesW = 2 * (rx + anchorPad);
+    seriesH = 2 * (ry + anchorPad);
     [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
-      id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + 10), y: cy + sy * (ry + 10), symbolSize: 0, silent: true, label: { show: false }, tip: ""
+      id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + anchorPad), y: cy + sy * (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: ""
     }));
   } else {
-    [[-1, -1], [1, -1], [-1, 0.2], [1, 0.2]].forEach(([sx, sy], i) => nodes.push({
-      id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + 10), y: cy + (sy < 0 ? sy * (ry + 10) : 20), symbolSize: 0, silent: true, label: { show: false }, tip: ""
-    }));
+    const bottomPad = 25;
+    seriesLeft = cx - (rx + anchorPad);
+    seriesTop = cy - (ry + anchorPad);
+    seriesW = 2 * (rx + anchorPad);
+    seriesH = (ry + anchorPad) + bottomPad;
+    nodes.push({ id: "anchor0", name: "", category: G_ORDER.length, x: cx - (rx + anchorPad), y: cy - (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: "" });
+    nodes.push({ id: "anchor1", name: "", category: G_ORDER.length, x: cx + (rx + anchorPad), y: cy - (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: "" });
+    nodes.push({ id: "anchor2", name: "", category: G_ORDER.length, x: cx - (rx + anchorPad), y: cy + bottomPad, symbolSize: 0, silent: true, label: { show: false }, tip: "" });
+    nodes.push({ id: "anchor3", name: "", category: G_ORDER.length, x: cx + (rx + anchorPad), y: cy + bottomPad, symbolSize: 0, silent: true, label: { show: false }, tip: "" });
   }
 
   const ringGraphics = RINGS.flatMap((label, i) => {
@@ -1028,7 +1021,7 @@ function renderGraph(){
     }],
     series: [{
       name: "Люди", type: "graph", layout: "none", roam: false,
-      left: cx - R - 10, top: cy - R - 10, width: 2 * R + 20, height: isMobile ? (2 * R + 20) : (R + 40), data: nodes, links, categories,
+      left: seriesLeft, top: seriesTop, width: seriesW, height: seriesH, data: nodes, links, categories,
       lineStyle: { opacity: 0, width: 0, curveness: .25 },
       emphasis: { focus: "adjacency", label: { show: true }, lineStyle: { opacity: 0, width: 0 } },
       blur: { itemStyle: { opacity: .12 }, label: { opacity: .2 } },
