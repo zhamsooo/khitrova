@@ -106,12 +106,19 @@
     margin-top: 4px;
     flex-shrink: 0;
   }
-  .graph-toolbar {
-    flex: 0 0 auto;
+  .graph-overlay-stack {
+    position: absolute;
+    top: 58px; /* под легендой в две строки */
+    left: 0; right: 0;
+    z-index: 5;
     display: flex;
-    justify-content: center;
-    padding: 8px 12px 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
   }
+  .graph-overlay-stack > * { pointer-events: auto; }
+  @media (max-width: 600px) { .graph-overlay-stack { top: 82px; } }
   .known-check {
     display: inline-flex;
     align-items: center;
@@ -281,10 +288,6 @@
 
   /* Бейдж сокурсников прямо над амфитеатром */
   .cohort-status-bar {
-    position: absolute;
-    top: 64px; /* под легендой в две строки */
-    left: 50%;
-    transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 12px;
@@ -295,16 +298,13 @@
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
     border-radius: 20px;
     padding: 5px 14px;
-    z-index: 5;
-    pointer-events: auto;
     animation: fadeInDown .2s ease;
     max-width: 92%;
     width: max-content;
   }
-  @media (max-width: 600px) { .cohort-status-bar { top: 88px; } }
   @keyframes fadeInDown {
-    from { opacity: 0; transform: translate(-50%, -6px); }
-    to { opacity: 1; transform: translate(-50%, 0); }
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .cohort-status-info {
     display: flex;
@@ -365,7 +365,10 @@
       border-radius: 12px;
       border: 1px solid var(--outline-variant, #E0E3E8);
       position: relative;
+      display: flex;
+      flex-direction: column;
     }
+    .graph-canvas-wrap { position: relative; flex: 1 1 0; min-height: 0; }
     .graph-panel {
       display: none;
       position: fixed;
@@ -415,23 +418,23 @@
   <div id="pplGraphWrap">
     <div class="graph-layout">
       <div class="graph-area">
-        <div class="graph-toolbar">
+        <div class="graph-canvas-wrap">
+          <div id="pplGraph"></div>
+          <div class="graph-overlay-stack">
           <button type="button" class="known-check" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
             <span class="sym known-box">check_box_outline_blank</span>
             <span class="sym known-star">star</span>
-            <span>Только известные</span>
+            <span>Известные</span>
           </button>
-        </div>
-        <div class="graph-canvas-wrap">
-          <div id="pplGraph"></div>
           <div class="cohort-status-bar" id="cohortStatusBar">
             <div class="cohort-status-info">
               <span class="sym" id="cohortStatusIcon" style="font-size:18px; color:var(--primary);">groups</span>
               <span id="cohortStatusText"></span>
             </div>
-            <button type="button" class="cohort-status-reset" id="cohortStatusReset" style="display:none;" onclick="window.unpinGraphPerson()" title="Показать всех (Esc)">
+            <button type="button" class="cohort-status-reset" id="cohortStatusReset" style="display:none;" onclick="window.resetGraphView()" title="Показать всех (Esc)">
               <span class="sym" style="font-size:15px;">close</span> Все люди
             </button>
+          </div>
           </div>
         </div>
       </div>
@@ -673,11 +676,13 @@ const SPLIT_SYMBOL_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent
     '<path d="M 16,0 A 16,16 0 0,1 16,32 Z" fill="#2E5B88"/>' +
   '</svg>'
 );
+const STAR_D = "M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z";
+const STAR_SYMBOL = "path://" + STAR_D; // «известные» — звёздочка цвета своей группы
 const SPLIT_NOTABLE_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">' +
-    '<path d="M 16,0 A 16,16 0 0,0 16,32 Z" fill="#B23A22"/>' +
-    '<path d="M 16,0 A 16,16 0 0,1 16,32 Z" fill="#2E5B88"/>' +
-    '<circle cx="16" cy="16" r="14.5" fill="none" stroke="#D4A017" stroke-width="2.5"/>' +
+  '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">' +
+    '<defs><clipPath id="l"><rect x="0" y="0" width="12" height="24"/></clipPath><clipPath id="r"><rect x="12" y="0" width="12" height="24"/></clipPath></defs>' +
+    '<path clip-path="url(#l)" fill="#B23A22" d="' + STAR_D + '"/>' +
+    '<path clip-path="url(#r)" fill="#2E5B88" d="' + STAR_D + '"/>' +
   '</svg>'
 );
 
@@ -775,8 +780,19 @@ function initGraphEvents(){
   if(eventsInited || !chart) return;
   eventsInited = true;
 
+  // Клик по группе: если показаны все — остаётся только она; иначе группа добавляется/убирается.
+  // Если убрали последнюю — снова показываем всех.
   chart.on("legendselectchanged", ev => {
-    legendSelected = ev.selected;
+    const allOn = G_ORDER.every(g => legendSelected[GROUPS[g].name] !== false);
+    const next = {};
+    if(allOn){
+      G_ORDER.forEach(g => { next[GROUPS[g].name] = (GROUPS[g].name === ev.name); });
+    } else {
+      G_ORDER.forEach(g => { next[GROUPS[g].name] = legendSelected[GROUPS[g].name] !== false; });
+      next[ev.name] = !next[ev.name];
+      if(G_ORDER.every(g => !next[GROUPS[g].name])) G_ORDER.forEach(g => { next[GROUPS[g].name] = true; });
+    }
+    legendSelected = next;
     renderGraph();
   });
 
@@ -900,12 +916,12 @@ function renderGraph(){
   if(cohortText){
     cohortText.innerHTML = boardHtml;
     if(cohortIcon) cohortIcon.textContent = boardIcon;
-    if(cohortReset) cohortReset.style.display = isCohortMode ? "" : "none";
+    if(cohortReset) cohortReset.style.display = (isCohortMode || (selectedGroups.length < G_ORDER.length)) ? "" : "none";
   }
   if(graphHint){
     graphHint.innerHTML = isCohortMode
       ? `Нажмите <b>Esc</b> или «Все люди», чтобы вернуться ко всем. Нажатие на другую точку переключит на этого человека.`
-      : `Кольца — десятилетия выпусков. Нажмите на ученика или студента — останутся те, кто учился в те же годы. Группы над графиком можно включать и отключать.`;
+      : `Кольца — десятилетия выпусков. Нажмите на группу — останутся только её люди (можно добавить ещё). Нажмите на ученика или студента — останутся те, кто учился в те же годы.`;
   }
 
   // Динамическая перегруппировка: оставшиеся люди гармонично заполняют дуги амфитеатра
@@ -914,7 +930,7 @@ function renderGraph(){
 
   let cx, cy, rx, ry, R;
   if(isMobile){
-    const top = 110, bottom = 12;
+    const top = 168, bottom = 12;
     const availH = Math.max(80, h - top - bottom);
     const availW = Math.max(80, w - 32);
     cx = w / 2; cy = top + availH / 2;
@@ -922,7 +938,7 @@ function renderGraph(){
     rx = R; ry = R;
   } else {
     cx = w / 2; cy = Math.max(100, h - 36);
-    R = Math.max(40, Math.min(Math.max(100, w / 2 - 40), Math.max(100, h - 80)));
+    R = Math.max(40, Math.min(Math.max(100, w / 2 - 40), Math.max(100, (h - 176) / 1.12)));
     rx = R; ry = R;
   }
 
@@ -948,14 +964,14 @@ function renderGraph(){
   ];
 
   const baseNodeSize = isMobile ? 8 : 10;
-  const notableNodeSize = isMobile ? 12 : 14;
+  const notableNodeSize = isMobile ? 16 : 19;
   const showLabels = (hasSearch && vis.length <= 18) || isCohortMode;
 
   const nodes = vis.map(p => {
     const isDual = !!p.studied_choir_school && (!!p.studied_conservatory || !!p.studied_assistantship);
     const isSelected = (p.id === pinnedPersonId);
 
-    let symbol = "circle";
+    let symbol = p.notable ? STAR_SYMBOL : "circle";
     if(isDual){
       symbol = p.notable ? SPLIT_NOTABLE_SVG : SPLIT_SYMBOL_SVG;
     }
@@ -983,8 +999,8 @@ function renderGraph(){
       symbolSize: finalSize,
       itemStyle: {
         color: isDual ? undefined : GROUPS[p._g].color,
-        borderColor: isSelected ? "#6B3074" : ((!isDual && p.notable) ? "#D4A017" : "transparent"),
-        borderWidth: isSelected ? 3.5 : ((!isDual && p.notable) ? 2.5 : 0),
+        borderColor: isSelected ? "#6B3074" : "transparent",
+        borderWidth: isSelected ? 3 : 0,
         shadowColor: isSelected ? "rgba(107, 48, 116, 0.4)" : undefined,
         shadowBlur: isSelected ? 8 : 0,
         opacity: 1
@@ -1269,6 +1285,12 @@ window.selectGraphPeer = function(id){
     updateGraphPanel(p, true);
     renderGraph();
   }
+};
+
+window.resetGraphView = function(){
+  if(pinnedPersonId){ window.unpinGraphPerson(); return; }
+  legendSelected = {};
+  renderGraph();
 };
 
 window.unpinGraphPerson = function(){
