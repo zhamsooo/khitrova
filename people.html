@@ -196,13 +196,15 @@
     gap: 8px;
   }
   .toolbar-row { flex-wrap: wrap; }
-  .toolbar-row .compact-search { flex: 0 1 150px; min-width: 120px; width: auto; }
+  .toolbar-row .compact-search { flex: 1 1 150px; min-width: 120px; max-width: 260px; width: auto; }
   .classmate-filters {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
     margin-left: auto;
+    padding-left: 12px;
+    border-left: 1px solid var(--outline-variant, #D0D7DE);
   }
   .classmate-filters .flt-chip {
     padding: 0 7px 0 6px;
@@ -492,6 +494,7 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
+    .classmate-filters { margin-left: 0; padding-left: 0; border-left: 0; }
     .toolbar-row .compact-search { flex: 1 1 0; }
     .flt-chip {
       height: 26px;
@@ -846,8 +849,8 @@ const GROUPS = {
   spbgk:     { name: "СПбГК",           color: "#2E5B88" },
   colleague: { name: "Коллеги",         color: "#C08A3E" },
   unspec:    { name: "Не указано",      color: "#8A96A3" },
-  coursemate:{ name: "Однокурсники Т.И.", short: "Однокурсники Т.И.", color: "#2E9E5B", hint: "Учились с Т.И. в консерватории" },
-  classmate: { name: "Одноклассники Т.И.", short: "Одноклассники Т.И.", color: "#D6457F", hint: "Учились с Т.И. в училище им. Римского-Корсакова" }
+  coursemate:{ name: "Однокурсники Т.И.", short: "Однокурсники", color: "#12A5C8", hint: "Учились с Т.И. в консерватории" },
+  classmate: { name: "Одноклассники Т.И.", short: "Одноклассники", color: "#3E9B3E", hint: "Учились с Т.И. в училище им. Римского-Корсакова" }
 };
 const CLASSMATE_GROUPS = ["coursemate", "classmate"];
 const G_ORDER = ["choir", "spbgk", "dual", "colleague", "unspec", "coursemate", "classmate"];
