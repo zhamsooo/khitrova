@@ -121,7 +121,7 @@
     opacity: 0;
     transition: opacity .2s ease;
   }
-  #addArrowPath.show { opacity: .85; }
+  #addArrowPath.show { opacity: .6; }
 
   /* Единая панель управления графиком */
   .graph-controls-panel {
@@ -135,7 +135,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 12px 16px 12px;
+    padding: 12px 12px 12px;
   }
   .compact-search {
     position: relative;
@@ -195,19 +195,25 @@
   .search-clear-btn .sym { font-size: 15px; }
 
   /* Фильтры и модификатор */
-  .graph-filters {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  .toolbar-row {
+    display: flex;
+    align-items: center;
     gap: 8px;
+  }
+  .toolbar-row .compact-search { flex: 1 1 0; min-width: 0; width: auto; }
+  .graph-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
     width: 100%;
   }
-  .graph-filters .flt-chip,
-  .graph-filters .known-switch-btn {
-    width: 100%;
-    min-width: 0;
-    justify-content: flex-start;
+  .graph-filters .flt-chip {
+    padding: 0 7px 0 6px;
+    gap: 4px;
+    font-size: 12px;
   }
-  .graph-filters .known-switch-btn .known-box { margin-left: auto; }
+  .graph-filters .flt-n { font-size: 11px; padding: 1px 4px; }
 
   .flt-chip {
     display: inline-flex;
@@ -317,10 +323,11 @@
   .cohort-status-strip {
     display: flex;
     align-items: center;
-    min-height: 36px;
-    padding: 4px 14px;
-    background: var(--surface-low, #F8FAFC);
-    border-top: 1px solid var(--outline-variant, #EAEFF4);
+    min-height: 44px;
+    padding: 6px 16px;
+    background: #E9EFF6;
+    border-top: 1px solid #D3DEEA;
+    border-left: 3px solid var(--primary, #0D1B2A);
     box-sizing: border-box;
   }
   .cohort-status-bar {
@@ -334,13 +341,14 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12.5px;
+    font-size: 14px;
+    font-weight: 600;
     line-height: 1.4;
     color: var(--on-surface, #0D1B2A);
     min-width: 0;
   }
   .cohort-status-info .sym {
-    font-size: 18px;
+    font-size: 20px;
     color: var(--primary, #0D1B2A);
     flex-shrink: 0;
   }
@@ -474,7 +482,7 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
-    .graph-filters { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+    .graph-filters { justify-content: flex-start; }
     .flt-chip {
       height: 26px;
       font-size: 12px;
@@ -566,17 +574,19 @@
       <div class="graph-area">
         <div class="graph-controls-panel">
           <div class="graph-controls-toolbar">
+            <div class="toolbar-row">
             <div class="compact-search">
               <span class="sym search-icon">search</span>
               <input type="search" class="compact-search-input" id="pplSearch" placeholder="Имя или год выпуска" autocomplete="off" spellcheck="false">
               <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
             </div>
-            <div class="graph-filters" id="graphFilters">
               <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
                 <span class="sym known-star">star</span>
                 <span class="known-label">Только известные</span>
                 <span class="sym known-box">check_box_outline_blank</span>
               </button>
+            </div>
+            <div class="graph-filters" id="graphFilters">
             </div>
           </div>
           <div class="cohort-status-strip">
@@ -956,7 +966,6 @@ function toggleGroupFilter(name){
 
 function initFilterChips(){
   const box = document.getElementById("graphFilters");
-  const known = document.getElementById("btnToggleKnown");
   if(!box || box.querySelector(".flt-chip[data-g]")) return;
   G_ORDER.forEach(g => {
     const b = document.createElement("button");
@@ -966,7 +975,7 @@ function initFilterChips(){
     b.setAttribute("aria-pressed", "true");
     b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].name}</span> <span class="flt-n">0</span>`;
     b.addEventListener("click", () => toggleGroupFilter(GROUPS[g].name));
-    box.insertBefore(b, known);
+    box.appendChild(b);
   });
 }
 
