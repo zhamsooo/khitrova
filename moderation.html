@@ -334,6 +334,8 @@ function formatDiffVal(field, val){
   if(field === "relation_type"){
     if(val === "ученик") return "Ученик / Ученица";
     if(val === "коллега") return "Коллега";
+    if(val === "однокурсник") return "Однокурсник(ца) Т.И. в консерватории";
+    if(val === "одноклассник") return "Одноклассник(ца) Т.И. в училище";
     if(val === "другое") return "Близкий человек";
   }
   if(field === "author_type"){
@@ -914,6 +916,8 @@ async function loadPeople(){
               <select class="in-p-relation">
                 <option value="ученик" ${p.relation_type === "ученик" ? "selected" : ""}>Ученик / Ученица</option>
                 <option value="коллега" ${p.relation_type === "коллега" ? "selected" : ""}>Коллега</option>
+                <option value="однокурсник" ${p.relation_type === "однокурсник" ? "selected" : ""}>Однокурсник(ца) Т.И. в консерватории</option>
+                <option value="одноклассник" ${p.relation_type === "одноклассник" ? "selected" : ""}>Одноклассник(ца) Т.И. в училище</option>
                 <option value="другое" ${p.relation_type === "другое" ? "selected" : ""}>Близкий человек (родные, друзья)</option>
               </select>
             </div>
@@ -1041,8 +1045,9 @@ async function loadPeople(){
 
       const startRaw = card.querySelector(".in-p-start").value;
       const endRaw = card.querySelector(".in-p-end").value;
-      let study_start = (relation_type === "ученик" && startRaw) ? parseInt(startRaw, 10) : null;
-      let study_end = (relation_type === "ученик" && endRaw) ? parseInt(endRaw, 10) : null;
+      const hasYears = relation_type === "ученик" || relation_type === "однокурсник" || relation_type === "одноклассник";
+      let study_start = (hasYears && startRaw) ? parseInt(startRaw, 10) : null;
+      let study_end = (hasYears && endRaw) ? parseInt(endRaw, 10) : null;
       if(!study_end && relation_type === "ученик"){
         study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
       }
@@ -1330,7 +1335,7 @@ async function loadArticles(){
 }
 
 // -------------------- 5. УЧАСТНИКИ (W4, только для администратора) --------------------
-const REL_LABEL_MEMBERS = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Близкий человек" };
+const REL_LABEL_MEMBERS = { "ученик": "Ученик(ца)", "коллега": "Коллега", "однокурсник": "Однокурсник(ца) Т.И.", "одноклассник": "Одноклассник(ца) Т.И.", "другое": "Близкий человек" };
 let allMembers = [];
 
 async function loadMembers(){

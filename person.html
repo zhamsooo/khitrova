@@ -312,6 +312,8 @@
               <select id="editRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
+                <option value="однокурсник">Однокурсник(ца) Т.И. в консерватории</option>
+                <option value="одноклассник">Одноклассник(ца) Т.И. в училище</option>
                 <option value="другое">Близкий человек (родные, друзья)</option>
               </select>
               <label class="lbl" for="editRelation">Кем приходится Т.И.?</label>
@@ -520,6 +522,9 @@ function renderPerson(p){
         bcCat.textContent = "Ученики";
         bcCat.href = "people.html?filter=все";
       }
+    } else if(rel === "однокурсник" || rel === "одноклассник"){
+      bcCat.textContent = rel === "однокурсник" ? "Однокурсники Т.И." : "Одноклассники Т.И.";
+      bcCat.href = "people.html";
     } else if(rel === "коллега"){
       bcCat.textContent = "Коллеги";
       bcCat.href = "people.html?filter=коллега";
@@ -863,8 +868,7 @@ function openEditModal(p){
   document.getElementById("editGender").value = p.gender || "";
   document.getElementById("editRelation").value = p.relation_type || "ученик";
 
-  const studyBlock = document.getElementById("editStudyBlock");
-  studyBlock.style.display = p.relation_type === "ученик" ? "block" : "none";
+  syncEditStudyBlock(p.relation_type);
 
   const choirCheck = document.getElementById("editChoirSchool");
   const choirBox = document.getElementById("editChoirBox");
@@ -987,9 +991,17 @@ function getPersonDiff(original, current){
   return patch;
 }
 
-document.getElementById("editRelation").addEventListener("change", e => {
-  document.getElementById("editStudyBlock").style.display = e.target.value === "ученик" ? "block" : "none";
-});
+// Блок годов учёбы: у учеников полный, у однокурсников/одноклассников Т.И. — только годы
+function syncEditStudyBlock(rel){
+  const block = document.getElementById("editStudyBlock");
+  const classmate = rel === "однокурсник" || rel === "одноклассник";
+  block.style.display = (rel === "ученик" || classmate) ? "block" : "none";
+  const box = block.querySelector(".study-box-wrap");
+  [box, box && box.previousElementSibling].forEach(el => { if(el) el.style.display = classmate ? "none" : ""; });
+  const yearsLbl = block.querySelector(".field .lbl");
+  if(yearsLbl) yearsLbl.textContent = classmate ? "Годы учёбы вместе с Т.И." : "Или другие годы учёбы";
+}
+document.getElementById("editRelation").addEventListener("change", e => syncEditStudyBlock(e.target.value));
 
 document.getElementById("editChoirSchool").addEventListener("change", e => {
   document.getElementById("editChoirBox").style.display = e.target.checked ? "block" : "none";
@@ -1090,8 +1102,9 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
 
     const studyStartRaw = document.getElementById("editStudyStart").value;
     const studyEndRaw = document.getElementById("editStudyEnd").value;
-    let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
-    let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    const hasYears = relation_type === "ученик" || relation_type === "однокурсник" || relation_type === "одноклассник";
+    let study_start = hasYears && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
+    let study_end = hasYears && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
     if(!study_end && relation_type === "ученик"){
       study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
     }

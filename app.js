@@ -129,6 +129,8 @@ const MODALS_HTML = `
           <select id="inRelation">
             <option value="ученик">Ученик / Ученица</option>
             <option value="коллега">Коллега</option>
+            <option value="однокурсник">Однокурсник(ца) Т.И. в консерватории</option>
+            <option value="одноклассник">Одноклассник(ца) Т.И. в училище</option>
             <option value="другое">Близкий человек (родные, друзья)</option>
           </select>
           <label class="lbl" for="inRelation">Кем вы приходитесь Т.И.?</label>
@@ -238,6 +240,8 @@ const MODALS_HTML = `
               <select id="uPRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
+                <option value="однокурсник">Однокурсник(ца) Т.И. в консерватории</option>
+                <option value="одноклассник">Одноклассник(ца) Т.И. в училище</option>
                 <option value="другое">Близкий человек (родные, друзья)</option>
               </select>
               <label class="lbl" for="uPRelation">Кем приходится Т.И.?</label>
@@ -391,6 +395,16 @@ function resetAuthModal(){
   if(title) title.textContent = "Войти";
 }
 
+// Блок годов учёбы в форме: у учеников полный, у однокурсников/одноклассников Т.И. — только годы
+function syncUStudyWrap(wrap, rel){
+  const classmate = rel === "однокурсник" || rel === "одноклассник";
+  wrap.style.display = (rel === "ученик" || classmate) ? "block" : "none";
+  const box = wrap.querySelector(".study-box-wrap");
+  [box, box && box.previousElementSibling].forEach(el => { if(el) el.style.display = classmate ? "none" : ""; });
+  const yearsLbl = wrap.querySelector(".field .lbl");
+  if(yearsLbl) yearsLbl.textContent = classmate ? "Годы учёбы вместе с Т.И." : "Или другие годы учёбы";
+}
+
 function personRelationLabel(p){
   if(!p) return "";
   const rel = p.relation_type || "ученик";
@@ -400,12 +414,14 @@ function personRelationLabel(p){
     return "Ученик(ца)";
   }
   if(rel === "коллега") return "Коллега";
+  if(rel === "однокурсник") return "Однокурсник(ца) Т.И.";
+  if(rel === "одноклассник") return "Одноклассник(ца) Т.И.";
   if(rel === "другое") return "Близкий человек";
   return rel;
 }
 window.personRelationLabel = personRelationLabel;
 
-const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "другое": "Близкий человек" };
+const relLabel = { "ученик": "Ученик(ца)", "коллега": "Коллега", "однокурсник": "Однокурсник(ца) Т.И.", "одноклассник": "Одноклассник(ца) Т.И.", "другое": "Близкий человек" };
 
 function onLoggedIn(profile){
   myProfile = profile;
@@ -500,7 +516,7 @@ function openOwnCardModal(){
   if(patronymicInput) patronymicInput.value = parts.slice(2).join(" ");
   if(relationInput) relationInput.value = myProfile.relation_type || "ученик";
   if(studyEndInput) studyEndInput.value = myProfile.study_end || "";
-  if(studyWrap) studyWrap.style.display = (relationInput && relationInput.value === "ученик") ? "block" : "none";
+  if(studyWrap) syncUStudyWrap(studyWrap, relationInput && relationInput.value);
   const hint = document.getElementById("uPOwnCardHint");
   if(hint) hint.style.display = "block";
 }
@@ -765,8 +781,9 @@ async function submitPersonForm(){
   const assistantship_start = (studied_assistantship && assistStartInput.value) ? parseInt(assistStartInput.value, 10) : null;
   const assistantship_end = (studied_assistantship && assistEndInput.value) ? parseInt(assistEndInput.value, 10) : null;
 
-  let study_start = relation_type === "ученик" && studyStartInput.value ? parseInt(studyStartInput.value, 10) : null;
-  let study_end = relation_type === "ученик" && studyEndInput.value ? parseInt(studyEndInput.value, 10) : null;
+  const hasYears = relation_type === "ученик" || relation_type === "однокурсник" || relation_type === "одноклассник";
+  let study_start = hasYears && studyStartInput.value ? parseInt(studyStartInput.value, 10) : null;
+  let study_end = hasYears && studyEndInput.value ? parseInt(studyEndInput.value, 10) : null;
   if(!study_end && relation_type === "ученик"){
     study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
   }
@@ -839,7 +856,7 @@ async function submitPersonForm(){
     const uPInstLabelReset = document.getElementById("uPInstLabel");
     if(uPInstLabelReset){ uPInstLabelReset.textContent = "Где работает сейчас / кем стал"; instInput.placeholder = "например, преподаватель Хорового училища"; }
     const studyWrap = document.getElementById("uPStudyWrap");
-    if(studyWrap) studyWrap.style.display = "block";
+    if(studyWrap) syncUStudyWrap(studyWrap, "ученик");
     if(choirChk){ choirChk.checked = false; document.getElementById("uPChoirBox").style.display = "none"; }
     choirStartInput.value = "";
     choirEndInput.value = "";
@@ -1003,7 +1020,7 @@ function initHeader(){
   const uPInstitutionInput = document.getElementById("uPInstitution");
   if(uPRelation && uPStudyWrap){
     uPRelation.addEventListener("change", e => {
-      uPStudyWrap.style.display = e.target.value === "ученик" ? "block" : "none";
+      syncUStudyWrap(uPStudyWrap, e.target.value);
       if(uPInstLabel && uPInstitutionInput){
         if(e.target.value === "коллега"){
           uPInstLabel.textContent = "Должность, место работы";

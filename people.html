@@ -200,7 +200,23 @@
     align-items: center;
     gap: 8px;
   }
-  .toolbar-row .compact-search { flex: 0 1 280px; min-width: 0; width: auto; }
+  .toolbar-row { flex-wrap: wrap; }
+  .toolbar-row .compact-search { flex: 0 1 190px; min-width: 150px; width: auto; }
+  .classmate-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+    padding-left: 14px;
+    border-left: 1px solid var(--outline-variant, #D0D7DE);
+  }
+  .classmate-filters .flt-chip {
+    padding: 0 7px 0 6px;
+    gap: 4px;
+    font-size: 12px;
+  }
+  .classmate-filters .flt-n { font-size: 11px; padding: 1px 4px; }
   .graph-filters {
     display: flex;
     flex-wrap: wrap;
@@ -483,6 +499,7 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
+    .classmate-filters { margin-left: 0; padding-left: 0; border-left: 0; }
     .toolbar-row .compact-search { flex: 1 1 0; }
     .flt-chip {
       height: 26px;
@@ -583,9 +600,10 @@
             </div>
               <button type="button" class="known-switch-btn" id="btnToggleKnown" role="checkbox" aria-checked="false" title="Показать только известных учеников и коллег">
                 <span class="sym known-star">star</span>
-                <span class="known-label">Только известные</span>
+                <span class="known-label">Известные</span>
                 <span class="sym known-box">check_box_outline_blank</span>
               </button>
+              <div class="classmate-filters" id="classmateFilters"></div>
             </div>
             <div class="graph-filters" id="graphFilters">
             </div>
@@ -663,6 +681,8 @@
               <select id="editRelation">
                 <option value="ученик">Ученик / Ученица</option>
                 <option value="коллега">Коллега</option>
+                <option value="однокурсник">Однокурсник(ца) Т.И. в консерватории</option>
+                <option value="одноклассник">Одноклассник(ца) Т.И. в училище</option>
                 <option value="другое">Близкий человек (родные, друзья)</option>
               </select>
               <label class="lbl" for="editRelation">Кем приходится Т.И.?</label>
@@ -774,6 +794,8 @@ function getPersonDotInfo(p){
   if(p.id === "ti"){
     return { isSplit: false, color: "#6B3074", label: "Т.И. Хитрова" };
   }
+  if(p.relation_type === "однокурсник") return { isSplit: false, color: GROUPS.coursemate.color, label: "Однокурсник Т.И." };
+  if(p.relation_type === "одноклассник") return { isSplit: false, color: GROUPS.classmate.color, label: "Одноклассник Т.И." };
   const isDual = !!p.studied_choir_school && (!!p.studied_conservatory || !!p.studied_assistantship);
   if(isDual){
     return { isSplit: true, color: null, label: "Училище и Консерватория" };
@@ -786,6 +808,8 @@ function getPersonDotInfo(p){
 }
 
 function personSubLine(p){
+  if(p.relation_type === "однокурсник") return "Однокурсник Т.И. в консерватории";
+  if(p.relation_type === "одноклассник") return "Одноклассник Т.И. в училище";
   if(p.relation_type === "коллега") return "Коллега";
   if(p.relation_type === "другое") return "Близкий человек";
 
@@ -830,11 +854,14 @@ const GROUPS = {
   dual:      { name: "Училище и СПбГК", color: "#6E4A5F" },
   spbgk:     { name: "СПбГК",           color: "#2E5B88" },
   colleague: { name: "Коллеги",         color: "#C08A3E" },
-  unspec:    { name: "Не указано",      color: "#8A96A3" }
+  unspec:    { name: "Не указано",      color: "#8A96A3" },
+  coursemate:{ name: "Однокурсники Т.И.", short: "Однокурсники", color: "#2A8C82", hint: "Учились с Т.И. в консерватории" },
+  classmate: { name: "Одноклассники Т.И.", short: "Одноклассники", color: "#7B8F2E", hint: "Учились с Т.И. в училище им. Римского-Корсакова" }
 };
-const G_ORDER = ["choir", "spbgk", "dual", "colleague", "unspec"];
+const CLASSMATE_GROUPS = ["coursemate", "classmate"];
+const G_ORDER = ["choir", "spbgk", "dual", "colleague", "unspec", "coursemate", "classmate"];
 // Порядок секторов в амфитеатре: «оба учебных заведения» посередине между хором и СПбГК
-const GRAPH_ORDER = ["choir", "dual", "spbgk", "colleague", "unspec"];
+const GRAPH_ORDER = ["coursemate", "classmate", "choir", "dual", "spbgk", "colleague", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
@@ -858,6 +885,8 @@ const SPLIT_NOTABLE_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponen
 );
 
 function graphGroup(p){
+  if(p.relation_type === "однокурсник") return "coursemate";
+  if(p.relation_type === "одноклассник") return "classmate";
   if(p.relation_type === "коллега") return "colleague";
   if(p.studied_choir_school && (p.studied_conservatory || p.studied_assistantship)) return "dual";
   if(p.studied_conservatory) return "spbgk";
@@ -865,6 +894,7 @@ function graphGroup(p){
   return "unspec";
 }
 function graphYear(p){
+  if(p.relation_type === "однокурсник" || p.relation_type === "одноклассник") return p.study_end || p.study_start || null;
   if(p.relation_type === "коллега") return p.study_start || p.study_end || null; // год начала совместной работы
   return p.conservatory_end || p.choir_school_end || p.study_end || null;
 }
@@ -885,8 +915,8 @@ function inCohort(pinned, p){
 }
 
 const DECADES = [1970, 1980, 1990, 2000, 2010];
-const RINGS = DECADES.map(d => d + "-е").concat(["год не указан"]);
-const ringOf = p => p._y ? Math.min(Math.max(Math.floor(p._y / 10) * 10, 1970), 2010) / 10 - 197 : DECADES.length;
+const RINGS = ["до 1970-х"].concat(DECADES.map(d => d + "-е"), ["год не указан"]);
+const ringOf = p => !p._y ? RINGS.length - 1 : p._y < 1970 ? 0 : Math.min(Math.floor(p._y / 10) * 10, 2010) / 10 - 196;
 const ringR = i => .2 + .8 * (i + 1) / RINGS.length;
 
 function layoutGraph(people, isMobile, activeGroups){
@@ -969,16 +999,17 @@ function toggleGroupFilter(name){
 
 function initFilterChips(){
   const box = document.getElementById("graphFilters");
-  if(!box || box.querySelector(".flt-chip[data-g]")) return;
+  if(!box || document.querySelector(".flt-chip[data-g]")) return;
   G_ORDER.forEach(g => {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "flt-chip";
     b.dataset.g = g;
     b.setAttribute("aria-pressed", "true");
-    b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].name}</span> <span class="flt-n">0</span>`;
+    b.innerHTML = `<span class="flt-dot${g === "dual" ? " split" : ""}" style="--c:${GROUPS[g].color}"></span><span>${GROUPS[g].short || GROUPS[g].name}</span> <span class="flt-n">0</span>`;
     b.addEventListener("click", () => toggleGroupFilter(GROUPS[g].name));
-    box.appendChild(b);
+    if(GROUPS[g].hint) b.title = GROUPS[g].hint;
+    (CLASSMATE_GROUPS.includes(g) ? document.getElementById("classmateFilters") : box).appendChild(b);
   });
 }
 
@@ -1066,7 +1097,7 @@ function renderGraph(){
   let vis = base.filter(p => legendSelected[GROUPS[p._g]?.name] !== false);
 
   // Состояние и числа на чипах-фильтрах
-  document.querySelectorAll("#graphFilters .flt-chip[data-g]").forEach(btn => {
+  document.querySelectorAll(".flt-chip[data-g]").forEach(btn => {
     const g = btn.dataset.g;
     btn.setAttribute("aria-pressed", legendSelected[GROUPS[g].name] !== false ? "true" : "false");
     btn.querySelector(".flt-n").textContent = groupCounts[g] || 0;
@@ -1092,7 +1123,7 @@ function renderGraph(){
     const together = (pinnedPerson._y || insts.length > 1) ? `в те же годы${yr}` : "(год выпуска не указан)";
     boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> и все, кто учился ${where} ${together} · ${shownCount} чел.`;
   } else if(focusGroup){
-    boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> ${focusGroup === "colleague" ? "и все коллеги Т.И." : "и другие люди, знакомые с Т.И."} · ${shownCount} чел.`;
+    boardHtml = `<b>${escapeHtml(pinnedPerson.full_name)}</b> ${focusGroup === "colleague" ? "и все коллеги Т.И." : CLASSMATE_GROUPS.includes(focusGroup) ? "и все, кто учился с Т.И." : "и другие люди, знакомые с Т.И."} · ${shownCount} чел.`;
   } else if(hasSearch){
     boardIcon = "search";
     boardHtml = shownCount
@@ -1102,13 +1133,15 @@ function renderGraph(){
     boardIcon = "filter_alt_off";
     boardHtml = "Ничего не выбрано — включите группы над графиком";
   } else if(selectedGroups.length === G_ORDER.length){
-    boardHtml = `Все, кто связан с Т.И.: ученики, студенты, коллеги и другие знакомые · ${shownCount} чел.`;
+    boardHtml = `Все, кто связан с Т.И.: ученики, однокурсники, коллеги и другие знакомые · ${shownCount} чел.`;
   } else if(selectedGroups.length === 1){
     const PHRASE = {
       choir: "Все ученики Хорового училища",
       spbgk: "Все студенты СПбГК",
       dual: "Все, кто учился и в училище, и в СПбГК",
       colleague: "Все коллеги Т.И.",
+      coursemate: "Все, кто учился с Т.И. в консерватории",
+      classmate: "Все, кто учился с Т.И. в училище им. Римского-Корсакова",
       unspec: "Другие люди, знакомые с Т.И."
     };
     boardHtml = `${PHRASE[selectedGroups[0]]} · ${shownCount} чел.`;
@@ -1216,7 +1249,7 @@ function renderGraph(){
       },
       tip: escapeHtml(p.full_name) + "<br>" +
            (isDual ? "Хоровое училище и СПбГК" : GROUPS[p._g].name) +
-           (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан") +
+           (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : CLASSMATE_GROUPS.includes(p._g) ? ", " + p._y + " г." : ", выпуск " + p._y) : ", год не указан") +
            (p.notable ? "<br>★ Известный" : "") +
            (p._y && STUDENT_GROUPS.includes(p._g) ? "<br>Учились в те же годы (±5 лет): " + degree.get(p.id) + " чел." : "") +
            (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? (!STUDENT_GROUPS.includes(p._g) ? (pinnedPerson ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы оставить только эту группу") : pinnedPerson ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы показать сокурсников") : ""))
@@ -1346,6 +1379,13 @@ function renderPersonMilestones(p){
         color: "#8A96A3"
       });
     }
+  } else if(p.relation_type === "однокурсник" || p.relation_type === "одноклассник"){
+    const isCons = p.relation_type === "однокурсник";
+    items.push({
+      name: p.institution || (isCons ? "Учился(-ась) с Т.И. в консерватории" : "Учился(-ась) с Т.И. в училище им. Римского-Корсакова"),
+      time: studyYearsLabel(p.study_start, p.study_end) || "Годы не указаны",
+      color: isCons ? GROUPS.coursemate.color : GROUPS.classmate.color
+    });
   } else if(p.relation_type === "коллега"){
     let yrStr = "";
     if(p.study_start && p.study_end) yrStr = `совместная работа ${p.study_start}–${p.study_end} гг.`;
@@ -1627,8 +1667,7 @@ window.openEditPersonModal = function(id){
   document.getElementById("editGender").value = p.gender || "";
   document.getElementById("editRelation").value = p.relation_type || "ученик";
 
-  const studyBlock = document.getElementById("editStudyBlock");
-  studyBlock.style.display = p.relation_type === "ученик" ? "block" : "none";
+  syncEditStudyBlock(p.relation_type);
 
   const choirCheck = document.getElementById("editChoirSchool");
   const choirBox = document.getElementById("editChoirBox");
@@ -1667,9 +1706,17 @@ window.openEditPersonModal = function(id){
   open_("editPersonOverlay");
 };
 
-document.getElementById("editRelation").addEventListener("change", e => {
-  document.getElementById("editStudyBlock").style.display = e.target.value === "ученик" ? "block" : "none";
-});
+// Блок годов учёбы: у учеников полный, у однокурсников/одноклассников Т.И. — только годы
+function syncEditStudyBlock(rel){
+  const block = document.getElementById("editStudyBlock");
+  const classmate = rel === "однокурсник" || rel === "одноклассник";
+  block.style.display = (rel === "ученик" || classmate) ? "block" : "none";
+  const box = block.querySelector(".study-box-wrap");
+  [box, box && box.previousElementSibling].forEach(el => { if(el) el.style.display = classmate ? "none" : ""; });
+  const yearsLbl = block.querySelector(".field .lbl");
+  if(yearsLbl) yearsLbl.textContent = classmate ? "Годы учёбы вместе с Т.И." : "Или другие годы учёбы";
+}
+document.getElementById("editRelation").addEventListener("change", e => syncEditStudyBlock(e.target.value));
 document.getElementById("editChoirSchool").addEventListener("change", e => {
   document.getElementById("editChoirBox").style.display = e.target.checked ? "block" : "none";
 });
@@ -1773,8 +1820,9 @@ document.getElementById("btnSavePersonEdit").addEventListener("click", async () 
 
     const studyStartRaw = document.getElementById("editStudyStart").value;
     const studyEndRaw = document.getElementById("editStudyEnd").value;
-    let study_start = relation_type === "ученик" && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
-    let study_end = relation_type === "ученик" && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
+    const hasYears = relation_type === "ученик" || relation_type === "однокурсник" || relation_type === "одноклассник";
+    let study_start = hasYears && studyStartRaw ? parseInt(studyStartRaw, 10) : null;
+    let study_end = hasYears && studyEndRaw ? parseInt(studyEndRaw, 10) : null;
     if(!study_end && relation_type === "ученик"){
       study_end = Math.max(choir_school_end || 0, conservatory_end || 0, assistantship_end || 0) || null;
     }
