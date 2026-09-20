@@ -18,7 +18,7 @@
     }
     .page {
       height: calc(100vh - 64px);
-      padding: 14px var(--pad-x) 12px;
+      padding: 24px var(--pad-x) 16px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -35,7 +35,7 @@
       flex: 1 1 0;
       min-height: 0;
       height: auto;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       display: flex;
       gap: 16px;
       align-items: stretch;
@@ -65,33 +65,81 @@
     .graph-hint {
       flex-shrink: 0;
       margin: 0;
-      font-size: 11.5px;
-      line-height: 1.25;
+      font-size: 12px;
+      line-height: 1.35;
       color: var(--on-surface-variant);
     }
   }
 
-  /* Шапка страницы и компактный поиск */
+  /* Шапка страницы и гармоничные отступы как на странице «Наследие» */
   .people-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 12px;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 18px;
     flex-shrink: 0;
   }
   .people-header-text h1 {
-    margin: 0 0 4px;
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.2;
+    font-size: 36px;
+    line-height: 44px;
+    font-weight: 400;
+    margin: 0 0 8px;
+    letter-spacing: 0;
+    text-wrap: balance;
     color: var(--on-surface);
   }
   .people-header-text .lead {
-    margin: 0;
-    font-size: 14px;
-    line-height: 1.45;
+    font-size: 16px;
+    line-height: 24px;
     color: var(--on-surface-variant);
+    max-width: 64ch;
+    margin: 0;
+  }
+  .people-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+  .btn-filter-known {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 19px;
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--on-surface-variant, #657A91);
+    background: var(--surface-variant, #F0F4F8);
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    cursor: pointer;
+    transition: all .2s ease;
+    user-select: none;
+    box-sizing: border-box;
+  }
+  .btn-filter-known:hover {
+    background: #E4EBF2;
+    color: var(--on-surface, #0D1B2A);
+  }
+  .btn-filter-known.active {
+    background: #FFF8E1;
+    color: #8D6E00;
+    border-color: #D4A017;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(212, 160, 23, 0.2);
+  }
+  .btn-filter-known .sym {
+    font-size: 18px;
+    color: #B0B8C1;
+    transition: all .2s ease;
+  }
+  .btn-filter-known.active .sym {
+    font-variation-settings: 'FILL' 1;
+    color: #D4A017;
   }
   .compact-search {
     position: relative;
@@ -102,9 +150,9 @@
   }
   .compact-search-input {
     width: 100%;
-    height: 36px;
+    height: 38px;
     padding: 0 32px 0 36px;
-    border-radius: 18px;
+    border-radius: 19px;
     border: 1px solid var(--outline-variant, #D0D7DE);
     background: var(--surface-variant, #F0F4F8);
     color: var(--on-surface, #0D1B2A);
@@ -199,11 +247,37 @@
     background: #FFFFFF; border: 1px solid var(--outline-variant, #E0E3E8); padding: 12px 14px; border-radius: 8px; word-break: break-word;
   }
   .card-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--on-surface-variant); margin-bottom: 4px; }
-  .card-source {
-    margin-top: 2px;
+  .card-head-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .source-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+  }
+  .source-tooltip-pop {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 6px;
+    background: #1B2838;
+    color: #FFFFFF;
+    padding: 8px 12px;
+    border-radius: 8px;
     font-size: 12px;
-    color: var(--on-surface-variant);
-    word-break: break-word;
+    line-height: 1.4;
+    white-space: normal;
+    width: max-content;
+    max-width: 240px;
+    z-index: 30;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+  }
+  .source-tooltip-wrap:hover .source-tooltip-pop {
+    display: block;
   }
   .panel-pin-btn {
     background: none; border: 1px solid var(--outline-variant, #D0D7DE); border-radius: 6px;
@@ -213,14 +287,73 @@
   .panel-pin-btn:hover { background: var(--surface-variant, #F4F6F8); color: var(--on-surface); }
   .panel-pin-btn .sym { font-size: 17px; }
 
+  /* Бейдж сокурсников прямо над амфитеатром */
+  .cohort-status-bar {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(13, 27, 42, 0.12);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    border-radius: 20px;
+    padding: 5px 14px;
+    z-index: 5;
+    pointer-events: auto;
+    animation: fadeInDown .2s ease;
+    white-space: nowrap;
+    max-width: 90%;
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translate(-50%, -6px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  .cohort-status-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--on-surface);
+  }
+  .cohort-status-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-variant, #F0F4F8);
+    border: 1px solid var(--outline-variant, #D0D7DE);
+    border-radius: 12px;
+    padding: 3px 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary, #0D1B2A);
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  .cohort-status-reset:hover {
+    background: #E2E8F0;
+  }
+
   @media (max-width: 860px) {
     .people-header {
       flex-direction: column;
       align-items: stretch;
       gap: 12px;
     }
-    .compact-search {
+    .people-header-actions {
       width: 100%;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+    .compact-search {
+      flex: 1;
+      width: auto;
     }
     .graph-layout {
       flex-direction: column;
@@ -273,10 +406,16 @@
       <h1>Люди</h1>
       <p class="lead">Ученики, коллеги и все, с кем была знакома Татьяна Ивановна.<br>Список неполный — пожалуйста, дополняйте его.</p>
     </div>
-    <div class="compact-search">
-      <span class="sym search-icon">search</span>
-      <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
-      <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
+    <div class="people-header-actions">
+      <button type="button" class="btn-filter-known" id="btnToggleKnown" title="Наложить фильтр: только известные ученики и коллеги">
+        <span class="sym">star</span>
+        <span>Известные</span>
+      </button>
+      <div class="compact-search">
+        <span class="sym search-icon">search</span>
+        <input type="search" class="compact-search-input" id="pplSearch" placeholder="Поиск по имени или году" autocomplete="off" spellcheck="false">
+        <button type="button" class="search-clear-btn" id="btnSearchClear" style="display:none;" title="Очистить"><span class="sym">close</span></button>
+      </div>
     </div>
   </div>
 
@@ -284,6 +423,15 @@
     <div class="graph-layout">
       <div class="graph-area">
         <div id="pplGraph"></div>
+        <div class="cohort-status-bar" id="cohortStatusBar" style="display:none;">
+          <div class="cohort-status-info">
+            <span class="sym" style="font-size:18px; color:var(--primary);">school</span>
+            <span id="cohortStatusText">Сокурсники (±5 лет)</span>
+          </div>
+          <button type="button" class="cohort-status-reset" onclick="window.unpinGraphPerson()" title="Показать всех (Esc)">
+            <span class="sym" style="font-size:15px;">close</span> Все люди (Esc)
+          </button>
+        </div>
       </div>
       <aside class="graph-panel" id="pplPanel">
         <div class="panel-placeholder" id="panelEmpty">
@@ -514,10 +662,7 @@ const G_ORDER = ["choir", "spbgk", "colleague", "close", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
-let chart = null, legendSelected = {}, pinnedPersonId = null, eventsInited = false;
-
-// По умолчанию фильтр «Известные» выключен (показываются все)
-legendSelected["Известные"] = false;
+let chart = null, legendSelected = {}, pinnedPersonId = null, eventsInited = false, onlyKnown = false;
 
 // SVG-символы для двухцветных точек (Хоровое училище + Консерватория)
 const SPLIT_SYMBOL_SVG = 'image://data:image/svg+xml;utf8,' + encodeURIComponent(
@@ -629,17 +774,52 @@ function renderGraph(){
   const w = el.clientWidth, h = el.clientHeight;
   const isMobile = w <= 600;
 
-  // Динамическая фильтрация: при поиске и группе «Известные» несовпадающие люди удаляются из графа
+  // Динамическая фильтрация: поиск, «Известные» и режим сокурсников (при фиксации карточки)
   const rawQ = (document.getElementById("pplSearch")?.value || "").trim();
   const hasSearch = rawQ.length > 0;
-  const onlyKnown = (legendSelected["Известные"] === true);
 
-  const vis = allPeople.filter(p => {
+  const pinnedPerson = (pinnedPersonId && pinnedPersonId !== "ti")
+    ? allPeople.find(o => String(o.id) === String(pinnedPersonId))
+    : null;
+  const isCohortMode = !!pinnedPerson;
+
+  let vis = allPeople.filter(p => {
     if(onlyKnown && !p.notable) return false;
     if(hasSearch && !personMatchesQuery(p, rawQ)) return false;
     if(legendSelected[GROUPS[p._g]?.name] === false) return false;
     return true;
   });
+
+  // В режиме сокурсников в амфитеатре остаются только выбранный человек и те, кто учился ±5 лет
+  if(isCohortMode){
+    const py = pinnedPerson._y;
+    vis = vis.filter(p => {
+      if(p.id === pinnedPerson.id) return true;
+      if(py && p._y) return Math.abs(p._y - py) <= WINDOW;
+      if(!py && !p._y) return p._g === pinnedPerson._g;
+      return false;
+    });
+  }
+
+  // Обновление бейджа сокурсников и нижней подсказки
+  const cohortBar = document.getElementById("cohortStatusBar");
+  const cohortText = document.getElementById("cohortStatusText");
+  const graphHint = document.querySelector(".graph-hint");
+
+  if(isCohortMode && cohortBar && cohortText){
+    cohortBar.style.display = "flex";
+    const yearInfo = pinnedPerson._y ? ` (${pinnedPerson._y} г.)` : "";
+    const cohortCount = vis.filter(p => p.id !== pinnedPerson.id).length;
+    cohortText.innerHTML = `Сокурсники (±5 лет) для: <b>${escapeHtml(pinnedPerson.full_name)}${yearInfo}</b> · ${cohortCount} чел. с именами`;
+    if(graphHint){
+      graphHint.innerHTML = `🎓 Отображаются сокурсники (±5 лет) для: <b>${escapeHtml(pinnedPerson.full_name)}</b> (${cohortCount} чел.). Нажмите <b>Esc</b> или кнопку в карточке, чтобы вернуться ко всем людям.`;
+    }
+  } else {
+    if(cohortBar) cohortBar.style.display = "none";
+    if(graphHint){
+      graphHint.innerHTML = `Кольца — десятилетия выпусков. Группы вверху графика можно включать и отключать кликом по названию.`;
+    }
+  }
 
   // Динамическая перегруппировка: оставшиеся люди гармонично заполняют дуги амфитеатра
   const activeGroups = G_ORDER.filter(g => legendSelected[GROUPS[g].name] !== false);
@@ -668,9 +848,8 @@ function renderGraph(){
     }
   }
 
-  // Все категории + группа «Известные» в едином ряду фильтров легенды
+  // 5 базовых групп институций в легенде графика
   const categories = G_ORDER.map(g => ({ name: GROUPS[g].name, itemStyle: { color: GROUPS[g].color } }));
-  categories.push({ name: "Известные", itemStyle: { color: "#D4A017" } });
   categories.push({ name: "Центр", itemStyle: { color: "#6B3074" } });
 
   const legendItems = [
@@ -678,15 +857,16 @@ function renderGraph(){
     { name: "СПбГК", icon: "circle" },
     { name: "Коллеги", icon: "circle" },
     { name: "Близкие", icon: "circle" },
-    { name: "Не указано", icon: "circle" },
-    { name: "Известные", icon: "circle" }
+    { name: "Не указано", icon: "circle" }
   ];
 
   const baseNodeSize = isMobile ? 8 : 10;
   const notableNodeSize = isMobile ? 12 : 14;
+  const showLabels = (hasSearch && vis.length <= 18) || isCohortMode;
 
   const nodes = vis.map(p => {
     const isDual = !!p.studied_choir_school && (!!p.studied_conservatory || !!p.studied_assistantship);
+    const isSelected = (p.id === pinnedPersonId);
 
     let symbol = "circle";
     if(isDual){
@@ -694,7 +874,7 @@ function renderGraph(){
     }
 
     const nodeSize = p.notable ? notableNodeSize : baseNodeSize;
-    const finalSize = hasSearch ? nodeSize + 2 : nodeSize;
+    const finalSize = isSelected ? (nodeSize + 6) : (hasSearch ? nodeSize + 2 : nodeSize);
 
     return {
       id: p.id,
@@ -706,25 +886,28 @@ function renderGraph(){
       symbolSize: finalSize,
       itemStyle: {
         color: isDual ? undefined : GROUPS[p._g].color,
-        borderColor: (!isDual && p.notable) ? "#D4A017" : "transparent",
-        borderWidth: (!isDual && p.notable) ? 2.5 : 0,
+        borderColor: isSelected ? "#6B3074" : ((!isDual && p.notable) ? "#D4A017" : "transparent"),
+        borderWidth: isSelected ? 3.5 : ((!isDual && p.notable) ? 2.5 : 0),
+        shadowColor: isSelected ? "rgba(107, 48, 116, 0.4)" : undefined,
+        shadowBlur: isSelected ? 8 : 0,
         opacity: 1
       },
-      // При поиске имена отображаются прямо над точками без наложений
+      // При поиске или в режиме сокурсников имена отображаются прямо над точками
       label: {
-        show: hasSearch && vis.length <= 18,
+        show: showLabels,
         position: "top",
-        fontSize: isMobile ? 10 : 11,
+        fontSize: isSelected ? 12 : (isMobile ? 10 : 11),
+        fontWeight: isSelected ? "bold" : "normal",
         color: "#0D1B2A",
         formatter: "{b}",
-        distance: 5
+        distance: isSelected ? 7 : 5
       },
       tip: escapeHtml(p.full_name) + "<br>" +
            (isDual ? "Хоровое училище и СПбГК" : GROUPS[p._g].name) +
            (p._y ? (p._g === "colleague" ? ", вместе с " + p._y + "-х" : ", выпуск " + p._y) : ", год не указан") +
            (p.notable ? "<br>★ Известный" : "") +
            (p._y ? "<br>Учились в те же годы (±5 лет): " + degree.get(p.id) + " чел." : "") +
-           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? "<br>Нажмите, чтобы зафиксировать карточку" : ""))
+           (p.demo ? "<br><i>демо-данные</i>" : (isFinePointer ? (isCohortMode ? "<br>Нажмите, чтобы переключить на этого человека" : "<br>Нажмите, чтобы показать сокурсников") : ""))
     };
   });
 
@@ -947,9 +1130,17 @@ function updateGraphPanel(p, isPinned){
           <div class="card-name">${escapeHtml(p.full_name)} ${notableStar}</div>
           <div class="card-role">${escapeHtml(subLine)}</div>
         </div>
-        <div style="display:flex; align-items:center; gap:6px;">
+        <div class="card-head-actions">
+          ${p.source ? `
+            <div class="source-tooltip-wrap">
+              <button type="button" class="panel-pin-btn" title="Источник: ${escapeHtml(p.source)}">
+                <span class="sym">info</span>
+              </button>
+              <div class="source-tooltip-pop">${escapeHtml(p.source)}</div>
+            </div>
+          ` : ''}
           ${!isDemo ? `<button type="button" class="panel-pin-btn" onclick="window.openEditPersonModal('${p.id}')" title="Редактировать"><span class="sym">edit</span></button>` : ''}
-          ${isPinned ? '<button type="button" class="panel-pin-btn" onclick="window.unpinGraphPerson()" title="Снять фиксацию"><span class="sym">close</span></button>' : ''}
+          ${isPinned ? '<button type="button" class="panel-pin-btn" onclick="window.unpinGraphPerson()" title="Снять фиксацию (Esc)"><span class="sym">close</span></button>' : ''}
         </div>
       </div>
     </div>
@@ -957,8 +1148,6 @@ function updateGraphPanel(p, isPinned){
     ${milestonesHtml}
 
     ${bioHtml ? `<div class="card-bio-block"><div class="card-section-label">О человеке</div><div class="card-bio-text">${bioHtml}</div></div>` : ''}
-
-    ${p.source ? `<div class="card-source"><span class="card-section-label">Источник информации</span><div style="color:var(--on-surface-variant); font-size:12px;">${escapeHtml(p.source)}</div></div>` : ''}
   `;
 }
 
@@ -967,16 +1156,14 @@ window.selectGraphPeer = function(id){
   if(p){
     pinnedPersonId = p.id;
     updateGraphPanel(p, true);
-    if(chart && p.id !== "ti"){
-      chart.dispatchAction({ type: "highlight", seriesIndex: 0, name: p.full_name });
-    }
+    renderGraph();
   }
 };
 
 window.unpinGraphPerson = function(){
   pinnedPersonId = null;
   updateGraphPanel(null);
-  if(chart) chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
+  renderGraph();
 };
 
 function makeDemo200(){
@@ -1053,6 +1240,35 @@ if(btnSearchClear){
     }
   });
 }
+
+// Управление кнопкой «Известные»
+const btnToggleKnown = document.getElementById("btnToggleKnown");
+if(btnToggleKnown){
+  btnToggleKnown.addEventListener("click", () => {
+    onlyKnown = !onlyKnown;
+    btnToggleKnown.classList.toggle("active", onlyKnown);
+    renderGraph();
+  });
+}
+
+// Снятие фиксации с карточки или закрытие модалки по клавише Escape
+window.addEventListener("keydown", e => {
+  if(e.key === "Escape"){
+    const editModal = document.getElementById("editPersonModal");
+    if(editModal && editModal.classList.contains("is-open")){
+      window.closeEditPersonModal();
+      return;
+    }
+    const authOverlay = document.getElementById("authOverlay");
+    if(authOverlay && authOverlay.classList.contains("is-open")){
+      if(typeof close_ === "function") close_("authOverlay");
+      return;
+    }
+    if(pinnedPersonId){
+      window.unpinGraphPerson();
+    }
+  }
+});
 
 // ---------------------------------------------------------------- МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ
 window.openEditPersonModal = function(id){
