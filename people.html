@@ -200,15 +200,17 @@
     align-items: center;
     gap: 8px;
   }
-  .toolbar-row .compact-search { flex: 1 1 0; min-width: 0; width: auto; }
+  .toolbar-row .compact-search { flex: 0 1 280px; min-width: 0; width: auto; }
+  .toolbar-row .known-switch-btn { margin-left: auto; }
   .graph-filters {
     display: flex;
     flex-wrap: wrap;
-    justify-content: space-between;
     gap: 6px;
     width: 100%;
   }
   .graph-filters .flt-chip {
+    flex: 1 1 auto;
+    justify-content: center;
     padding: 0 7px 0 6px;
     gap: 4px;
     font-size: 12px;
@@ -482,7 +484,7 @@
       gap: 8px;
     }
     .add-arrow { display: none; }
-    .graph-filters { justify-content: flex-start; }
+    .toolbar-row .compact-search { flex: 1 1 0; }
     .flt-chip {
       height: 26px;
       font-size: 12px;
@@ -832,6 +834,8 @@ const GROUPS = {
   unspec:    { name: "Не указано",      color: "#8A96A3" }
 };
 const G_ORDER = ["choir", "spbgk", "dual", "colleague", "unspec"];
+// Порядок секторов в амфитеатре: «оба учебных заведения» посередине между хором и СПбГК
+const GRAPH_ORDER = ["choir", "dual", "spbgk", "colleague", "unspec"];
 const WINDOW = 5;
 const FONT = '"PT Sans", sans-serif';
 const isFinePointer = window.matchMedia("(hover: hover)").matches;
@@ -888,7 +892,7 @@ const ringR = i => .2 + .8 * (i + 1) / RINGS.length;
 
 function layoutGraph(people, isMobile, activeGroups){
   // 1. Учитываем только те группы, в которых реально есть люди в текущей выборке
-  const baseGroups = (activeGroups && activeGroups.length) ? activeGroups : G_ORDER;
+  const baseGroups = GRAPH_ORDER.filter(g => (activeGroups && activeGroups.length ? activeGroups : G_ORDER).includes(g));
   let presentGroups = baseGroups.filter(g => people.some(p => p._g === g));
   if(!presentGroups.length) presentGroups = baseGroups;
 
