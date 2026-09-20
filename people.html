@@ -711,9 +711,15 @@ function layoutGraph(people, isMobile, activeGroups){
   const sum = weights.reduce((a, b) => a + b, 0) || 1;
   let start = isMobile ? (-180 + GAP / 2) : (-180 + (180 - ARC_SPAN) / 2);
 
+  const minSector = (presentGroups.length > 1)
+    ? Math.min(24, (avail / presentGroups.length) * 0.7)
+    : avail;
+  const remAvail = Math.max(0, avail - presentGroups.length * minSector);
+
   presentGroups.forEach((g, gi) => {
-    const rawSector = avail * weights[gi] / sum;
-    const sector = Math.max(rawSector, 30);
+    const sector = (presentGroups.length === 1)
+      ? avail
+      : (minSector + remAvail * (weights[gi] / sum));
 
     RINGS.forEach((_, ri) => {
       const list = people.filter(p => p._g === g && ringOf(p) === ri).sort((a, b) => (a._y || 0) - (b._y || 0));
@@ -964,27 +970,17 @@ function renderGraph(){
     tip: "Татьяна Ивановна Хитрова"
   });
 
-  const anchorPad = 30;
-  let seriesLeft, seriesTop, seriesW, seriesH;
-  if(isMobile){
-    seriesLeft = cx - (rx + anchorPad);
-    seriesTop = cy - (ry + anchorPad);
-    seriesW = 2 * (rx + anchorPad);
-    seriesH = 2 * (ry + anchorPad);
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy], i) => nodes.push({
-      id: "anchor" + i, name: "", category: G_ORDER.length, x: cx + sx * (rx + anchorPad), y: cy + sy * (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: ""
-    }));
-  } else {
-    const bottomPad = 25;
-    seriesLeft = cx - (rx + anchorPad);
-    seriesTop = cy - (ry + anchorPad);
-    seriesW = 2 * (rx + anchorPad);
-    seriesH = (ry + anchorPad) + bottomPad;
-    nodes.push({ id: "anchor0", name: "", category: G_ORDER.length, x: cx - (rx + anchorPad), y: cy - (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: "" });
-    nodes.push({ id: "anchor1", name: "", category: G_ORDER.length, x: cx + (rx + anchorPad), y: cy - (ry + anchorPad), symbolSize: 0, silent: true, label: { show: false }, tip: "" });
-    nodes.push({ id: "anchor2", name: "", category: G_ORDER.length, x: cx - (rx + anchorPad), y: cy + bottomPad, symbolSize: 0, silent: true, label: { show: false }, tip: "" });
-    nodes.push({ id: "anchor3", name: "", category: G_ORDER.length, x: cx + (rx + anchorPad), y: cy + bottomPad, symbolSize: 0, silent: true, label: { show: false }, tip: "" });
-  }
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  nodes.forEach(n => {
+    if(n.x < minX) minX = n.x;
+    if(n.x > maxX) maxX = n.x;
+    if(n.y < minY) minY = n.y;
+    if(n.y > maxY) maxY = n.y;
+  });
+  const seriesW = Math.max(2, maxX - minX);
+  const seriesH = Math.max(2, maxY - minY);
+  const seriesLeft = minX;
+  const seriesTop = minY;
 
   const ringGraphics = RINGS.flatMap((label, i) => {
     const r = ringR(i) * R;
